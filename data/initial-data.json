@@ -1,0 +1,27 @@
+/* Initialize data files for driving instructor website */
+
+{
+  "students": [],
+  "bookings": [],
+  "availability": {
+    "weekdays": {
+      "monday": { "enabled": true, "slots": ["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00"] },
+      "tuesday": { "enabled": true, "slots": ["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00"] },
+      "wednesday": { "enabled": true, "slots": ["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00"] },
+      "thursday": { "enabled": true, "slots": ["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00"] },
+      "friday": { "enabled": true, "slots": ["09:00", "10:00", "11:00", "13:00", "14:00", "15:00", "16:00", "17:00"] }
+    },
+    "weekends": {
+      "saturday": { "enabled": true, "slots": ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00"] },
+      "sunday": { "enabled": false, "slots": [] }
+    }
+  },
+  "settings": {
+    "lessonPrice": 45,
+    "testPrepPrice": 50,
+    "lessonDuration": 60,
+    "testPrepDuration": 90,
+    "currency": "AUD",
+    "timezone": "Australia/Sydney"
+  }
+}
