@@ -9,10 +9,15 @@ export default function DashboardPage() {
   const [selectedTab, setSelectedTab] = useState<'upcoming' | 'completed'>('upcoming')
 
   useEffect(() => {
-    // Load bookings from localStorage
-    const storedBookings = localStorage.getItem('bookings')
-    if (storedBookings) {
-      setBookings(JSON.parse(storedBookings))
+    try {
+      // Load bookings from localStorage
+      const storedBookings = localStorage.getItem('bookings')
+      if (storedBookings) {
+        setBookings(JSON.parse(storedBookings))
+      }
+    } catch (error) {
+      console.error('Error loading bookings:', error)
+      setBookings([])
     }
   }, [])
 
@@ -20,20 +25,30 @@ export default function DashboardPage() {
   const completedBookings = bookings.filter(b => b.status === 'completed')
 
   const cancelBooking = (bookingId: string) => {
-    const updatedBookings = bookings.map(b =>
-      b.id === bookingId ? { ...b, status: 'cancelled' as const } : b
-    )
-    setBookings(updatedBookings)
-    localStorage.setItem('bookings', JSON.stringify(updatedBookings))
-    alert('Booking cancelled successfully')
+    try {
+      const updatedBookings = bookings.map(b =>
+        b.id === bookingId ? { ...b, status: 'cancelled' as const } : b
+      )
+      setBookings(updatedBookings)
+      localStorage.setItem('bookings', JSON.stringify(updatedBookings))
+      alert('Booking cancelled successfully')
+    } catch (error) {
+      console.error('Error cancelling booking:', error)
+      alert('Error cancelling booking. Please try again.')
+    }
   }
 
   const completeBooking = (bookingId: string) => {
-    const updatedBookings = bookings.map(b =>
-      b.id === bookingId ? { ...b, status: 'completed' as const } : b
-    )
-    setBookings(updatedBookings)
-    localStorage.setItem('bookings', JSON.stringify(updatedBookings))
+    try {
+      const updatedBookings = bookings.map(b =>
+        b.id === bookingId ? { ...b, status: 'completed' as const } : b
+      )
+      setBookings(updatedBookings)
+      localStorage.setItem('bookings', JSON.stringify(updatedBookings))
+    } catch (error) {
+      console.error('Error completing booking:', error)
+      alert('Error updating booking status. Please try again.')
+    }
   }
 
   return (

@@ -1,6 +1,11 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
 
 export default function Home() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Navigation */}
@@ -10,21 +15,59 @@ export default function Home() {
             <div className="flex items-center">
               <span className="text-2xl font-bold text-primary">🚗 Driving Instructor</span>
             </div>
-            <div className="hidden md:flex space-x-8">
+
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex space-x-8 items-center">
               <Link href="#services" className="text-gray-700 hover:text-primary transition">Services</Link>
               <Link href="#pricing" className="text-gray-700 hover:text-primary transition">Pricing</Link>
               <Link href="#about" className="text-gray-700 hover:text-primary transition">About</Link>
               <Link href="#contact" className="text-gray-700 hover:text-primary transition">Contact</Link>
               <Link href="/dashboard" className="text-gray-700 hover:text-primary transition">Dashboard</Link>
               <Link href="/instructor" className="text-gray-700 hover:text-primary transition">Instructor</Link>
+              <Link
+                href="/book"
+                className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-secondary transition"
+              >
+                Book Now
+              </Link>
             </div>
-            <Link
-              href="/book"
-              className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-secondary transition"
-            >
-              Book Now
-            </Link>
+
+            {/* Mobile menu button */}
+            <div className="md:hidden flex items-center">
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="text-gray-700 hover:text-primary focus:outline-none"
+              >
+                {mobileMenuOpen ? (
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                ) : (
+                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
+
+          {/* Mobile menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden pb-4 space-y-2">
+              <Link href="#services" className="block px-4 py-2 text-gray-700 hover:text-primary hover:bg-blue-50">Services</Link>
+              <Link href="#pricing" className="block px-4 py-2 text-gray-700 hover:text-primary hover:bg-blue-50">Pricing</Link>
+              <Link href="#about" className="block px-4 py-2 text-gray-700 hover:text-primary hover:bg-blue-50">About</Link>
+              <Link href="#contact" className="block px-4 py-2 text-gray-700 hover:text-primary hover:bg-blue-50">Contact</Link>
+              <Link href="/dashboard" className="block px-4 py-2 text-gray-700 hover:text-primary hover:bg-blue-50">Dashboard</Link>
+              <Link href="/instructor" className="block px-4 py-2 text-gray-700 hover:text-primary hover:bg-blue-50">Instructor</Link>
+              <Link
+                href="/book"
+                className="block px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition text-center mx-4"
+              >
+                Book Now
+              </Link>
+            </div>
+          )}
         </div>
       </nav>
 

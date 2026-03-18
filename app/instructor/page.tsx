@@ -10,14 +10,19 @@ export default function InstructorPage() {
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
 
   useEffect(() => {
-    // Load bookings from localStorage
-    const storedBookings = localStorage.getItem('bookings')
-    if (storedBookings) {
-      setBookings(JSON.parse(storedBookings))
+    try {
+      // Load bookings from localStorage
+      const storedBookings = localStorage.getItem('bookings')
+      if (storedBookings) {
+        setBookings(JSON.parse(storedBookings))
+      }
+    } catch (error) {
+      console.error('Error loading bookings:', error)
+      setBookings([])
     }
   }, [])
 
-  const get Today's date
+
   const today = new Date().toISOString().split('T')[0]
 
   const todayBookings = bookings.filter(b => b.date === today && b.status !== 'cancelled')
@@ -40,12 +45,17 @@ export default function InstructorPage() {
   }
 
   const updateBookingStatus = (bookingId: string, newStatus: Booking['status']) => {
-    const updatedBookings = bookings.map(b =>
-      b.id === bookingId ? { ...b, status: newStatus } : b
-    )
-    setBookings(updatedBookings)
-    localStorage.setItem('bookings', JSON.stringify(updatedBookings))
-    alert(`Booking status updated to: ${newStatus}`)
+    try {
+      const updatedBookings = bookings.map(b =>
+        b.id === bookingId ? { ...b, status: newStatus } : b
+      )
+      setBookings(updatedBookings)
+      localStorage.setItem('bookings', JSON.stringify(updatedBookings))
+      alert(`Booking status updated to: ${newStatus}`)
+    } catch (error) {
+      console.error('Error updating booking status:', error)
+      alert('Error updating booking status. Please try again.')
+    }
   }
 
   const getTotalRevenue = () => {

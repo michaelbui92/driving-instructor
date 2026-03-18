@@ -21,6 +21,9 @@ export interface Booking {
   createdAt: string
 }
 
+// Explicit Booking type export (redundant but explicit for clarity)
+export type BookingRequest = Omit<Booking, 'id' | 'status' | 'createdAt'>
+
 // Generate time slots for next 14 days
 export function generateTimeSlots(): TimeSlot[] {
   const slots: TimeSlot[] = []
