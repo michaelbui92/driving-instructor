@@ -15,6 +15,8 @@ export default function Home() {
               <Link href="#pricing" className="text-gray-700 hover:text-primary transition">Pricing</Link>
               <Link href="#about" className="text-gray-700 hover:text-primary transition">About</Link>
               <Link href="#contact" className="text-gray-700 hover:text-primary transition">Contact</Link>
+              <Link href="/dashboard" className="text-gray-700 hover:text-primary transition">Dashboard</Link>
+              <Link href="/instructor" className="text-gray-700 hover:text-primary transition">Instructor</Link>
             </div>
             <Link
               href="/book"

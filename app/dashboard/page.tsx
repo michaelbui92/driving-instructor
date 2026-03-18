@@ -1,0 +1,226 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import Link from 'next/link'
+import { formatDate, getLessonTypeName, type Booking } from '@/lib/booking-utils'
+
+export default function DashboardPage() {
+  const [bookings, setBookings] = useState<Booking[]>([])
+  const [selectedTab, setSelectedTab] = useState<'upcoming' | 'completed'>('upcoming')
+
+  useEffect(() => {
+    // Load bookings from localStorage
+    const storedBookings = localStorage.getItem('bookings')
+    if (storedBookings) {
+      setBookings(JSON.parse(storedBookings))
+    }
+  }, [])
+
+  const upcomingBookings = bookings.filter(b => b.status === 'pending' || b.status === 'confirmed')
+  const completedBookings = bookings.filter(b => b.status === 'completed')
+
+  const cancelBooking = (bookingId: string) => {
+    const updatedBookings = bookings.map(b =>
+      b.id === bookingId ? { ...b, status: 'cancelled' as const } : b
+    )
+    setBookings(updatedBookings)
+    localStorage.setItem('bookings', JSON.stringify(updatedBookings))
+    alert('Booking cancelled successfully')
+  }
+
+  const completeBooking = (bookingId: string) => {
+    const updatedBookings = bookings.map(b =>
+      b.id === bookingId ? { ...b, status: 'completed' as const } : b
+    )
+    setBookings(updatedBookings)
+    localStorage.setItem('bookings', JSON.stringify(updatedBookings))
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Navigation */}
+      <nav className="bg-white shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <Link href="/" className="text-2xl font-bold text-primary">🚗 Driving Instructor</Link>
+            <div className="flex space-x-4">
+              <Link
+                href="/book"
+                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition"
+              >
+                New Booking
+              </Link>
+              <Link
+                href="/"
+                className="text-gray-700 hover:text-primary transition"
+              >
+                Home
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2">Student Dashboard</h1>
+          <p className="text-gray-600">Manage your driving lessons and track your progress</p>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-xl p-6 shadow-lg">
+            <div className="text-3xl mb-2">📅</div>
+            <div className="text-3xl font-bold text-primary">{upcomingBookings.length}</div>
+            <p className="text-gray-600">Upcoming Lessons</p>
+          </div>
+          <div className="bg-white rounded-xl p-6 shadow-lg">
+            <div className="text-3xl mb-2">✅</div>
+            <div className="text-3xl font-bold text-green-600">{completedBookings.length}</div>
+            <p className="text-gray-600">Completed Lessons</p>
+          </div>
+          <div className="bg-white rounded-xl p-6 shadow-lg">
+            <div className="text-3xl mb-2">💰</div>
+            <div className="text-3xl font-bold text-accent">
+              ${upcomingBookings.reduce((sum, b) => sum + b.price, 0)}
+            </div>
+            <p className="text-gray-600">Upcoming Cost</p>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="bg-white rounded-xl shadow-lg">
+          <div className="border-b">
+            <div className="flex">
+              <button
+                className={`flex-1 px-6 py-4 font-semibold transition ${
+                  selectedTab === 'upcoming'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+                onClick={() => setSelectedTab('upcoming')}
+              >
+                Upcoming ({upcomingBookings.length})
+              </button>
+              <button
+                className={`flex-1 px-6 py-4 font-semibold transition ${
+                  selectedTab === 'completed'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+                onClick={() => setSelectedTab('completed')}
+              >
+                Completed ({completedBookings.length})
+              </button>
+            </div>
+          </div>
+
+          {/* Bookings List */}
+          <div className="p-6">
+            {selectedTab === 'upcoming' && upcomingBookings.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">📚</div>
+                <h3 className="text-xl font-semibold mb-2">No Upcoming Lessons</h3>
+                <p className="text-gray-600 mb-6">Book your first lesson to get started</p>
+                <Link
+                  href="/book"
+                  className="inline-block px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition"
+                >
+                  Book Now
+                </Link>
+              </div>
+            )}
+
+            {selectedTab === 'completed' && completedBookings.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">🎯</div>
+                <h3 className="text-xl font-semibold mb-2">No Completed Lessons Yet</h3>
+                <p className="text-gray-600">Your completed lessons will appear here</p>
+              </div>
+            )}
+
+            {(selectedTab === 'upcoming' ? upcomingBookings : completedBookings).map((booking) => (
+              <div
+                key={booking.id}
+                className="border rounded-lg p-6 mb-4 hover:shadow-md transition"
+              >
+                <div className="grid md:grid-cols-4 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Date & Time</p>
+                    <p className="font-semibold">{formatDate(booking.date)}</p>
+                    <p className="text-gray-600">{booking.time}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Lesson Type</p>
+                    <p className="font-semibold">{getLessonTypeName(booking.lessonType)}</p>
+                    <p className="text-gray-600">${booking.price}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Status</p>
+                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+                      booking.status === 'pending'
+                        ? 'bg-yellow-100 text-yellow-800'
+                        : booking.status === 'confirmed'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                    </span>
+                  </div>
+                  <div className="flex items-end space-x-2">
+                    {selectedTab === 'upcoming' && (
+                      <>
+                        <Link
+                          href={`/book`}
+                          className="flex-1 px-4 py-2 border-2 border-primary text-primary rounded-lg text-center hover:bg-blue-50 transition"
+                        >
+                          Reschedule
+                        </Link>
+                        <button
+                          onClick={() => cancelBooking(booking.id)}
+                          className="flex-1 px-4 py-2 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => completeBooking(booking.id)}
+                          className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition"
+                        >
+                          Complete
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Progress Section */}
+        {completedBookings.length > 0 && (
+          <div className="bg-white rounded-xl p-6 shadow-lg mt-8">
+            <h2 className="text-2xl font-bold mb-4">Your Progress</h2>
+            <div className="mb-4">
+              <div className="flex justify-between mb-2">
+                <span className="font-semibold">Lessons Completed</span>
+                <span className="font-semibold">{completedBookings.length} lessons</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-4">
+                <div
+                  className="bg-primary h-4 rounded-full transition-all"
+                  style={{ width: `${Math.min((completedBookings.length / 10) * 100, 100)}%` }}
+                />
+              </div>
+            </div>
+            {completedBookings.length >= 5 && (
+              <p className="text-green-600 font-semibold">🎉 Great progress! Keep going!</p>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
