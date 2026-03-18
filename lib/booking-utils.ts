@@ -14,12 +14,20 @@ export interface Booking {
   studentName: string
   email: string
   phone: string
+  address?: string // Optional address field
   lessonType: string
+  lessonSlots?: LessonSlot[] // For package bookings
   date: string
   time: string
   price: number
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled'
   createdAt: string
+}
+
+export interface LessonSlot {
+  date: string
+  time: string
+  isNightTime: boolean
 }
 
 // Explicit Booking type export (redundant but explicit for clarity)
@@ -74,34 +82,78 @@ export function getAvailableSlots(date: string, existingBookings?: Booking[]): T
   // Mark slots as unavailable based on existing bookings
   if (existingBookings && existingBookings.length > 0) {
     existingBookings
-      .filter(booking => booking.date === date && booking.status !== 'cancelled')
+      .filter(booking => booking.status !== 'cancelled')
       .forEach(booking => {
-        // Mark the booked slot as unavailable
-        const bookedSlotIndex = slots.findIndex(slot => slot.time === booking.time)
-        if (bookedSlotIndex !== -1) {
-          slots[bookedSlotIndex].available = false
+        // Handle single lesson bookings
+        if (booking.lessonType === 'single' || !booking.lessonSlots) {
+          if (booking.date === date) {
+            const bookedSlotIndex = slots.findIndex(slot => slot.time === booking.time)
+            if (bookedSlotIndex !== -1) {
+              slots[bookedSlotIndex].available = false
 
-          // Blocking logic: if 6pm is booked, block 7pm. If 7pm is booked, block 6pm.
-          // This ensures full dedication to the student and allows for travel home.
-          const timeOptions = ['6:00 PM', '7:00 PM', '8:00 PM']
+              // Blocking logic: if 6pm is booked, block 7pm. If 7pm is booked, block 6pm.
+              const timeOptions = ['6:00 PM', '7:00 PM', '8:00 PM']
 
-          if (booking.time === '6:00 PM') {
-            const blockedIndex = slots.findIndex(slot => slot.time === '7:00 PM')
-            if (blockedIndex !== -1) {
-              slots[blockedIndex].available = false
-            }
-          } else if (booking.time === '7:00 PM') {
-            const blockedIndex = slots.findIndex(slot => slot.time === '6:00 PM')
-            if (blockedIndex !== -1) {
-              slots[blockedIndex].available = false
+              if (booking.time === '6:00 PM') {
+                const blockedIndex = slots.findIndex(slot => slot.time === '7:00 PM')
+                if (blockedIndex !== -1) {
+                  slots[blockedIndex].available = false
+                }
+              } else if (booking.time === '7:00 PM') {
+                const blockedIndex = slots.findIndex(slot => slot.time === '6:00 PM')
+                if (blockedIndex !== -1) {
+                  slots[blockedIndex].available = false
+                }
+              }
             }
           }
+        }
+
+        // Handle package bookings with multiple lesson slots
+        if (booking.lessonSlots && booking.lessonSlots.length > 0) {
+          booking.lessonSlots.forEach(slot => {
+            if (slot.date === date) {
+              const bookedSlotIndex = slots.findIndex(s => s.time === slot.time)
+              if (bookedSlotIndex !== -1) {
+                slots[bookedSlotIndex].available = false
+
+                // Blocking logic for package bookings
+                const timeOptions = ['6:00 PM', '7:00 PM', '8:00 PM']
+
+                if (slot.time === '6:00 PM') {
+                  const blockedIndex = slots.findIndex(s => s.time === '7:00 PM')
+                  if (blockedIndex !== -1) {
+                    slots[blockedIndex].available = false
+                  }
+                } else if (slot.time === '7:00 PM') {
+                  const blockedIndex = slots.findIndex(s => s.time === '6:00 PM')
+                  if (blockedIndex !== -1) {
+                    slots[blockedIndex].available = false
+                  }
+                }
+              }
+            }
+          })
         }
       })
   }
 
   // Only return available slots
   return slots.filter(slot => slot.available)
+}
+
+// Get the required number of lessons for a package
+export function getRequiredLessons(lessonType: string): number {
+  switch (lessonType) {
+    case 'single':
+      return 1
+    case '5-pack':
+      return 5
+    case '10-pack':
+      return 10
+    default:
+      return 1
+  }
 }
 
 // Format date for display
@@ -121,7 +173,7 @@ export function isNightTimeSlot(time: string): boolean {
 }
 
 // Validate booking details
-export function validateBooking(booking: Partial<Booking>): { valid: boolean; errors: string[] } {
+export function validateBooking(booking: Partial<Booking>, selectedSlotIds?: string[]): { valid: boolean; errors: string[] } {
   const errors: string[] = []
 
   if (!booking.studentName || booking.studentName.trim().length === 0) {
@@ -140,12 +192,23 @@ export function validateBooking(booking: Partial<Booking>): { valid: boolean; er
     errors.push('Lesson type is required')
   }
 
-  if (!booking.date) {
-    errors.push('Date is required')
+  // For single lesson, need date and time
+  if (booking.lessonType === 'single') {
+    if (!booking.date) {
+      errors.push('Date is required')
+    }
+
+    if (!booking.time) {
+      errors.push('Time slot is required')
+    }
   }
 
-  if (!booking.time) {
-    errors.push('Time slot is required')
+  // For packages, need to select required number of slots
+  if (booking.lessonType !== 'single' && selectedSlotIds) {
+    const requiredLessons = getRequiredLessons(booking.lessonType)
+    if (selectedSlotIds.length < requiredLessons) {
+      errors.push(`Please select ${requiredLessons} lessons for your package`)
+    }
   }
 
   return {

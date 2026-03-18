@@ -7,6 +7,7 @@ import { formatDate, getLessonTypeName, type Booking } from '@/lib/booking-utils
 export default function DashboardPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [selectedTab, setSelectedTab] = useState<'upcoming' | 'completed'>('upcoming')
+  const [reschedulingBooking, setReschedulingBooking] = useState<Booking | null>(null)
 
   useEffect(() => {
     try {
@@ -51,6 +52,40 @@ export default function DashboardPage() {
     }
   }
 
+  const handleReschedule = (booking: Booking) => {
+    setReschedulingBooking(booking)
+  }
+
+  const saveReschedule = (newDate: string, newTime: string) => {
+    try {
+      const updatedBookings = bookings.map(b =>
+        b.id === reschedulingBooking?.id
+          ? { ...b, date: newDate, time: newTime }
+          : b
+      )
+      setBookings(updatedBookings)
+      localStorage.setItem('bookings', JSON.stringify(updatedBookings))
+      alert('Booking rescheduled successfully')
+      setReschedulingBooking(null)
+    } catch (error) {
+      console.error('Error rescheduling booking:', error)
+      alert('Error rescheduling booking. Please try again.')
+    }
+  }
+
+  const getUpcomingLessonsCount = () => {
+    // Count all upcoming lessons including those in package bookings
+    let count = 0
+    upcomingBookings.forEach(b => {
+      if (b.lessonSlots && b.lessonSlots.length > 0) {
+        count += b.lessonSlots.length
+      } else {
+        count += 1
+      }
+    })
+    return count
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Navigation */}
@@ -88,13 +123,13 @@ export default function DashboardPage() {
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-xl p-6 shadow-lg">
             <div className="text-3xl mb-2">📅</div>
-            <div className="text-3xl font-bold text-primary">{upcomingBookings.length}</div>
+            <div className="text-3xl font-bold text-primary">{getUpcomingLessonsCount()}</div>
             <p className="text-gray-600">Upcoming Lessons</p>
           </div>
           <div className="bg-white rounded-xl p-6 shadow-lg">
             <div className="text-3xl mb-2">✅</div>
             <div className="text-3xl font-bold text-green-600">{completedBookings.length}</div>
-            <p className="text-gray-600">Completed Lessons</p>
+            <p className="text-gray-600">Completed Bookings</p>
           </div>
           <div className="bg-white rounded-xl p-6 shadow-lg">
             <div className="text-3xl mb-2">💰</div>
@@ -161,16 +196,36 @@ export default function DashboardPage() {
                 key={booking.id}
                 className="border rounded-lg p-6 mb-4 hover:shadow-md transition"
               >
-                <div className="grid md:grid-cols-4 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Date & Time</p>
-                    <p className="font-semibold">{formatDate(booking.date)}</p>
-                    <p className="text-gray-600">{booking.time}</p>
+                <div className="grid md:grid-cols-6 gap-4">
+                  <div className="md:col-span-2">
+                    <p className="text-sm text-gray-600 mb-1">
+                      {booking.lessonSlots && booking.lessonSlots.length > 0
+                        ? 'Lessons'
+                        : 'Date & Time'}
+                    </p>
+                    {booking.lessonSlots && booking.lessonSlots.length > 0 ? (
+                      <div className="space-y-1">
+                        {booking.lessonSlots.map((slot, index) => (
+                          <div key={index}>
+                            <p className="font-semibold">{formatDate(slot.date)}</p>
+                            <p className="text-gray-600">{slot.time}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <>
+                        <p className="font-semibold">{formatDate(booking.date)}</p>
+                        <p className="text-gray-600">{booking.time}</p>
+                      </>
+                    )}
                   </div>
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Lesson Type</p>
                     <p className="font-semibold">{getLessonTypeName(booking.lessonType)}</p>
-                    <p className="text-gray-600">${booking.price}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600 mb-1">Price</p>
+                    <p className="font-semibold text-primary">${booking.price}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Status</p>
@@ -187,12 +242,22 @@ export default function DashboardPage() {
                   <div className="flex items-end space-x-2">
                     {selectedTab === 'upcoming' && (
                       <>
-                        <Link
-                          href={`/book`}
-                          className="flex-1 px-4 py-2 border-2 border-primary text-primary rounded-lg text-center hover:bg-blue-50 transition"
-                        >
-                          Reschedule
-                        </Link>
+                        {booking.lessonSlots && booking.lessonSlots.length === 1 && (
+                          <button
+                            onClick={() => handleReschedule(booking)}
+                            className="flex-1 px-4 py-2 border-2 border-orange-500 text-orange-500 rounded-lg hover:bg-orange-50 transition"
+                          >
+                            🔄 Reschedule
+                          </button>
+                        )}
+                        {booking.lessonType === 'single' && (
+                          <button
+                            onClick={() => handleReschedule(booking)}
+                            className="flex-1 px-4 py-2 border-2 border-orange-500 text-orange-500 rounded-lg hover:bg-orange-50 transition"
+                          >
+                            🔄 Reschedule
+                          </button>
+                        )}
                         <button
                           onClick={() => cancelBooking(booking.id)}
                           className="flex-1 px-4 py-2 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition"
@@ -221,7 +286,7 @@ export default function DashboardPage() {
             <div className="mb-4">
               <div className="flex justify-between mb-2">
                 <span className="font-semibold">Lessons Completed</span>
-                <span className="font-semibold">{completedBookings.length} lessons</span>
+                <span className="font-semibold">{completedBookings.length} bookings</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-4">
                 <div
@@ -236,6 +301,93 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+
+      {/* Reschedule Modal */}
+      {reschedulingBooking && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Reschedule Booking</h2>
+              <button
+                onClick={() => setReschedulingBooking(null)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-gray-600 mb-2">Current Date & Time:</p>
+                <p className="font-semibold">{formatDate(reschedulingBooking.date)}</p>
+                <p className="text-gray-600">{reschedulingBooking.time}</p>
+              </div>
+
+              <div className="border-t pt-4">
+                <p className="text-sm text-gray-600 mb-2">New Date:</p>
+                <input
+                  type="date"
+                  id="newDate"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  defaultValue={reschedulingBooking.date}
+                />
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-600 mb-2">New Time:</p>
+                <select
+                  id="newTime"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  defaultValue={reschedulingBooking.time}
+                >
+                  <option value="6:00 PM">6:00 PM</option>
+                  <option value="7:00 PM">7:00 PM</option>
+                  <option value="8:00 PM">8:00 PM (Night Time)</option>
+                  <option value="8:00 AM">8:00 AM</option>
+                  <option value="9:00 AM">9:00 AM</option>
+                  <option value="10:00 AM">10:00 AM</option>
+                  <option value="11:00 AM">11:00 AM</option>
+                  <option value="12:00 PM">12:00 PM</option>
+                  <option value="1:00 PM">1:00 PM</option>
+                  <option value="2:00 PM">2:00 PM</option>
+                  <option value="3:00 PM">3:00 PM</option>
+                  <option value="4:00 PM">4:00 PM</option>
+                  <option value="5:00 PM">5:00 PM</option>
+                  <option value="6:00 PM">6:00 PM</option>
+                  <option value="7:00 PM">7:00 PM</option>
+                </select>
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
+                <strong>Note:</strong> If you book 6pm, 7pm is automatically blocked to ensure full dedication to your lesson.
+              </div>
+            </div>
+
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => setReschedulingBooking(null)}
+                className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const newDate = (document.getElementById('newDate') as HTMLInputElement)?.value || ''
+                  const newTime = (document.getElementById('newTime') as HTMLSelectElement)?.value || ''
+                  if (newDate && newTime) {
+                    saveReschedule(newDate, newTime)
+                  } else {
+                    alert('Please select new date and time')
+                  }
+                }}
+                className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
