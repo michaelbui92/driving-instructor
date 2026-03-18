@@ -57,7 +57,7 @@ export default function DashboardPage() {
       <nav className="bg-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="text-2xl font-bold text-primary">🚗 Driving Instructor</Link>
+            <Link href="/" className="text-2xl font-bold text-primary">🚗 Drive With Bui</Link>
             <div className="flex space-x-4">
               <Link
                 href="/book"

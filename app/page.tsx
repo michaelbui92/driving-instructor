@@ -13,7 +13,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <span className="text-2xl font-bold text-primary">🚗 Driving Instructor</span>
+              <span className="text-2xl font-bold text-primary">🚗 Drive With Bui</span>
             </div>
 
             {/* Desktop Navigation */}
@@ -75,10 +75,10 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center">
           <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-            Get Your License With <span className="text-primary">Confidence</span>
+            Get Your License With <span className="text-primary">Drive With Bui</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Professional driving lessons tailored to your learning style. Learn to drive safely and pass your test the first time.
+            Professional driving lessons tailored for international students and working holiday makers. Learn to drive safely and pass your test the first time with experienced, patient instruction.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
@@ -187,35 +187,52 @@ export default function Home() {
       {/* About Section */}
       <section className="bg-white py-16" id="about">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Why Choose Us?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Why Drive With Bui?</h2>
           <div className="max-w-4xl mx-auto">
+            <p className="text-gray-600 text-center text-lg mb-12">
+              Specifically designed for international students and working holiday makers, Drive With Bui provides patient, experienced instruction to help you get your Australian driver's license with confidence.
+            </p>
             <div className="grid md:grid-cols-2 gap-8">
               <div className="flex items-start">
                 <span className="text-3xl mr-4">✓</span>
                 <div>
                   <h3 className="text-xl font-bold mb-2">Experienced Instructor</h3>
-                  <p className="text-gray-600">Years of experience helping students pass their driving tests</p>
+                  <p className="text-gray-600">Years of experience helping international students pass their driving tests</p>
                 </div>
               </div>
               <div className="flex items-start">
                 <span className="text-3xl mr-4">✓</span>
                 <div>
                   <h3 className="text-xl font-bold mb-2">Patient & Supportive</h3>
-                  <p className="text-gray-600">Learn at your pace in a stress-free environment</p>
+                  <p className="text-gray-600">Learn at your pace in a stress-free environment with clear, encouraging feedback</p>
                 </div>
               </div>
               <div className="flex items-start">
                 <span className="text-3xl mr-4">✓</span>
                 <div>
                   <h3 className="text-xl font-bold mb-2">High Pass Rate</h3>
-                  <p className="text-gray-600">Our students consistently pass their driving tests</p>
+                  <p className="text-gray-600">Our international student students consistently pass their driving tests on the first attempt</p>
                 </div>
               </div>
               <div className="flex items-start">
                 <span className="text-3xl mr-4">✓</span>
                 <div>
                   <h3 className="text-xl font-bold mb-2">Flexible Scheduling</h3>
-                  <p className="text-gray-600">Book lessons that fit your schedule</p>
+                  <p className="text-gray-600">Book lessons around your study or work schedule</p>
+                </div>
+              </div>
+              <div className="flex items-start">
+                <span className="text-3xl mr-4">✓</span>
+                <div>
+                  <h3 className="text-xl font-bold mb-2">International-Friendly</h3>
+                  <p className="text-gray-600">Experienced teaching students from diverse backgrounds and cultures</p>
+                </div>
+              </div>
+              <div className="flex items-start">
+                <span className="text-3xl mr-4">✓</span>
+                <div>
+                  <h3 className="text-xl font-bold mb-2">Working Holiday Optimized</h3>
+                  <p className="text-gray-600">Flexible timing for those balancing work and driving lessons</p>
                 </div>
               </div>
             </div>
@@ -228,7 +245,7 @@ export default function Home() {
         <div className="max-w-4xl mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Ready to Start Learning?</h2>
           <p className="text-xl text-blue-100 mb-8">
-            Book your first lesson today and start your journey to becoming a confident driver
+            Join other international students and working holiday makers who have passed their tests with Drive With Bui
           </p>
           <Link
             href="/book"
@@ -244,8 +261,8 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-3 gap-8">
             <div>
-              <h3 className="text-xl font-bold mb-4">Driving Instructor</h3>
-              <p className="text-gray-400">Professional driving lessons for everyone</p>
+              <h3 className="text-xl font-bold mb-4">Drive With Bui</h3>
+              <p className="text-gray-400">Professional driving lessons for international students and working holiday makers in Sydney.</p>
             </div>
             <div>
               <h3 className="text-xl font-bold mb-4">Quick Links</h3>
@@ -259,12 +276,20 @@ export default function Home() {
             <div>
               <h3 className="text-xl font-bold mb-4">Contact</h3>
               <p className="text-gray-400 mb-2">📍 Sydney, Australia</p>
-              <p className="text-gray-400 mb-2">📞 (02) 1234-5678</p>
-              <p className="text-gray-400">✉️ hello@drivinginstructor.com</p>
+              <p className="text-gray-400 mb-2">✉️ DriveWithBui@agentmail.to</p>
+              <p className="text-gray-400 mb-2">📸 @DriveWithBui</p>
+              <a
+                href="https://instagram.com/DriveWithBui"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 hover:text-blue-300 transition"
+              >
+                Follow us on Instagram
+              </a>
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2026 Driving Instructor. All rights reserved.</p>
+            <p>&copy; 2026 Drive With Bui. All rights reserved.</p>
           </div>
         </div>
       </footer>

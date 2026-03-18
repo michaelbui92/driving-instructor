@@ -1,16 +1,22 @@
-# Driving Instructor Website
+# Drive With Bui Website
 
-A professional driving school booking system built with Next.js 14.
+A professional driving school booking system built with Next.js 14, specifically designed for international students and working holiday makers in Sydney, Australia.
 
 ## Features
 
 - ✨ Modern, responsive design
-- 📅 Online booking system
+- 📅 24/7 online booking system
 - 💳 Package deals with discounts
-- 🎯 Student dashboard (coming soon)
-- 👨‍🏫 Instructor portal (coming soon)
+- 🎯 Student dashboard
+- 👨‍🏫 Instructor portal
 - 📱 Mobile-first design
-- 📧 Email notifications (coming soon)
+- 📧 Email support
+
+## Target Audience
+
+- ✈️ International students
+- 🌏 Working holiday makers
+- 🎓 Anyone learning to drive in Sydney
 
 ## Pricing
 
@@ -19,13 +25,19 @@ A professional driving school booking system built with Next.js 14.
 - 10-Lesson Pack: $430 (save $20)
 - Test Preparation: $50/90min
 
+## Contact
+
+- 📧 Email: DriveWithBui@agentmail.to
+- 📸 Instagram: [@DriveWithBui](https://instagram.com/DriveWithBui)
+- 📍 Location: Sydney, Australia
+
 ## Tech Stack
 
 - **Next.js 14** - React framework with App Router
 - **React 18** - UI library
 - **Tailwind CSS** - Styling
 - **TypeScript** - Type safety
-- **Vercel** - Deployment (recommended)
+- **Vercel** - Deployment
 
 ## Getting Started
 
@@ -63,22 +75,27 @@ yarn dev
 ```
 driving-instructor/
 ├── app/              # Next.js App Router
-│   ├── globals.css  # Global styles
-│   ├── layout.tsx   # Root layout
-│   └── page.tsx     # Homepage
-├── public/          # Static assets
-├── package.json     # Dependencies
-├── tsconfig.json    # TypeScript config
+│   ├── book/         # Booking system
+│   ├── dashboard/    # Student dashboard
+│   ├── instructor/   # Instructor portal
+│   ├── globals.css   # Global styles
+│   ├── layout.tsx    # Root layout
+│   └── page.tsx      # Homepage
+├── lib/              # Utilities and helpers
+│   └── booking-utils.ts
+├── public/           # Static assets
+├── package.json      # Dependencies
+├── tsconfig.json     # TypeScript config
 └── tailwind.config.js # Tailwind config
 ```
 
-## Development Roadmap
+## Development Status
 
 - [x] Phase 1: Project setup and planning
 - [x] Phase 2: Homepage design
-- [ ] Phase 2: Booking system
-- [ ] Phase 3: Student dashboard
-- [ ] Phase 3: Instructor portal
+- [x] Phase 2: Booking system
+- [x] Phase 3: Student dashboard
+- [x] Phase 3: Instructor portal
 - [ ] Phase 4: Payment integration
 - [ ] Phase 4: Testing and deployment
 
@@ -88,4 +105,4 @@ MIT
 
 ---
 
-Built with ❤️ for driving instructors
+Built with ❤️ by Drive With Bui

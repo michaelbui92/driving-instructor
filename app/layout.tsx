@@ -5,8 +5,8 @@ import './globals.css'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Driving Instructor - Professional Driving Lessons',
-  description: 'Get your license with confidence. Professional driving lessons with affordable packages.',
+  title: 'Drive With Bui - Professional Driving Lessons',
+  description: 'Get your license with confidence. Professional driving lessons tailored for international students and working holiday makers. Affordable packages with experienced instructors.',
 }
 
 export default function RootLayout({
