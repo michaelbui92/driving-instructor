@@ -6,6 +6,7 @@ export interface TimeSlot {
   time: string
   available: boolean
   price: number
+  isNightTime: boolean // Flag for 8pm bookings
 }
 
 export interface Booking {
@@ -28,12 +29,26 @@ export type BookingRequest = Omit<Booking, 'id' | 'status' | 'createdAt'>
 export function generateTimeSlots(): TimeSlot[] {
   const slots: TimeSlot[] = []
   const today = new Date()
-  const timeOptions = ['9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM']
 
   for (let i = 1; i <= 14; i++) {
     const date = new Date(today)
     date.setDate(today.getDate() + i)
     const dateString = date.toISOString().split('T')[0]
+    const dayOfWeek = date.getDay() // 0 = Sunday, 6 = Saturday
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+
+    let timeOptions: string[]
+
+    if (isWeekend) {
+      // Weekend: 8am to 7pm (every hour)
+      timeOptions = [
+        '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
+        '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM'
+      ]
+    } else {
+      // Weekday: 6pm, 7pm, 8pm only
+      timeOptions = ['6:00 PM', '7:00 PM', '8:00 PM']
+    }
 
     timeOptions.forEach((time) => {
       slots.push({
@@ -41,7 +56,8 @@ export function generateTimeSlots(): TimeSlot[] {
         date: dateString,
         time,
         available: true,
-        price: 45, // Default price, will be adjusted based on lesson type
+        price: 45,
+        isNightTime: time === '8:00 PM', // Flag 8pm as night time
       })
     })
   }
@@ -49,10 +65,43 @@ export function generateTimeSlots(): TimeSlot[] {
   return slots
 }
 
-// Get available slots for a specific date
-export function getAvailableSlots(date: string): TimeSlot[] {
-  const allSlots = generateTimeSlots()
-  return allSlots.filter((slot) => slot.date === date && slot.available)
+// Get available slots for a specific date, taking into account existing bookings
+// If 6pm is booked, 7pm is blocked. If 7pm is booked, 6pm is blocked.
+export function getAvailableSlots(date: string, existingBookings?: Booking[]): TimeSlot[] {
+  const allSlots = generateTimeSlots().filter((slot) => slot.date === date)
+  const slots = [...allSlots]
+
+  // Mark slots as unavailable based on existing bookings
+  if (existingBookings && existingBookings.length > 0) {
+    existingBookings
+      .filter(booking => booking.date === date && booking.status !== 'cancelled')
+      .forEach(booking => {
+        // Mark the booked slot as unavailable
+        const bookedSlotIndex = slots.findIndex(slot => slot.time === booking.time)
+        if (bookedSlotIndex !== -1) {
+          slots[bookedSlotIndex].available = false
+
+          // Blocking logic: if 6pm is booked, block 7pm. If 7pm is booked, block 6pm.
+          // This ensures full dedication to the student and allows for travel home.
+          const timeOptions = ['6:00 PM', '7:00 PM', '8:00 PM']
+
+          if (booking.time === '6:00 PM') {
+            const blockedIndex = slots.findIndex(slot => slot.time === '7:00 PM')
+            if (blockedIndex !== -1) {
+              slots[blockedIndex].available = false
+            }
+          } else if (booking.time === '7:00 PM') {
+            const blockedIndex = slots.findIndex(slot => slot.time === '6:00 PM')
+            if (blockedIndex !== -1) {
+              slots[blockedIndex].available = false
+            }
+          }
+        }
+      })
+  }
+
+  // Only return available slots
+  return slots.filter(slot => slot.available)
 }
 
 // Format date for display
@@ -64,6 +113,11 @@ export function formatDate(dateStr: string): string {
     month: 'long',
     year: 'numeric',
   })
+}
+
+// Check if a time slot is night time
+export function isNightTimeSlot(time: string): boolean {
+  return time === '8:00 PM'
 }
 
 // Validate booking details
@@ -106,7 +160,6 @@ export function getLessonPrice(lessonType: string): number {
     'single': 45,
     '5-pack': 220,
     '10-pack': 430,
-    'test-prep': 50,
   }
   return prices[lessonType] || 45
 }
@@ -117,7 +170,15 @@ export function getLessonTypeName(lessonType: string): string {
     'single': 'Single Lesson (60 min)',
     '5-pack': '5-Lesson Package',
     '10-pack': '10-Lesson Package',
-    'test-prep': 'Test Preparation (90 min)',
   }
   return names[lessonType] || lessonType
+}
+
+// Get lesson type options
+export function getLessonTypes() {
+  return [
+    { id: 'single', name: 'Single Lesson', duration: '60 min', price: 45 },
+    { id: '5-pack', name: '5-Lesson Package', duration: '5 × 60 min', price: 220 },
+    { id: '10-pack', name: '10-Lesson Package', duration: '10 × 60 min', price: 430 },
+  ]
 }

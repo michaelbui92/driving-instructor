@@ -23,7 +23,13 @@ A professional driving school booking system built with Next.js 14, specifically
 - Single Lesson: $45/60min
 - 5-Lesson Pack: $220 (save $5)
 - 10-Lesson Pack: $430 (save $20)
-- Test Preparation: $50/90min
+
+## Availability
+
+- **Weekdays:** Evenings only (6pm, 7pm, 8pm)
+- **Weekends:** 8am to 7pm
+- **Note:** If you book 6pm, 7pm is automatically blocked (allows for full lesson duration + travel time)
+- **Night Time:** 8pm bookings are marked as night time
 
 ## Contact
 

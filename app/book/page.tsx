@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
   generateTimeSlots,
@@ -8,6 +8,9 @@ import {
   getLessonPrice,
   getLessonTypeName,
   validateBooking,
+  getLessonTypes,
+  isNightTimeSlot,
+  getAvailableSlots,
   type Booking,
   type TimeSlot,
 } from '@/lib/booking-utils'
@@ -17,14 +20,23 @@ export default function BookPage() {
   const [booking, setBooking] = useState<Partial<Booking>>({
     lessonType: 'single',
   })
+  const [existingBookings, setExistingBookings] = useState<Booking[]>([])
+
+  // Load existing bookings on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('bookings')
+      if (stored) {
+        setExistingBookings(JSON.parse(stored))
+      }
+    } catch (error) {
+      console.error('Error loading bookings:', error)
+      setExistingBookings([])
+    }
+  }, [])
 
   // Step 1: Lesson Type Selection
-  const lessonTypes = [
-    { id: 'single', name: 'Single Lesson', duration: '60 min', price: 45 },
-    { id: '5-pack', name: '5-Lesson Package', duration: '5 × 60 min', price: 220 },
-    { id: '10-pack', name: '10-Lesson Package', duration: '10 × 60 min', price: 430 },
-    { id: 'test-prep', name: 'Test Preparation', duration: '90 min', price: 50 },
-  ]
+  const lessonTypes = getLessonTypes()
 
   // Step 2: Date and Time Selection
   const allSlots = generateTimeSlots()
@@ -32,7 +44,7 @@ export default function BookPage() {
 
   // Helper functions
   const getSlotsForDate = (date: string) => {
-    return allSlots.filter(slot => slot.date === date)
+    return getAvailableSlots(date, existingBookings)
   }
 
   const handleLessonTypeSelect = (typeId: string) => {
@@ -180,7 +192,13 @@ export default function BookPage() {
         {step === 2 && (
           <div>
             <h2 className="text-3xl font-bold mb-6">Select Date & Time</h2>
-            
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-yellow-800">
+                <strong>Availability:</strong> Weekday evenings (6pm-8pm), weekends (8am-7pm). <strong>Note:</strong> If you book 6pm, 7pm is blocked to ensure full dedication to your lesson. 8pm is a night time booking.
+              </p>
+            </div>
+
             <div className="space-y-6">
               {/* Date Selection */}
               <div>
@@ -213,6 +231,8 @@ export default function BookPage() {
                         className={`p-4 rounded-lg border-2 transition ${
                           booking.time === slot.time
                             ? 'border-primary bg-blue-50'
+                            : slot.isNightTime
+                            ? 'border-purple-300 bg-purple-50 hover:border-purple-400'
                             : 'border-gray-200 bg-white hover:border-primary'
                         }`}
                         onClick={(e) => {
@@ -221,6 +241,9 @@ export default function BookPage() {
                         }}
                       >
                         <div className="font-semibold">{slot.time}</div>
+                        {slot.isNightTime && (
+                          <div className="text-xs text-purple-700 mt-1">Night Time</div>
+                        )}
                       </button>
                     ))}
                   </div>
