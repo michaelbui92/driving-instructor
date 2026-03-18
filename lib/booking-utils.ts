@@ -204,7 +204,7 @@ export function validateBooking(booking: Partial<Booking>, selectedSlotIds?: str
   }
 
   // For packages, need to select required number of slots
-  if (booking.lessonType !== 'single' && selectedSlotIds) {
+  if (booking.lessonType && booking.lessonType !== 'single' && selectedSlotIds) {
     const requiredLessons = getRequiredLessons(booking.lessonType)
     if (selectedSlotIds.length < requiredLessons) {
       errors.push(`Please select ${requiredLessons} lessons for your package`)
