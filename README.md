@@ -1,88 +1,91 @@
 # Driving Instructor Website
 
-## 🚗 Professional Driving School Website
+A professional driving school booking system built with Next.js 14.
 
-Modern, responsive driving instructor website with integrated booking system and client management.
+## Features
 
-## 🚀 Live Demo
-[driving-instructor.vercel.app](https://driving-instructor.vercel.app)
+- ✨ Modern, responsive design
+- 📅 Online booking system
+- 💳 Package deals with discounts
+- 🎯 Student dashboard (coming soon)
+- 👨‍🏫 Instructor portal (coming soon)
+- 📱 Mobile-first design
+- 📧 Email notifications (coming soon)
 
-## ✨ Features
+## Pricing
 
-- 🎯 **Booking System** - Online lesson scheduling
-- 💰 **Package Deals** - Bulk lesson discounts
-- 📊 **Progress Tracking** - Student advancement monitoring
-- 📱 **Mobile First** - Responsive design
-- 📧 **Email Notifications** - Booking confirmations
-- 📅 **Calendar Sync** - Instructor schedule management
+- Single Lesson: $45/60min
+- 5-Lesson Pack: $220 (save $5)
+- 10-Lesson Pack: $430 (save $20)
+- Test Preparation: $50/90min
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-- **Framework:** Next.js 14
-- **Styling:** Tailwind CSS
-- **Database:** JSON files (simple, reliable)
-- **UI Components:** shadcn/ui
-- **Deployment:** Vercel
+- **Next.js 14** - React framework with App Router
+- **React 18** - UI library
+- **Tailwind CSS** - Styling
+- **TypeScript** - Type safety
+- **Vercel** - Deployment (recommended)
 
-## 📁 Project Structure
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+ installed
+- npm or yarn package manager
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone https://github.com/michaelbui92/driving-instructor.git
+cd driving-instructor
+```
+
+2. Install dependencies:
+```bash
+npm install
+# or
+yarn install
+```
+
+3. Run the development server:
+```bash
+npm run dev
+# or
+yarn dev
+```
+
+4. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+## Project Structure
 
 ```
 driving-instructor/
-├── pages/              # Next.js application pages
-├── components/         # React components
-├── lib/               # Utilities and helpers
-├── data/             # JSON data storage
-├── public/           # Static assets
-└── styles/           # CSS and styling
+├── app/              # Next.js App Router
+│   ├── globals.css  # Global styles
+│   ├── layout.tsx   # Root layout
+│   └── page.tsx     # Homepage
+├── public/          # Static assets
+├── package.json     # Dependencies
+├── tsconfig.json    # TypeScript config
+└── tailwind.config.js # Tailwind config
 ```
 
-## 🚦 Getting Started
+## Development Roadmap
 
-```bash
-# Install dependencies
-npm install
+- [x] Phase 1: Project setup and planning
+- [x] Phase 2: Homepage design
+- [ ] Phase 2: Booking system
+- [ ] Phase 3: Student dashboard
+- [ ] Phase 3: Instructor portal
+- [ ] Phase 4: Payment integration
+- [ ] Phase 4: Testing and deployment
 
-# Run development server
-npm run dev
+## License
 
-# Build for production
-npm run build
-```
-
-## 📋 Development Status
-
-Current progress: **Phase 1 - Foundation**
-
-- [x] Project setup
-- [ ] Homepage design
-- [ ] Navigation structure
-- [ ] Basic components
-- [ ] Booking system
-- [ ] Student dashboard
-- [ ] Instructor portal
-
-## 💰 Pricing Structure
-
-| Service | Price | Duration |
-|---------|-------|----------|
-| Single Lesson | $45 | 60 min |
-| 5-Lesson Pack | $220 | Save $5 |
-| 10-Lesson Pack | $430 | Save $20 |
-| Test Prep | $50 | 90 min |
-
-## 📍 Service Areas
-
-- **Sydney CBD** and surrounding suburbs
-- **Inner West** (Newtown, Marrickville, Summer Hill)
-- **Eastern Suburbs** (Bondi, Coogee, Randwick)
-- **North Shore** (Chatswood, North Sydney, Mosman)
-
-## 📞 Contact
-
-- **Phone:** 0412 345 678
-- **Email:** lessons@drivinginstructor.sydney
-- **Hours:** Mon-Fri 8am-7pm, Sat-Sun 9am-5pm
+MIT
 
 ---
 
-*Built with ❤️ by Nova AI Assistant*
+Built with ❤️ for driving instructors
