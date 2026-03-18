@@ -8,6 +8,7 @@ export default function DashboardPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [selectedTab, setSelectedTab] = useState<'upcoming' | 'completed'>('upcoming')
   const [reschedulingBooking, setReschedulingBooking] = useState<Booking | null>(null)
+  const [selectedNewDate, setSelectedNewDate] = useState<string>('')
 
   useEffect(() => {
     try {
@@ -54,9 +55,25 @@ export default function DashboardPage() {
 
   const handleReschedule = (booking: Booking) => {
     setReschedulingBooking(booking)
+    setSelectedNewDate(booking.date)
   }
 
   const saveReschedule = (newDate: string, newTime: string) => {
+    // Validate time based on day of week
+    const dateObj = new Date(newDate)
+    const dayOfWeek = dateObj.getDay()
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+
+    // Weekday: only 6pm, 7pm, 8pm
+    // Weekend: 8am to 7pm
+    if (!isWeekend) {
+      const weekdayTimes = ['6:00 PM', '7:00 PM', '8:00 PM']
+      if (!weekdayTimes.includes(newTime)) {
+        alert(`Invalid time for weekday. Available: ${weekdayTimes.join(', ')}`)
+        return
+      }
+    }
+
     try {
       const updatedBookings = bookings.map(b =>
         b.id === reschedulingBooking?.id
@@ -84,6 +101,25 @@ export default function DashboardPage() {
       }
     })
     return count
+  }
+
+  const getAvailableTimeOptions = (date: string) => {
+    if (!date) return []
+
+    const dateObj = new Date(date)
+    const dayOfWeek = dateObj.getDay()
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+
+    if (isWeekend) {
+      // Weekend: 8am to 7pm
+      return [
+        '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
+        '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM'
+      ]
+    } else {
+      // Weekday: 6pm, 7pm, 8pm only
+      return ['6:00 PM', '7:00 PM', '8:00 PM']
+    }
   }
 
   return (
@@ -330,6 +366,7 @@ export default function DashboardPage() {
                   id="newDate"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   defaultValue={reschedulingBooking.date}
+                  onChange={(e) => setSelectedNewDate(e.target.value)}
                 />
               </div>
 
@@ -340,26 +377,22 @@ export default function DashboardPage() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   defaultValue={reschedulingBooking.time}
                 >
-                  <option value="6:00 PM">6:00 PM</option>
-                  <option value="7:00 PM">7:00 PM</option>
-                  <option value="8:00 PM">8:00 PM (Night Time)</option>
-                  <option value="8:00 AM">8:00 AM</option>
-                  <option value="9:00 AM">9:00 AM</option>
-                  <option value="10:00 AM">10:00 AM</option>
-                  <option value="11:00 AM">11:00 AM</option>
-                  <option value="12:00 PM">12:00 PM</option>
-                  <option value="1:00 PM">1:00 PM</option>
-                  <option value="2:00 PM">2:00 PM</option>
-                  <option value="3:00 PM">3:00 PM</option>
-                  <option value="4:00 PM">4:00 PM</option>
-                  <option value="5:00 PM">5:00 PM</option>
-                  <option value="6:00 PM">6:00 PM</option>
-                  <option value="7:00 PM">7:00 PM</option>
+                  {getAvailableTimeOptions(selectedNewDate or reschedulingBooking.date).map(time => (
+                    <option key={time} value={time}>
+                      {time === '8:00 PM' ? `${time} (Night Time)` : time}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
-                <strong>Note:</strong> If you book 6pm, 7pm is automatically blocked to ensure full dedication to your lesson.
+                <strong>Availability:</strong>
+                <br />
+                • Weekdays: 6pm, 7pm, 8pm only
+                <br />
+                • Weekends: 8am to 7pm
+                <br />
+                • If you book 6pm, 7pm is blocked automatically
               </div>
             </div>
 

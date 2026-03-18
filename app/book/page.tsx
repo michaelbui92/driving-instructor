@@ -313,7 +313,7 @@ export default function BookPage() {
                           disabled={
                             booking.lessonType === 'single'
                               ? selectedSlotIds.includes(slot.id)
-                              : true // Only disable if already selected for single
+                              : selectedSlotIds.length >= requiredLessons && !selectedSlotIds.includes(slot.id)
                           }
                           className={`p-4 rounded-lg border-2 transition ${
                             selectedSlotIds.includes(slot.id)
