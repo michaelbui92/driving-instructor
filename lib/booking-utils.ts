@@ -73,11 +73,103 @@ export function generateTimeSlots(): TimeSlot[] {
   return slots
 }
 
-// Get available slots for a specific date, taking into account existing bookings
+// Instructor availability management
+export interface BlockedSlot {
+  date: string
+  time: string
+  reason?: string
+}
+
+const BLOCKED_SLOTS_KEY = 'instructor_blocked_slots'
+
+export function getBlockedSlots(): BlockedSlot[] {
+  try {
+    const stored = localStorage.getItem(BLOCKED_SLOTS_KEY)
+    return stored ? JSON.parse(stored) : []
+  } catch {
+    return []
+  }
+}
+
+export function addBlockedSlot(date: string, time: string, reason?: string): void {
+  const blocked = getBlockedSlots()
+  // Check if already blocked
+  if (!blocked.some(b => b.date === date && b.time === time)) {
+    blocked.push({ date, time, reason })
+    localStorage.setItem(BLOCKED_SLOTS_KEY, JSON.stringify(blocked))
+  }
+}
+
+export function removeBlockedSlot(date: string, time: string): void {
+  const blocked = getBlockedSlots().filter(b => !(b.date === date && b.time === time))
+  localStorage.setItem(BLOCKED_SLOTS_KEY, JSON.stringify(blocked))
+}
+
+export function isSlotBlocked(date: string, time: string): boolean {
+  const blocked = getBlockedSlots()
+  return blocked.some(b => b.date === date && b.time === time)
+}
+
+// Get blocked dates (dates where all/most slots are blocked)
+export function getBlockedDates(): string[] {
+  const blocked = getBlockedSlots()
+  const blockedDates = new Set<string>()
+  
+  // Generate all possible slots for the next 14 days
+  const allSlots = generateTimeSlots()
+  const slotsByDate: Record<string, string[]> = {}
+  
+  allSlots.forEach(slot => {
+    if (!slotsByDate[slot.date]) {
+      slotsByDate[slot.date] = []
+    }
+    slotsByDate[slot.date].push(slot.time)
+  })
+  
+  // Check each date to see if all weekday or all weekend slots are blocked
+  Object.keys(slotsByDate).forEach(date => {
+    const dateObj = new Date(date)
+    const dayOfWeek = dateObj.getDay()
+    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
+    
+    const times = slotsByDate[date]
+    const blockedForDate = blocked.filter(b => b.date === date)
+    
+    if (isWeekend) {
+      // Weekend: block date if all 8am-7pm slots are blocked
+      const weekendSlots = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
+        '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM']
+      const allBlocked = weekendSlots.every(t => 
+        blockedForDate.some(b => b.time === t) || 
+        times.every(slotTime => blockedForDate.some(b => b.time === slotTime))
+      )
+      if (blockedForDate.length >= 6) {
+        blockedDates.add(date)
+      }
+    } else {
+      // Weekday: block date if all 6pm, 7pm, 8pm slots are blocked
+      if (blockedForDate.length >= 2) {
+        blockedDates.add(date)
+      }
+    }
+  })
+  
+  return Array.from(blockedDates)
+}
+
+// Get available slots for a specific date, taking into account existing bookings AND instructor blocked slots
 // If 6pm is booked, 7pm is blocked. If 7pm is booked, 6pm is blocked.
 export function getAvailableSlots(date: string, existingBookings?: Booking[]): TimeSlot[] {
   const allSlots = generateTimeSlots().filter((slot) => slot.date === date)
   const slots = [...allSlots]
+  const blockedSlots = getBlockedSlots()
+  
+  // First, mark instructor-blocked slots as unavailable
+  slots.forEach(slot => {
+    if (blockedSlots.some(b => b.date === date && b.time === slot.time)) {
+      slot.available = false
+    }
+  })
 
   // Mark slots as unavailable based on existing bookings
   if (existingBookings && existingBookings.length > 0) {
@@ -92,8 +184,6 @@ export function getAvailableSlots(date: string, existingBookings?: Booking[]): T
               slots[bookedSlotIndex].available = false
 
               // Blocking logic: if 6pm is booked, block 7pm. If 7pm is booked, block 6pm.
-              const timeOptions = ['6:00 PM', '7:00 PM', '8:00 PM']
-
               if (booking.time === '6:00 PM') {
                 const blockedIndex = slots.findIndex(slot => slot.time === '7:00 PM')
                 if (blockedIndex !== -1) {
@@ -118,8 +208,6 @@ export function getAvailableSlots(date: string, existingBookings?: Booking[]): T
                 slots[bookedSlotIndex].available = false
 
                 // Blocking logic for package bookings
-                const timeOptions = ['6:00 PM', '7:00 PM', '8:00 PM']
-
                 if (slot.time === '6:00 PM') {
                   const blockedIndex = slots.findIndex(s => s.time === '7:00 PM')
                   if (blockedIndex !== -1) {
@@ -172,7 +260,60 @@ export function isNightTimeSlot(time: string): boolean {
   return time === '8:00 PM'
 }
 
-// Validate booking details
+// Step-specific validation functions
+export function validateStep1(booking: Partial<Booking>): { valid: boolean; errors: string[] } {
+  const errors: string[] = []
+  if (!booking.lessonType) {
+    errors.push('Please select a lesson type')
+  }
+  return { valid: errors.length === 0, errors }
+}
+
+export function validateStep2(booking: Partial<Booking>, selectedSlotIds: string[], allowPartial: boolean = false): { valid: boolean; errors: string[] } {
+  const errors: string[] = []
+  const requiredLessons = getRequiredLessons(booking.lessonType || 'single')
+
+  if (booking.lessonType === 'single') {
+    if (!booking.date) {
+      errors.push('Please select a date')
+    }
+    if (!booking.time) {
+      errors.push('Please select a time slot')
+    }
+    if (selectedSlotIds.length === 0) {
+      errors.push('Please select at least one time slot')
+    }
+  } else {
+    // Package validation
+    if (selectedSlotIds.length === 0) {
+      errors.push('Please select at least one lesson slot')
+    } else if (!allowPartial && selectedSlotIds.length < requiredLessons) {
+      errors.push(`Please select at least ${requiredLessons} lessons for your package, or choose "I'll choose remaining lessons later"`)
+    }
+  }
+
+  return { valid: errors.length === 0, errors }
+}
+
+export function validateStep3(booking: Partial<Booking>): { valid: boolean; errors: string[] } {
+  const errors: string[] = []
+
+  if (!booking.studentName || booking.studentName.trim().length === 0) {
+    errors.push('Student name is required')
+  }
+
+  if (!booking.email || !booking.email.includes('@')) {
+    errors.push('Valid email is required')
+  }
+
+  if (!booking.phone || booking.phone.trim().length < 10) {
+    errors.push('Valid phone number is required')
+  }
+
+  return { valid: errors.length === 0, errors }
+}
+
+// Validate booking details (full validation)
 export function validateBooking(booking: Partial<Booking>, selectedSlotIds?: string[]): { valid: boolean; errors: string[] } {
   const errors: string[] = []
 
@@ -203,11 +344,10 @@ export function validateBooking(booking: Partial<Booking>, selectedSlotIds?: str
     }
   }
 
-  // For packages, need to select required number of slots
+  // For packages, need at least 1 slot selected (full validation happens on submit)
   if (booking.lessonType && booking.lessonType !== 'single' && selectedSlotIds) {
-    const requiredLessons = getRequiredLessons(booking.lessonType)
-    if (selectedSlotIds.length < requiredLessons) {
-      errors.push(`Please select ${requiredLessons} lessons for your package`)
+    if (selectedSlotIds.length === 0) {
+      errors.push('Please select at least one lesson slot')
     }
   }
 

@@ -7,7 +7,9 @@ import {
   formatDate,
   getLessonPrice,
   getLessonTypeName,
-  validateBooking,
+  validateStep1,
+  validateStep2,
+  validateStep3,
   getLessonTypes,
   isNightTimeSlot,
   getAvailableSlots,
@@ -24,6 +26,7 @@ export default function BookPage() {
   })
   const [selectedSlotIds, setSelectedSlotIds] = useState<string[]>([])
   const [existingBookings, setExistingBookings] = useState<Booking[]>([])
+  const [deferRemainingSlots, setDeferRemainingSlots] = useState(false)
 
   // Load existing bookings on mount
   useEffect(() => {
@@ -56,6 +59,7 @@ export default function BookPage() {
   const handleLessonTypeSelect = (typeId: string) => {
     setBooking(prev => ({ ...prev, lessonType: typeId }))
     setSelectedSlotIds([]) // Reset selections when changing package
+    setDeferRemainingSlots(false) // Reset defer option
   }
 
   const handleSlotToggle = (slot: TimeSlot) => {
@@ -75,10 +79,16 @@ export default function BookPage() {
       setSelectedSlotIds(prev => {
         if (prev.includes(slotId)) {
           return prev.filter(id => id !== slotId)
-        } else if (prev.length < requiredLessons) {
-          return [...prev, slotId]
+        } else {
+          // When deferring, allow selecting any number of slots (1 or more)
+          // When not deferring, cap at required lessons
+          if (deferRemainingSlots) {
+            return [...prev, slotId]
+          } else if (prev.length < requiredLessons) {
+            return [...prev, slotId]
+          }
+          return prev // Don't exceed required lessons when not deferring
         }
-        return prev // Don't exceed required lessons
       })
     }
   }
@@ -92,18 +102,21 @@ export default function BookPage() {
 
   const handleNext = () => {
     if (step === 1) {
-      if (booking.lessonType) {
+      const validation = validateStep1(booking)
+      if (validation.valid) {
         setStep(2)
+      } else {
+        alert(validation.errors.join('\n'))
       }
     } else if (step === 2) {
-      const validation = validateBooking(booking, selectedSlotIds)
+      const validation = validateStep2(booking, selectedSlotIds, deferRemainingSlots)
       if (validation.valid) {
         setStep(3)
       } else {
         alert(validation.errors.join('\n'))
       }
     } else if (step === 3) {
-      const validation = validateBooking(booking, selectedSlotIds)
+      const validation = validateStep3(booking)
       if (validation.valid) {
         setStep(4)
       } else {
@@ -313,7 +326,7 @@ export default function BookPage() {
                           disabled={
                             booking.lessonType === 'single'
                               ? selectedSlotIds.includes(slot.id)
-                              : selectedSlotIds.length >= requiredLessons && !selectedSlotIds.includes(slot.id)
+                              : !deferRemainingSlots && selectedSlotIds.length >= requiredLessons && !selectedSlotIds.includes(slot.id)
                           }
                           className={`p-4 rounded-lg border-2 transition ${
                             selectedSlotIds.includes(slot.id)
@@ -321,7 +334,7 @@ export default function BookPage() {
                               : slot.isNightTime
                               ? 'border-purple-300 bg-purple-50 hover:border-purple-400'
                               : 'border-gray-200 bg-white hover:border-primary'
-                          } ${booking.lessonType === 'single' && selectedSlotIds.includes(slot.id) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          } ${!deferRemainingSlots && selectedSlotIds.length >= requiredLessons && !selectedSlotIds.includes(slot.id) ? 'opacity-50 cursor-not-allowed' : ''}`}
                           onClick={(e) => {
                             e.stopPropagation()
                             handleSlotToggle(slot)
@@ -354,6 +367,44 @@ export default function BookPage() {
                       </div>
                     ))}
                   </div>
+                  
+                  {/* Defer Option */}
+                  {selectedSlotIds.length < requiredLessons && (
+                    <div className="mt-4 pt-4 border-t border-blue-200">
+                      <label className="flex items-start cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={deferRemainingSlots}
+                          onChange={(e) => setDeferRemainingSlots(e.target.checked)}
+                          className="mt-1 mr-3 h-5 w-5 text-primary border-gray-300 rounded focus:ring-primary"
+                        />
+                        <div>
+                          <span className="font-semibold text-blue-800">I'll choose the remaining lessons later</span>
+                          <p className="text-sm text-blue-700 mt-1">
+                            You've selected {selectedSlotIds.length} of {requiredLessons} lessons. You can book the remaining lessons at any time by contacting Bui directly.
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+                  )}
+                  
+                  {/* Show message if user can't select more without deferring */}
+                  {selectedSlotIds.length >= requiredLessons && !deferRemainingSlots && (
+                    <div className="mt-4 pt-4 border-t border-blue-200">
+                      <p className="text-sm text-green-700">
+                        ✓ You've selected all {requiredLessons} lessons for this package!
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {/* Prompt to select slots if none selected */}
+              {booking.lessonType !== 'single' && selectedSlotIds.length === 0 && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <p className="text-yellow-800 text-sm">
+                    <strong>Tip:</strong> Select at least one lesson slot above, or select all {requiredLessons} if you know your schedule. You can also choose to defer remaining lessons.
+                  </p>
                 </div>
               )}
             </div>
@@ -526,9 +577,9 @@ export default function BookPage() {
                 (step === 2 && (
                   booking.lessonType === 'single'
                     ? (!booking.date || !booking.time)
-                    : selectedSlotIds.length < requiredLessons
+                    : selectedSlotIds.length === 0
                 )) ||
-                (step === 3 && !validateBooking(booking, selectedSlotIds).valid)
+                (step === 3 && !validateStep3(booking).valid)
               }
               className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
