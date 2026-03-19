@@ -23,8 +23,8 @@ export default function Home() {
               <Link href="#pricing" className="text-gray-700 hover:text-primary transition">Pricing</Link>
               <Link href="#about" className="text-gray-700 hover:text-primary transition">About</Link>
               <Link href="#contact" className="text-gray-700 hover:text-primary transition">Contact</Link>
-              <Link href="/dashboard" className="text-gray-700 hover:text-primary transition">Dashboard</Link>
-              <Link href="/instructor" className="text-gray-700 hover:text-primary transition">Instructor</Link>
+              <Link href="/dashboard" className="px-4 py-2 border-2 border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition">Login as Student</Link>
+              <Link href="/instructor" className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition">Login as Instructor</Link>
               <Link
                 href="/book"
                 className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-secondary transition"
@@ -59,8 +59,8 @@ export default function Home() {
               <Link href="#pricing" className="block px-4 py-2 text-gray-700 hover:text-primary hover:bg-blue-50">Pricing</Link>
               <Link href="#about" className="block px-4 py-2 text-gray-700 hover:text-primary hover:bg-blue-50">About</Link>
               <Link href="#contact" className="block px-4 py-2 text-gray-700 hover:text-primary hover:bg-blue-50">Contact</Link>
-              <Link href="/dashboard" className="block px-4 py-2 text-gray-700 hover:text-primary hover:bg-blue-50">Dashboard</Link>
-              <Link href="/instructor" className="block px-4 py-2 text-gray-700 hover:text-primary hover:bg-blue-50">Instructor</Link>
+              <Link href="/dashboard" className="block px-4 py-2 text-gray-700 hover:text-primary hover:bg-blue-50">Login as Student</Link>
+              <Link href="/instructor" className="block px-4 py-2 text-gray-700 hover:text-primary hover:bg-blue-50">Login as Instructor</Link>
               <Link
                 href="/book"
                 className="block px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition text-center mx-4"
@@ -204,7 +204,7 @@ export default function Home() {
                 <span className="text-3xl mr-4">✓</span>
                 <div>
                   <h3 className="text-xl font-bold mb-2">Flexible Scheduling</h3>
-                  <p className="text-gray-600">Weekday evenings 6pm-8pm, weekends 8am-7pm - fits around study or work</p>
+                  <p className="text-gray-600">Weekdays 9am-8pm, weekends 8am-7pm - fits around study or work</p>
                 </div>
               </div>
               <div className="flex items-start">

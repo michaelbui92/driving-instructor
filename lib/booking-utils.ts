@@ -33,12 +33,12 @@ export interface LessonSlot {
 // Explicit Booking type export (redundant but explicit for clarity)
 export type BookingRequest = Omit<Booking, 'id' | 'status' | 'createdAt'>
 
-// Generate time slots for next 14 days
+// Generate time slots for next 28 days (4 weeks)
 export function generateTimeSlots(): TimeSlot[] {
   const slots: TimeSlot[] = []
   const today = new Date()
 
-  for (let i = 1; i <= 14; i++) {
+  for (let i = 1; i <= 28; i++) {
     const date = new Date(today)
     date.setDate(today.getDate() + i)
     const dateString = date.toISOString().split('T')[0]
@@ -48,14 +48,17 @@ export function generateTimeSlots(): TimeSlot[] {
     let timeOptions: string[]
 
     if (isWeekend) {
-      // Weekend: 8am to 7pm (every hour)
+      // Weekend: 8am to 7pm (every hour EXCEPT 12pm)
       timeOptions = [
-        '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
+        '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM',
         '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM'
       ]
     } else {
-      // Weekday: 6pm, 7pm, 8pm only
-      timeOptions = ['6:00 PM', '7:00 PM', '8:00 PM']
+      // Weekday: 9am to 8pm (every hour EXCEPT 12pm)
+      timeOptions = [
+        '9:00 AM', '10:00 AM', '11:00 AM',
+        '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM'
+      ]
     }
 
     timeOptions.forEach((time) => {
@@ -158,7 +161,6 @@ export function getBlockedDates(): string[] {
 }
 
 // Get available slots for a specific date, taking into account existing bookings AND instructor blocked slots
-// If 6pm is booked, 7pm is blocked. If 7pm is booked, 6pm is blocked.
 export function getAvailableSlots(date: string, existingBookings?: Booking[]): TimeSlot[] {
   const allSlots = generateTimeSlots().filter((slot) => slot.date === date)
   const slots = [...allSlots]
@@ -182,19 +184,6 @@ export function getAvailableSlots(date: string, existingBookings?: Booking[]): T
             const bookedSlotIndex = slots.findIndex(slot => slot.time === booking.time)
             if (bookedSlotIndex !== -1) {
               slots[bookedSlotIndex].available = false
-
-              // Blocking logic: if 6pm is booked, block 7pm. If 7pm is booked, block 6pm.
-              if (booking.time === '6:00 PM') {
-                const blockedIndex = slots.findIndex(slot => slot.time === '7:00 PM')
-                if (blockedIndex !== -1) {
-                  slots[blockedIndex].available = false
-                }
-              } else if (booking.time === '7:00 PM') {
-                const blockedIndex = slots.findIndex(slot => slot.time === '6:00 PM')
-                if (blockedIndex !== -1) {
-                  slots[blockedIndex].available = false
-                }
-              }
             }
           }
         }
@@ -206,19 +195,6 @@ export function getAvailableSlots(date: string, existingBookings?: Booking[]): T
               const bookedSlotIndex = slots.findIndex(s => s.time === slot.time)
               if (bookedSlotIndex !== -1) {
                 slots[bookedSlotIndex].available = false
-
-                // Blocking logic for package bookings
-                if (slot.time === '6:00 PM') {
-                  const blockedIndex = slots.findIndex(s => s.time === '7:00 PM')
-                  if (blockedIndex !== -1) {
-                    slots[blockedIndex].available = false
-                  }
-                } else if (slot.time === '7:00 PM') {
-                  const blockedIndex = slots.findIndex(s => s.time === '6:00 PM')
-                  if (blockedIndex !== -1) {
-                    slots[blockedIndex].available = false
-                  }
-                }
               }
             }
           })
