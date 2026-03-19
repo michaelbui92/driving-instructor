@@ -377,7 +377,7 @@ export default function DashboardPage() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   defaultValue={reschedulingBooking.time}
                 >
-                  {getAvailableTimeOptions(selectedNewDate or reschedulingBooking.date).map(time => (
+                  {getAvailableTimeOptions(selectedNewDate || reschedulingBooking.date).map(time => (
                     <option key={time} value={time}>
                       {time === '8:00 PM' ? `${time} (Night Time)` : time}
                     </option>
