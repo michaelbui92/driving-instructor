@@ -113,8 +113,8 @@ export default function Home() {
             </div>
             <div className="text-center p-6 rounded-lg bg-blue-50 hover:shadow-xl transition">
               <div className="text-5xl mb-4">💰</div>
-              <h3 className="text-xl font-bold mb-2">Affordable Packages</h3>
-              <p className="text-gray-600">Save money with our discounted lesson packages</p>
+              <h3 className="text-xl font-bold mb-2">Flexible Pricing</h3>
+              <p className="text-gray-600">Book single lessons at competitive rates</p>
             </div>
           </div>
         </div>

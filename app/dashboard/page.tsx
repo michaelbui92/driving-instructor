@@ -94,12 +94,12 @@ export default function DashboardPage() {
     try {
       const updatedBookings = bookings.map(b =>
         b.id === reschedulingBooking?.id
-          ? { ...b, date: newDate, time: newTime }
+          ? { ...b, date: newDate, time: newTime, status: 'pending' as const }
           : b
       )
       setBookings(updatedBookings)
       localStorage.setItem('bookings', JSON.stringify(updatedBookings))
-      alert('Booking rescheduled successfully')
+      alert('Booking rescheduled successfully. Instructor confirmation required.')
       setReschedulingBooking(null)
     } catch (error) {
       console.error('Error rescheduling booking:', error)
@@ -400,6 +400,8 @@ export default function DashboardPage() {
                 • Weekends: 8am to 7pm
                 <br />
                 • If you book 6pm, 7pm is blocked automatically
+                <br />
+                <strong>Important:</strong> After rescheduling, your booking will require instructor confirmation again.
               </div>
             </div>
 

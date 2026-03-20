@@ -39,11 +39,11 @@ export default function DynamicHeadline() {
           setTypedPortion(currentPhrase.slice(0, typedPortion.length + 1))
         }, 50) // Typing speed: ~50ms per character
       } else {
-        // Finished typing, pause for 2 seconds
+        // Finished typing, pause for 1 second
         setPhase('pausing')
         timeoutId = setTimeout(() => {
           setPhase('deleting')
-        }, 2000)
+        }, 1000)
       }
     } else if (phase === 'deleting') {
       // Backspace character by character

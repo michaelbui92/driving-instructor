@@ -50,9 +50,8 @@ export default function BookPage() {
 
   // Helper functions
   const getSlotsForDate = (date: string) => {
-    return getAvailableSlots(date, existingBookings.filter(b =>
-      b.status !== 'cancelled' && selectedSlotIds.includes(`${b.date}-${b.time}`)
-    ))
+    // Get all existing bookings (not cancelled) to check availability
+    return getAvailableSlots(date, existingBookings.filter(b => b.status !== 'cancelled'))
   }
 
   const handleLessonTypeSelect = (typeId: string) => {
@@ -220,7 +219,7 @@ export default function BookPage() {
 
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
               <p className="text-sm text-yellow-800">
-                <strong>Availability:</strong> Weekday evenings (6pm-8pm), weekends (8am-7pm). <strong>Note:</strong> If you book 6pm, 7pm is blocked to ensure full dedication to your lesson. 8pm is a night time booking.
+                <strong>Availability:</strong> Weekday evenings (6pm-8pm), weekends (8am-7pm). <strong>Note:</strong> If you book 6pm, 7pm is blocked to ensure full dedication to your lesson. 8pm is a night time booking. Some days may have limited availability due to max booking rules.
               </p>
             </div>
 

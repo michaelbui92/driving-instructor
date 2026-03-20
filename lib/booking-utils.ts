@@ -152,8 +152,14 @@ export function getApplicableRules(date: string, time: string, existingBookings:
 
     if (!appliesToDay) return false
 
-    // For Phase 3a, we only handle TIME_BLOCK and EXCEPTION rules
-    // Phase 3b will add date range and max booking logic
+    // Check repeat type (for one-time rules, check date range)
+    if (rule.repeatType === RepeatType.ONE_TIME) {
+      // One-time rules need date range filtering - to be implemented
+      // For now, always return false for ONE_TIME rules
+      return false
+    }
+
+    // Handle different rule types
     if (rule.type === RuleType.TIME_BLOCK || rule.type === RuleType.EXCEPTION) {
       // Check if time is within the rule's time range
       if (rule.startTime && rule.endTime) {
@@ -161,8 +167,12 @@ export function getApplicableRules(date: string, time: string, existingBookings:
       }
     }
 
-    // Phase 3b: Handle MAX_BOOKING rules and ONE_TIME date range filtering
-    // For Phase 3a, we only support TIME_BLOCK and EXCEPTION rules
+    if (rule.type === RuleType.MAX_BOOKING) {
+      // MAX_BOOKING rules apply regardless of specific time
+      // They apply to the entire day based on dayType
+      return true
+    }
+
     return false
   })
 }
@@ -198,8 +208,18 @@ export function shouldBlockSlot(date: string, time: string, existingBookings: Bo
         return false // This is an exception, make it available
       }
     } else if (rule.type === RuleType.MAX_BOOKING) {
-      // Phase 3b: Will handle max booking limit
-      // For Phase 3a, max booking rules are not yet implemented
+      // Check if max booking limit has been reached for this day
+      if (rule.maxBookings !== undefined) {
+        // Count existing bookings for this day (excluding cancelled)
+        const bookingsForDay = existingBookings.filter(
+          b => b.date === date && b.status !== 'cancelled'
+        )
+
+        // If we've reached or exceeded the max, block ALL remaining slots for the day
+        if (bookingsForDay.length >= rule.maxBookings) {
+          return true // Block this slot
+        }
+      }
     }
   }
 
@@ -366,25 +386,42 @@ export function getAvailableSlots(date: string, existingBookings?: Booking[]): T
   const allSlots = generateTimeSlots().filter((slot) => slot.date === date)
   const slots = [...allSlots]
   const blockedSlots = getBlockedSlots()
-  
-  // First, mark instructor-blocked slots as unavailable
-  slots.forEach(slot => {
-    if (blockedSlots.some(b => b.date === date && b.time === slot.time)) {
-      slot.available = false
-    }
-  })
 
-  // Mark slots as unavailable based on availability rules
-  slots.forEach(slot => {
-    if (shouldBlockSlot(date, slot.time, existingBookings)) {
-      slot.available = false
-    }
-  })
+  // Priority order for slot blocking:
+  // 1. MAX_BOOKING rules (if day limit reached, block all remaining slots)
+  // 2. Existing bookings (block specific time slots that are pending/confirmed)
+  // 3. TIME_BLOCK/EXCEPTION rules
+  // 4. Manual instructor blocks
 
-  // Mark slots as unavailable based on existing bookings
+  // Step 1: Check MAX_BOOKING rules first (highest priority)
+  const sortedRules = getSortedRules()
+  for (const rule of sortedRules) {
+    if (rule.type === RuleType.MAX_BOOKING && rule.maxBookings !== undefined) {
+      // Check if day type applies
+      const appliesToDay =
+        rule.dayType === DayType.ALL_DAYS ||
+        (rule.dayType === DayType.WEEKDAY && isWeekdayDay(date)) ||
+        (rule.dayType === DayType.WEEKEND && isWeekendDay(date))
+
+      if (appliesToDay) {
+        // Count existing bookings for this day (excluding cancelled)
+        const bookingsForDay = existingBookings
+          ? existingBookings.filter(b => b.date === date && (b.status === 'pending' || b.status === 'confirmed'))
+          : []
+
+        // If we've reached or exceeded the max, block ALL remaining slots for the day
+        if (bookingsForDay.length >= rule.maxBookings) {
+          slots.forEach(slot => { slot.available = false })
+          return slots.filter(slot => slot.available)
+        }
+      }
+    }
+  }
+
+  // Step 2: Mark slots as unavailable based on existing bookings (pending or confirmed)
   if (existingBookings && existingBookings.length > 0) {
     existingBookings
-      .filter(booking => booking.status !== 'cancelled')
+      .filter(booking => booking.status === 'pending' || booking.status === 'confirmed')
       .forEach(booking => {
         // With new structure: each booking (even packages) has its own date and time
         // Packages are split into individual bookings, so we just check booking.date and booking.time
@@ -396,6 +433,20 @@ export function getAvailableSlots(date: string, existingBookings?: Booking[]): T
         }
       })
   }
+
+  // Step 3: Mark slots as unavailable based on availability rules (TIME_BLOCK/EXCEPTION)
+  slots.forEach(slot => {
+    if (shouldBlockSlot(date, slot.time, existingBookings)) {
+      slot.available = false
+    }
+  })
+
+  // Step 4: Mark instructor-blocked slots as unavailable
+  slots.forEach(slot => {
+    if (blockedSlots.some(b => b.date === date && b.time === slot.time)) {
+      slot.available = false
+    }
+  })
 
   // Only return available slots
   return slots.filter(slot => slot.available)
