@@ -299,12 +299,6 @@ export default function DashboardPage() {
                                 >
                                   Cancel
                                 </button>
-                                <button
-                                  onClick={() => completeBooking(booking.id)}
-                                  className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition"
-                                >
-                                  Complete
-                                </button>
                               </>
                             )}
                           </div>
@@ -349,28 +343,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Progress Section */}
-        {completedBookings.length > 0 && (
-          <div className="bg-white rounded-xl p-6 shadow-lg mt-8">
-            <h2 className="text-2xl font-bold mb-4">Your Progress</h2>
-            <div className="mb-4">
-              <div className="flex justify-between mb-2">
-                <span className="font-semibold">Lessons Completed</span>
-                <span className="font-semibold">{completedBookings.length} bookings</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-4">
-                <div
-                  className="bg-primary h-4 rounded-full transition-all"
-                  style={{ width: `${Math.min((completedBookings.length / 10) * 100, 100)}%` }}
-                />
-              </div>
-            </div>
-            {completedBookings.length >= 5 && (
-              <p className="text-green-600 font-semibold">🎉 Great progress! Keep going!</p>
-            )}
-          </div>
-        )}
-      </div>
+        </div>
 
       {/* Reschedule Modal */}
       {reschedulingBooking && (

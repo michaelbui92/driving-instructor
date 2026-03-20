@@ -406,8 +406,6 @@ export function getRequiredLessons(lessonType: string): number {
   switch (lessonType) {
     case 'single':
       return 1
-    case '5-pack':
-      return 5
     default:
       return 1
   }
@@ -529,25 +527,22 @@ export function validateBooking(booking: Partial<Booking>, selectedSlotIds?: str
 // Get price for lesson type
 export function getLessonPrice(lessonType: string): number {
   const prices: Record<string, number> = {
-    'single': 45,
-    '5-pack': 220,
+    'single': 50,
   }
-  return prices[lessonType] || 45
+  return prices[lessonType] || 50
 }
 
 // Get lesson type display name
 export function getLessonTypeName(lessonType: string): string {
   const names: Record<string, string> = {
     'single': 'Single Lesson (60 min)',
-    '5-pack': '5-Lesson Package',
   }
-  return names[lessonType] || lessonType
+  return names[lessonType] || 'Single Lesson (60 min)'
 }
 
 // Get lesson type options
 export function getLessonTypes() {
   return [
-    { id: 'single', name: 'Single Lesson', duration: '60 min', price: 45 },
-    { id: '5-pack', name: '5-Lesson Package', duration: '5 × 60 min', price: 220 },
+    { id: 'single', name: 'Single Lesson', duration: '60 min', price: 50 },
   ]
 }

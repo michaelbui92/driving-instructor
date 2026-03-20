@@ -872,6 +872,37 @@ export default function InstructorPage() {
           <p className="text-gray-600">Manage your schedule and student bookings</p>
         </div>
 
+        {/* Pending Bookings Notification */}
+        {bookings.filter(b => b.status === 'pending').length > 0 && (
+          <div className="bg-yellow-50 border-2 border-yellow-400 rounded-xl p-6 mb-8 shadow-md">
+            <h2 className="text-xl font-bold text-yellow-800 mb-4">⚠️ Pending Bookings Confirmation Required</h2>
+            <div className="space-y-3">
+              {bookings.filter(b => b.status === 'pending').map((booking) => (
+                <div key={booking.id} className="flex items-center justify-between bg-white rounded-lg p-4 border border-yellow-300">
+                  <div>
+                    <p className="font-semibold text-gray-900">{booking.studentName}</p>
+                    <p className="text-sm text-gray-600">{formatDate(booking.date)} at {booking.time} - ${booking.price}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => { updateBookingStatus(booking.id, 'confirmed') }}
+                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold"
+                    >
+                      Confirm
+                    </button>
+                    <button
+                      onClick={() => { updateBookingStatus(booking.id, 'cancelled') }}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl p-6 shadow-lg">
             <div className="text-3xl mb-2">📅</div>
@@ -1022,10 +1053,13 @@ export default function InstructorPage() {
                 <div className="border-t pt-6">
                   <p className="text-sm text-gray-600 mb-4">Update Status</p>
                   <div className="flex flex-wrap gap-3">
-                    {selectedBooking.status !== 'confirmed' && (
+                    {selectedBooking.status !== 'confirmed' && selectedBooking.status !== 'completed' && (
                       <button onClick={() => { updateBookingStatus(selectedBooking.id, 'confirmed'); setSelectedBooking(null) }} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">Confirm Booking</button>
                     )}
-                    {selectedBooking.status !== 'cancelled' && (
+                    {selectedBooking.status === 'confirmed' && (
+                      <button onClick={() => { updateBookingStatus(selectedBooking.id, 'completed'); setSelectedBooking(null) }} className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">Mark as Completed</button>
+                    )}
+                    {selectedBooking.status !== 'cancelled' && selectedBooking.status !== 'completed' && (
                       <button onClick={() => { updateBookingStatus(selectedBooking.id, 'cancelled'); setSelectedBooking(null) }} className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">Cancel Booking</button>
                     )}
                   </div>

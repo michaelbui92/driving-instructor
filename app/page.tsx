@@ -123,47 +123,18 @@ export default function Home() {
       {/* Pricing Section */}
       <section className="py-16 bg-gradient-to-b from-blue-50 to-indigo-100" id="pricing">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Pricing Packages</h2>
-          <div className="grid md:grid-cols-3 gap-8">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Pricing</h2>
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Single Lesson */}
-            <div className="bg-white rounded-xl shadow-lg p-8 hover:shadow-2xl transition">
+            <div className="bg-white rounded-xl shadow-lg p-8 border-2 border-primary hover:shadow-2xl transition transform scale-105">
               <h3 className="text-2xl font-bold mb-4">Single Lesson</h3>
-              <div className="text-4xl font-bold text-primary mb-4">$45</div>
+              <div className="text-4xl font-bold text-primary mb-4">$50</div>
               <p className="text-gray-600 mb-6">60 minutes of professional instruction</p>
               <Link
                 href="/book"
-                className="block w-full border-2 border-primary text-primary text-center py-3 rounded-lg hover:bg-primary hover:text-white transition"
+                className="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-secondary transition font-semibold"
               >
                 Book Now
-              </Link>
-            </div>
-
-            {/* 5 Lesson Pack */}
-            <div className="bg-white rounded-xl shadow-lg p-8 border-2 border-primary hover:shadow-2xl transition transform scale-105">
-              <div className="bg-primary text-white text-sm px-3 py-1 rounded-full inline-block mb-4">Most Popular</div>
-              <h3 className="text-2xl font-bold mb-4">5 Lesson Pack</h3>
-              <div className="text-4xl font-bold text-primary mb-4">$220</div>
-              <p className="text-gray-600 mb-2">5 × 60-minute lessons</p>
-              <p className="text-green-600 mb-6">Save $5</p>
-              <Link
-                href="/book"
-                className="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-secondary transition"
-              >
-                Get Started
-              </Link>
-            </div>
-
-            {/* 10 Lesson Pack */}
-            <div className="bg-white rounded-xl shadow-lg p-8 hover:shadow-2xl transition">
-              <h3 className="text-2xl font-bold mb-4">10 Lesson Pack</h3>
-              <div className="text-4xl font-bold text-primary mb-4">$430</div>
-              <p className="text-gray-600 mb-2">10 × 60-minute lessons</p>
-              <p className="text-green-600 mb-6">Save $20</p>
-              <Link
-                href="/book"
-                className="block w-full border-2 border-primary text-primary text-center py-3 rounded-lg hover:bg-primary hover:text-white transition"
-              >
-                Get Started
               </Link>
             </div>
           </div>

@@ -26,7 +26,6 @@ export default function BookPage() {
   })
   const [selectedSlotIds, setSelectedSlotIds] = useState<string[]>([])
   const [existingBookings, setExistingBookings] = useState<Booking[]>([])
-  const [deferRemainingSlots, setDeferRemainingSlots] = useState(false)
 
   // Load existing bookings on mount
   useEffect(() => {
@@ -58,39 +57,20 @@ export default function BookPage() {
 
   const handleLessonTypeSelect = (typeId: string) => {
     setBooking(prev => ({ ...prev, lessonType: typeId }))
-    setSelectedSlotIds([]) // Reset selections when changing package
-    setDeferRemainingSlots(false) // Reset defer option
+    setSelectedSlotIds([]) // Reset selections
   }
 
   const handleSlotToggle = (slot: TimeSlot) => {
     const slotId = slot.id
 
-    if (booking.lessonType === 'single') {
-      // Single lesson: select this slot, deselect all others
-      setBooking(prev => ({
-        ...prev,
-        date: slot.date,
-        time: slot.time,
-        price: getLessonPrice(prev.lessonType || 'single'),
-      }))
-      setSelectedSlotIds([slotId])
-    } else {
-      // Package: toggle this slot
-      setSelectedSlotIds(prev => {
-        if (prev.includes(slotId)) {
-          return prev.filter(id => id !== slotId)
-        } else {
-          // When deferring, allow selecting any number of slots (1 or more)
-          // When not deferring, cap at required lessons
-          if (deferRemainingSlots) {
-            return [...prev, slotId]
-          } else if (prev.length < requiredLessons) {
-            return [...prev, slotId]
-          }
-          return prev // Don't exceed required lessons when not deferring
-        }
-      })
-    }
+    // Single lesson: select this slot, deselect all others
+    setBooking(prev => ({
+      ...prev,
+      date: slot.date,
+      time: slot.time,
+      price: getLessonPrice(prev.lessonType || 'single'),
+    }))
+    setSelectedSlotIds([slotId])
   }
 
   const handlePersonalInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -109,7 +89,7 @@ export default function BookPage() {
         alert(validation.errors.join('\n'))
       }
     } else if (step === 2) {
-      const validation = validateStep2(booking, selectedSlotIds, deferRemainingSlots)
+      const validation = validateStep2(booking, selectedSlotIds)
       if (validation.valid) {
         setStep(3)
       } else {
@@ -132,57 +112,25 @@ export default function BookPage() {
   }
 
   const handleSubmit = () => {
-    // Create a package ID for grouping individual lesson bookings
-    const packageId = booking.lessonType !== 'single' ? `PKG-${Date.now()}` : undefined
+    // Single lesson: Create one booking record
     const totalPrice = getLessonPrice(booking.lessonType || 'single')
-
-    // For packages, create individual booking records for each slot
-    // For single lessons, create one booking record
-    const bookingsToCreate: Booking[] = []
-
-    if (booking.lessonType !== 'single' && selectedSlotIds.length > 0) {
-      // Package: Create one booking per selected slot
-      const pricePerLesson = totalPrice / selectedSlotIds.length
-
-      selectedSlotIds.forEach((slotId, index) => {
-        const [date, time] = slotId.split('-')
-        bookingsToCreate.push({
-          id: `BK-${Date.now()}-${index}`,
-          studentName: booking.studentName || '',
-          email: booking.email || '',
-          phone: booking.phone || '',
-          address: booking.address,
-          lessonType: booking.lessonType || 'single',
-          date: date,
-          time: time.replace(/-/g, ':'),
-          price: Math.round(pricePerLesson), // Price per lesson
-          status: 'pending',
-          createdAt: new Date().toISOString(),
-          packageId: packageId,
-          packageLessonIndex: index,
-        })
-      })
-    } else {
-      // Single lesson: Create one booking record
-      const newBooking: Booking = {
-        id: `BK-${Date.now()}`,
-        studentName: booking.studentName || '',
-        email: booking.email || '',
-        phone: booking.phone || '',
-        address: booking.address,
-        lessonType: booking.lessonType || 'single',
-        date: booking.date || '',
-        time: booking.time || '',
-        price: totalPrice,
-        status: 'pending',
-        createdAt: new Date().toISOString(),
-      }
-      bookingsToCreate.push(newBooking)
+    const newBooking: Booking = {
+      id: `BK-${Date.now()}`,
+      studentName: booking.studentName || '',
+      email: booking.email || '',
+      phone: booking.phone || '',
+      address: booking.address,
+      lessonType: booking.lessonType || 'single',
+      date: booking.date || '',
+      time: booking.time || '',
+      price: totalPrice,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
     }
 
     // Store in localStorage for demo
     const existing = JSON.parse(localStorage.getItem('bookings') || '[]')
-    localStorage.setItem('bookings', JSON.stringify([...existing, ...bookingsToCreate]))
+    localStorage.setItem('bookings', JSON.stringify([...existing, newBooking]))
 
     alert('Booking confirmed! A confirmation email will be sent shortly.')
     window.location.href = '/'
@@ -244,8 +192,8 @@ export default function BookPage() {
       <div className="max-w-4xl mx-auto px-4 py-12">
         {step === 1 && (
           <div>
-            <h2 className="text-3xl font-bold mb-6">Choose Your Lesson Package</h2>
-            <div className="grid md:grid-cols-3 gap-4">
+            <h2 className="text-3xl font-bold mb-6">Choose Your Lesson</h2>
+            <div className="grid grid-cols-1 max-w-md mx-auto">
               {lessonTypes.map((type) => (
                 <div
                   key={type.id}
@@ -254,16 +202,12 @@ export default function BookPage() {
                       ? 'border-primary bg-blue-50'
                       : 'border-gray-200 bg-white hover:border-primary'
                   }`}
-                  onClick={() => handleLessonTypeSelect(type.id)}
                 >
                   <h3 className="text-xl font-bold mb-2">{type.name}</h3>
                   <p className="text-gray-600 mb-4">{type.duration}</p>
                   <div className="text-3xl font-bold text-primary">
                     ${type.price}
                   </div>
-                  {type.id === '5-pack' && (
-                    <div className="text-green-600 text-sm mt-2">Save $5</div>
-                  )}
                 </div>
               ))}
             </div>
@@ -272,19 +216,11 @@ export default function BookPage() {
 
         {step === 2 && (
           <div>
-            <h2 className="text-3xl font-bold mb-6">
-              {booking.lessonType === 'single'
-                ? 'Select Date & Time'
-                : `Select ${requiredLessons} Lesson Slots (${selectedSlotIds.length}/${requiredLessons} selected)`
-              }
-            </h2>
+            <h2 className="text-3xl font-bold mb-6">Select Date & Time</h2>
 
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
               <p className="text-sm text-yellow-800">
                 <strong>Availability:</strong> Weekday evenings (6pm-8pm), weekends (8am-7pm). <strong>Note:</strong> If you book 6pm, 7pm is blocked to ensure full dedication to your lesson. 8pm is a night time booking.
-                {booking.lessonType !== 'single' && (
-                  <> <strong>For packages:</strong> Select multiple dates and times across different days. Use the calendar below to pick your preferred schedule.</>
-                )}
               </p>
             </div>
 
@@ -295,7 +231,7 @@ export default function BookPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {uniqueDates.slice(0, 14).map((date) => {
                     const slotsForDate = getSlotsForDate(date)
-                    const selectedCount = selectedSlotIds.filter(id => id.startsWith(date)).length
+                    const isSelected = booking.date === date
                     const isDisabled = slotsForDate.length === 0
 
                     return (
@@ -303,7 +239,7 @@ export default function BookPage() {
                         key={date}
                         disabled={isDisabled}
                         className={`p-4 rounded-lg border-2 transition ${
-                          selectedCount > 0
+                          isSelected
                             ? 'border-primary bg-blue-50'
                             : isDisabled
                             ? 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -312,9 +248,6 @@ export default function BookPage() {
                         onClick={() => setBooking(prev => ({ ...prev, date }))}
                       >
                         <div className="font-semibold">{formatDate(date)}</div>
-                        {selectedCount > 0 && (
-                          <div className="text-xs text-primary mt-1">{selectedCount} selected</div>
-                        )}
                         {isDisabled && (
                           <div className="text-xs text-gray-400 mt-1">Fully booked</div>
                         )}
@@ -340,22 +273,15 @@ export default function BookPage() {
                       {getSlotsForDate(booking.date).map((slot) => (
                         <button
                           key={slot.id}
-                          disabled={
-                            booking.lessonType === 'single'
-                              ? selectedSlotIds.includes(slot.id)
-                              : !deferRemainingSlots && selectedSlotIds.length >= requiredLessons && !selectedSlotIds.includes(slot.id)
-                          }
+                          disabled={selectedSlotIds.includes(slot.id)}
                           className={`p-4 rounded-lg border-2 transition ${
                             selectedSlotIds.includes(slot.id)
                               ? 'border-primary bg-blue-50'
                               : slot.isNightTime
                               ? 'border-purple-300 bg-purple-50 hover:border-purple-400'
                               : 'border-gray-200 bg-white hover:border-primary'
-                          } ${!deferRemainingSlots && selectedSlotIds.length >= requiredLessons && !selectedSlotIds.includes(slot.id) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleSlotToggle(slot)
-                          }}
+                          } ${selectedSlotIds.includes(slot.id) ? 'cursor-not-allowed' : ''}`}
+                          onClick={() => handleSlotToggle(slot)}
                         >
                           <div className="font-semibold">{slot.time}</div>
                           {slot.isNightTime && (
@@ -368,60 +294,6 @@ export default function BookPage() {
                       ))}
                     </div>
                   )}
-                </div>
-              )}
-
-              {/* Selected Slots Summary for Packages */}
-              {booking.lessonType !== 'single' && selectedSlotIds.length > 0 && (
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <h3 className="font-semibold mb-2">Selected Lessons ({selectedSlotIds.length}/{requiredLessons}):</h3>
-                  <div className="grid md:grid-cols-2 gap-2 text-sm">
-                    {getSelectedSlots().map((slot) => (
-                      <div key={slot.id} className="flex items-center">
-                        <span className="text-blue-600 mr-2">✓</span>
-                        <span>{formatDate(slot.date)} @ {slot.time}</span>
-                        {slot.isNightTime && <span className="ml-2 text-xs text-purple-600">(Night)</span>}
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {/* Defer Option */}
-                  {selectedSlotIds.length < requiredLessons && (
-                    <div className="mt-4 pt-4 border-t border-blue-200">
-                      <label className="flex items-start cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={deferRemainingSlots}
-                          onChange={(e) => setDeferRemainingSlots(e.target.checked)}
-                          className="mt-1 mr-3 h-5 w-5 text-primary border-gray-300 rounded focus:ring-primary"
-                        />
-                        <div>
-                          <span className="font-semibold text-blue-800">I'll choose the remaining lessons later</span>
-                          <p className="text-sm text-blue-700 mt-1">
-                            You've selected {selectedSlotIds.length} of {requiredLessons} lessons. You can book the remaining lessons at any time by contacting Bui directly.
-                          </p>
-                        </div>
-                      </label>
-                    </div>
-                  )}
-                  
-                  {/* Show message if user can't select more without deferring */}
-                  {selectedSlotIds.length >= requiredLessons && !deferRemainingSlots && (
-                    <div className="mt-4 pt-4 border-t border-blue-200">
-                      <p className="text-sm text-green-700">
-                        ✓ You've selected all {requiredLessons} lessons for this package!
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-              
-              {/* Prompt to select slots if none selected */}
-              {booking.lessonType !== 'single' && selectedSlotIds.length === 0 && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                  <p className="text-yellow-800 text-sm">
-                    <strong>Tip:</strong> Select at least one lesson slot above, or select all {requiredLessons} if you know your schedule. You can also choose to defer remaining lessons.
-                  </p>
                 </div>
               )}
             </div>
@@ -518,31 +390,18 @@ export default function BookPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-gray-600 text-sm">Lesson Type</p>
-                    <p className="font-semibold">{getLessonTypeName(booking.lessonType || '')}</p>
+                    <p className="font-semibold">{getLessonTypeName(booking.lessonType || 'single')}</p>
                   </div>
                   <div>
                     <p className="text-gray-600 text-sm">Price</p>
                     <p className="font-semibold text-primary">${getLessonPrice(booking.lessonType || 'single')}</p>
                   </div>
                   <div className="col-span-2">
-                    <p className="text-gray-600 text-sm">
-                      {booking.lessonType === 'single' ? 'Date & Time' : 'Selected Lessons'}
-                    </p>
-                    {booking.lessonType === 'single' ? (
-                      <div>
-                        <p className="font-semibold">{formatDate(booking.date || '')}</p>
-                        <p className="text-gray-600">{booking.time}</p>
-                      </div>
-                    ) : (
-                      <div className="grid md:grid-cols-2 gap-2 text-sm">
-                        {getSelectedSlots().map((slot) => (
-                          <div key={slot.id} className="bg-gray-50 p-2 rounded">
-                            <p className="font-semibold">{formatDate(slot.date)}</p>
-                            <p className="text-gray-600">{slot.time} {slot.isNightTime && <span className="text-purple-600">(Night)</span>}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                    <p className="text-gray-600 text-sm">Date & Time</p>
+                    <div>
+                      <p className="font-semibold">{formatDate(booking.date || '')}</p>
+                      <p className="text-gray-600">{booking.time}</p>
+                    </div>
                   </div>
                   <div>
                     <p className="text-gray-600 text-sm">Student Name</p>
@@ -591,11 +450,7 @@ export default function BookPage() {
               onClick={handleNext}
               disabled={
                 (step === 1 && !booking.lessonType) ||
-                (step === 2 && (
-                  booking.lessonType === 'single'
-                    ? (!booking.date || !booking.time)
-                    : selectedSlotIds.length === 0
-                )) ||
+                (step === 2 && (!booking.date || !booking.time)) ||
                 (step === 3 && !validateStep3(booking).valid)
               }
               className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition"
