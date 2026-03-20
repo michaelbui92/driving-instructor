@@ -1,5 +1,46 @@
 // Booking utilities and data structures
 
+// Rule enums and interfaces
+export enum RuleType {
+  TIME_BLOCK = 'TIME_BLOCK',      // Block specific time ranges
+  EXCEPTION = 'EXCEPTION',         // Allow specific times within blocks
+  MAX_BOOKING = 'MAX_BOOKING'      // Limit total bookings per day
+}
+
+export enum DayType {
+  WEEKDAY = 'WEEKDAY',
+  WEEKEND = 'WEEKEND',
+  ALL_DAYS = 'ALL_DAYS'
+}
+
+export enum RepeatType {
+  ONE_TIME = 'ONE_TIME',
+  REPEATING = 'REPEATING'
+}
+
+export interface AvailabilityRule {
+  id: string
+  name: string                    // User-friendly name
+  type: RuleType
+  priority: number                // Lower = higher priority
+  dayType: DayType
+
+  // Time Block / Exception fields
+  startTime?: string              // "9:00 AM", "6:00 PM"
+  endTime?: string                // "5:00 PM", "8:00 PM"
+
+  // Max Booking fields
+  maxBookings?: number            // Max bookings per day
+
+  // Repeat settings
+  repeatType: RepeatType
+  startDate?: string              // For one-time rules
+  endDate?: string                // For one-time rules
+
+  enabled: boolean                // Enable/disable without deleting
+  createdAt: string
+}
+
 export interface TimeSlot {
   id: string
   date: string
@@ -7,6 +48,163 @@ export interface TimeSlot {
   available: boolean
   price: number
   isNightTime: boolean // Flag for 8pm bookings
+}
+
+// Availability Rules Management
+const RULES_KEY = 'instructor_availability_rules'
+
+// Helper: Generate unique ID
+function generateId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+}
+
+// Helper: Check if a date is a weekend
+function isWeekendDay(dateStr: string): boolean {
+  const date = new Date(dateStr)
+  const dayOfWeek = date.getDay()
+  return dayOfWeek === 0 || dayOfWeek === 6
+}
+
+// Helper: Check if a date is a weekday
+function isWeekdayDay(dateStr: string): boolean {
+  return !isWeekendDay(dateStr)
+}
+
+// Helper: Check if time falls within a time range
+function isTimeInRange(time: string, startTime: string, endTime: string): boolean {
+  // Convert times to minutes for comparison
+  const timeToMinutes = (t: string): number => {
+    const [timePart, period] = t.split(' ')
+    let [hours, minutes] = timePart.split(':').map(Number)
+
+    if (period === 'PM' && hours !== 12) {
+      hours += 12
+    } else if (period === 'AM' && hours === 12) {
+      hours = 0
+    }
+
+    return hours * 60 + minutes
+  }
+
+  const timeMin = timeToMinutes(time)
+  const startMin = timeToMinutes(startTime)
+  const endMin = timeToMinutes(endTime)
+
+  return timeMin >= startMin && timeMin <= endMin
+}
+
+// CRUD operations for rules
+export function getRules(): AvailabilityRule[] {
+  try {
+    const stored = localStorage.getItem(RULES_KEY)
+    return stored ? JSON.parse(stored) : []
+  } catch {
+    return []
+  }
+}
+
+export function addRule(rule: Omit<AvailabilityRule, 'id' | 'createdAt'>): string {
+  const rules = getRules()
+  const newRule: AvailabilityRule = {
+    ...rule,
+    id: generateId(),
+    createdAt: new Date().toISOString()
+  }
+  rules.push(newRule)
+  localStorage.setItem(RULES_KEY, JSON.stringify(rules))
+  return newRule.id
+}
+
+export function updateRule(id: string, updates: Partial<AvailabilityRule>): void {
+  const rules = getRules()
+  const index = rules.findIndex(r => r.id === id)
+  if (index !== -1) {
+    rules[index] = { ...rules[index], ...updates }
+    localStorage.setItem(RULES_KEY, JSON.stringify(rules))
+  }
+}
+
+export function deleteRule(id: string): void {
+  const rules = getRules().filter(r => r.id !== id)
+  localStorage.setItem(RULES_KEY, JSON.stringify(rules))
+}
+
+export function toggleRule(id: string, enabled: boolean): void {
+  updateRule(id, { enabled })
+}
+
+// Priority filtering
+export function getSortedRules(): AvailabilityRule[] {
+  return getRules()
+    .filter(rule => rule.enabled)
+    .sort((a, b) => a.priority - b.priority) // Lower priority number = higher priority
+}
+
+// Get applicable rules for a specific date and time
+export function getApplicableRules(date: string, time: string, existingBookings: Booking[] = []): AvailabilityRule[] {
+  const sortedRules = getSortedRules()
+  return sortedRules.filter(rule => {
+    // Check day type
+    const appliesToDay =
+      rule.dayType === DayType.ALL_DAYS ||
+      (rule.dayType === DayType.WEEKDAY && isWeekdayDay(date)) ||
+      (rule.dayType === DayType.WEEKEND && isWeekendDay(date))
+
+    if (!appliesToDay) return false
+
+    // For Phase 3a, we only handle TIME_BLOCK and EXCEPTION rules
+    // Phase 3b will add date range and max booking logic
+    if (rule.type === RuleType.TIME_BLOCK || rule.type === RuleType.EXCEPTION) {
+      // Check if time is within the rule's time range
+      if (rule.startTime && rule.endTime) {
+        return isTimeInRange(time, rule.startTime, rule.endTime)
+      }
+    }
+
+    // Phase 3b: Handle MAX_BOOKING rules and ONE_TIME date range filtering
+    // For Phase 3a, we only support TIME_BLOCK and EXCEPTION rules
+    return false
+  })
+}
+
+// Determine if a slot should be blocked based on rules
+export function shouldBlockSlot(date: string, time: string, existingBookings: Booking[] = []): boolean {
+  const applicableRules = getApplicableRules(date, time, existingBookings)
+
+  if (applicableRules.length === 0) {
+    return false
+  }
+
+  // Check rules in priority order (already sorted by priority)
+  for (const rule of applicableRules) {
+    if (rule.type === RuleType.TIME_BLOCK) {
+      // Check if there's an exception with higher priority (lower number)
+      const hasException = applicableRules.some(
+        r => r.type === RuleType.EXCEPTION &&
+             r.priority < rule.priority &&
+             isTimeInRange(time, r.startTime || '', r.endTime || '')
+      )
+
+      if (!hasException) {
+        return true // Block this slot
+      }
+    } else if (rule.type === RuleType.EXCEPTION) {
+      // Exception slot is available unless blocked by another higher priority rule
+      const higherPriorityBlock = applicableRules.some(
+        r => r.type === RuleType.TIME_BLOCK && r.priority < rule.priority
+      )
+
+      if (!higherPriorityBlock) {
+        return false // This is an exception, make it available
+      }
+    } else if (rule.type === RuleType.MAX_BOOKING) {
+      // Phase 3b: Will handle max booking limit
+      // For Phase 3a, max booking rules are not yet implemented
+    }
+  }
+
+  // If no rules explicitly block the slot, it's available
+  return false
 }
 
 export interface Booking {
@@ -22,6 +220,9 @@ export interface Booking {
   price: number
   status: 'pending' | 'confirmed' | 'completed' | 'cancelled'
   createdAt: string
+  archived?: boolean // Archive status (default: false)
+  packageId?: string // ID to group individual bookings from a package
+  packageLessonIndex?: number // Index of this lesson within a package (0-based)
 }
 
 export interface LessonSlot {
@@ -173,31 +374,25 @@ export function getAvailableSlots(date: string, existingBookings?: Booking[]): T
     }
   })
 
+  // Mark slots as unavailable based on availability rules
+  slots.forEach(slot => {
+    if (shouldBlockSlot(date, slot.time, existingBookings)) {
+      slot.available = false
+    }
+  })
+
   // Mark slots as unavailable based on existing bookings
   if (existingBookings && existingBookings.length > 0) {
     existingBookings
       .filter(booking => booking.status !== 'cancelled')
       .forEach(booking => {
-        // Handle single lesson bookings
-        if (booking.lessonType === 'single' || !booking.lessonSlots) {
-          if (booking.date === date) {
-            const bookedSlotIndex = slots.findIndex(slot => slot.time === booking.time)
-            if (bookedSlotIndex !== -1) {
-              slots[bookedSlotIndex].available = false
-            }
+        // With new structure: each booking (even packages) has its own date and time
+        // Packages are split into individual bookings, so we just check booking.date and booking.time
+        if (booking.date === date) {
+          const bookedSlotIndex = slots.findIndex(slot => slot.time === booking.time)
+          if (bookedSlotIndex !== -1) {
+            slots[bookedSlotIndex].available = false
           }
-        }
-
-        // Handle package bookings with multiple lesson slots
-        if (booking.lessonSlots && booking.lessonSlots.length > 0) {
-          booking.lessonSlots.forEach(slot => {
-            if (slot.date === date) {
-              const bookedSlotIndex = slots.findIndex(s => s.time === slot.time)
-              if (bookedSlotIndex !== -1) {
-                slots[bookedSlotIndex].available = false
-              }
-            }
-          })
         }
       })
   }
@@ -213,8 +408,6 @@ export function getRequiredLessons(lessonType: string): number {
       return 1
     case '5-pack':
       return 5
-    case '10-pack':
-      return 10
     default:
       return 1
   }
@@ -338,7 +531,6 @@ export function getLessonPrice(lessonType: string): number {
   const prices: Record<string, number> = {
     'single': 45,
     '5-pack': 220,
-    '10-pack': 430,
   }
   return prices[lessonType] || 45
 }
@@ -348,7 +540,6 @@ export function getLessonTypeName(lessonType: string): string {
   const names: Record<string, string> = {
     'single': 'Single Lesson (60 min)',
     '5-pack': '5-Lesson Package',
-    '10-pack': '10-Lesson Package',
   }
   return names[lessonType] || lessonType
 }
@@ -358,6 +549,5 @@ export function getLessonTypes() {
   return [
     { id: 'single', name: 'Single Lesson', duration: '60 min', price: 45 },
     { id: '5-pack', name: '5-Lesson Package', duration: '5 × 60 min', price: 220 },
-    { id: '10-pack', name: '10-Lesson Package', duration: '10 × 60 min', price: 430 },
   ]
 }

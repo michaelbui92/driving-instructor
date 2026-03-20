@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { formatDate, getLessonTypeName, type Booking } from '@/lib/booking-utils'
+import { formatDate, getLessonTypeName, getRequiredLessons, type Booking } from '@/lib/booking-utils'
 
 export default function DashboardPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
@@ -25,6 +25,23 @@ export default function DashboardPage() {
 
   const upcomingBookings = bookings.filter(b => b.status === 'pending' || b.status === 'confirmed')
   const completedBookings = bookings.filter(b => b.status === 'completed')
+
+  // Group bookings by packageId for display
+  const groupedUpcomingBookings = upcomingBookings.reduce((acc, booking) => {
+    if (booking.packageId) {
+      if (!acc[booking.packageId]) {
+        acc[booking.packageId] = []
+      }
+      acc[booking.packageId].push(booking)
+    } else {
+      // Non-package bookings get their own group
+      if (!acc[booking.id]) {
+        acc[booking.id] = []
+      }
+      acc[booking.id].push(booking)
+    }
+    return acc
+  }, {} as Record<string, Booking[]>)
 
   const cancelBooking = (bookingId: string) => {
     try {
@@ -91,16 +108,9 @@ export default function DashboardPage() {
   }
 
   const getUpcomingLessonsCount = () => {
-    // Count all upcoming lessons including those in package bookings
-    let count = 0
-    upcomingBookings.forEach(b => {
-      if (b.lessonSlots && b.lessonSlots.length > 0) {
-        count += b.lessonSlots.length
-      } else {
-        count += 1
-      }
-    })
-    return count
+    // With new structure, each lesson is a separate booking (packages split into individual bookings)
+    // So just count all upcoming bookings
+    return upcomingBookings.length
   }
 
   const getAvailableTimeOptions = (date: string) => {
@@ -227,91 +237,115 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {(selectedTab === 'upcoming' ? upcomingBookings : completedBookings).map((booking) => (
-              <div
-                key={booking.id}
-                className="border rounded-lg p-6 mb-4 hover:shadow-md transition"
-              >
-                <div className="grid md:grid-cols-6 gap-4">
-                  <div className="md:col-span-2">
-                    <p className="text-sm text-gray-600 mb-1">
-                      {booking.lessonSlots && booking.lessonSlots.length > 0
-                        ? 'Lessons'
-                        : 'Date & Time'}
-                    </p>
-                    {booking.lessonSlots && booking.lessonSlots.length > 0 ? (
-                      <div className="space-y-1">
-                        {booking.lessonSlots.map((slot, index) => (
-                          <div key={index}>
-                            <p className="font-semibold">{formatDate(slot.date)}</p>
-                            <p className="text-gray-600">{slot.time}</p>
-                          </div>
-                        ))}
+            {selectedTab === 'upcoming' ? (
+              Object.entries(groupedUpcomingBookings).map(([groupId, groupBookings]) => {
+                const isPackage = groupBookings[0].packageId !== undefined
+                const packageTotal = getRequiredLessons(groupBookings[0].lessonType)
+                const completedInPackage = groupBookings.filter(b => b.status === 'completed').length
+                const packageLessonType = groupBookings[0].lessonType
+
+                return (
+                  <div
+                    key={groupId}
+                    className="border rounded-lg p-6 mb-4 hover:shadow-md transition"
+                  >
+                    {isPackage && (
+                      <div className="mb-4">
+                        <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
+                          {getLessonTypeName(packageLessonType)} ({groupBookings.length}/{packageTotal} lessons)
+                        </span>
                       </div>
-                    ) : (
-                      <>
-                        <p className="font-semibold">{formatDate(booking.date)}</p>
-                        <p className="text-gray-600">{booking.time}</p>
-                      </>
                     )}
+                    <div className="space-y-3">
+                      {groupBookings.map((booking) => (
+                        <div key={booking.id} className="grid md:grid-cols-6 gap-4 items-center border-b last:border-0 pb-3 last:pb-0">
+                          <div className="md:col-span-2">
+                            <p className="text-sm text-gray-600 mb-1">Date & Time</p>
+                            <p className="font-semibold">{formatDate(booking.date)}</p>
+                            <p className="text-gray-600">{booking.time}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">Lesson Type</p>
+                            <p className="font-semibold">{getLessonTypeName(booking.lessonType)}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">Price</p>
+                            <p className="font-semibold text-primary">${booking.price}</p>
+                          </div>
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1">Status</p>
+                            <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+                              booking.status === 'pending'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : booking.status === 'confirmed'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-gray-100 text-gray-800'
+                            }`}>
+                              {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                            </span>
+                          </div>
+                          <div className="flex items-end space-x-2">
+                            {selectedTab === 'upcoming' && (
+                              <>
+                                <button
+                                  onClick={() => handleReschedule(booking)}
+                                  className="flex-1 px-4 py-2 border-2 border-orange-500 text-orange-500 rounded-lg hover:bg-orange-50 transition"
+                                >
+                                  🔄 Reschedule
+                                </button>
+                                <button
+                                  onClick={() => cancelBooking(booking.id)}
+                                  className="flex-1 px-4 py-2 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={() => completeBooking(booking.id)}
+                                  className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition"
+                                >
+                                  Complete
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Lesson Type</p>
-                    <p className="font-semibold">{getLessonTypeName(booking.lessonType)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Price</p>
-                    <p className="font-semibold text-primary">${booking.price}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Status</p>
-                    <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
-                      booking.status === 'pending'
-                        ? 'bg-yellow-100 text-yellow-800'
-                        : booking.status === 'confirmed'
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                    </span>
-                  </div>
-                  <div className="flex items-end space-x-2">
-                    {selectedTab === 'upcoming' && (
-                      <>
-                        {booking.lessonSlots && booking.lessonSlots.length === 1 && (
-                          <button
-                            onClick={() => handleReschedule(booking)}
-                            className="flex-1 px-4 py-2 border-2 border-orange-500 text-orange-500 rounded-lg hover:bg-orange-50 transition"
-                          >
-                            🔄 Reschedule
-                          </button>
-                        )}
-                        {booking.lessonType === 'single' && (
-                          <button
-                            onClick={() => handleReschedule(booking)}
-                            className="flex-1 px-4 py-2 border-2 border-orange-500 text-orange-500 rounded-lg hover:bg-orange-50 transition"
-                          >
-                            🔄 Reschedule
-                          </button>
-                        )}
-                        <button
-                          onClick={() => cancelBooking(booking.id)}
-                          className="flex-1 px-4 py-2 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={() => completeBooking(booking.id)}
-                          className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition"
-                        >
-                          Complete
-                        </button>
-                      </>
-                    )}
+                )
+              })
+            ) : (
+              completedBookings.map((booking) => (
+                <div
+                  key={booking.id}
+                  className="border rounded-lg p-6 mb-4 hover:shadow-md transition"
+                >
+                  <div className="grid md:grid-cols-5 gap-4">
+                    <div className="md:col-span-2">
+                      <p className="text-sm text-gray-600 mb-1">Date & Time</p>
+                      <p className="font-semibold">{formatDate(booking.date)}</p>
+                      <p className="text-gray-600">{booking.time}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Lesson Type</p>
+                      <p className="font-semibold">{getLessonTypeName(booking.lessonType)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Price</p>
+                      <p className="font-semibold text-primary">${booking.price}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-1">Status</p>
+                      <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+                        booking.status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
 

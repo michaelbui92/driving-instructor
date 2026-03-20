@@ -132,37 +132,57 @@ export default function BookPage() {
   }
 
   const handleSubmit = () => {
-    // In a real app, this would save to a database
-    const newBooking: Booking = {
-      id: `BK-${Date.now()}`,
-      studentName: booking.studentName || '',
-      email: booking.email || '',
-      phone: booking.phone || '',
-      address: booking.address,
-      lessonType: booking.lessonType || 'single',
-      date: booking.date || '',
-      time: booking.time || '',
-      price: booking.price || 0,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-    }
+    // Create a package ID for grouping individual lesson bookings
+    const packageId = booking.lessonType !== 'single' ? `PKG-${Date.now()}` : undefined
+    const totalPrice = getLessonPrice(booking.lessonType || 'single')
 
-    // Handle package bookings - convert selected slots to lesson slots
+    // For packages, create individual booking records for each slot
+    // For single lessons, create one booking record
+    const bookingsToCreate: Booking[] = []
+
     if (booking.lessonType !== 'single' && selectedSlotIds.length > 0) {
-      const lessonSlots: LessonSlot[] = selectedSlotIds.map(slotId => {
+      // Package: Create one booking per selected slot
+      const pricePerLesson = totalPrice / selectedSlotIds.length
+
+      selectedSlotIds.forEach((slotId, index) => {
         const [date, time] = slotId.split('-')
-        return {
-          date,
-          time: time.replace(/-/g, ':'), // Convert dashes to colons
-          isNightTime: time === '8:00 PM',
-        }
+        bookingsToCreate.push({
+          id: `BK-${Date.now()}-${index}`,
+          studentName: booking.studentName || '',
+          email: booking.email || '',
+          phone: booking.phone || '',
+          address: booking.address,
+          lessonType: booking.lessonType || 'single',
+          date: date,
+          time: time.replace(/-/g, ':'),
+          price: Math.round(pricePerLesson), // Price per lesson
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+          packageId: packageId,
+          packageLessonIndex: index,
+        })
       })
-      newBooking.lessonSlots = lessonSlots
+    } else {
+      // Single lesson: Create one booking record
+      const newBooking: Booking = {
+        id: `BK-${Date.now()}`,
+        studentName: booking.studentName || '',
+        email: booking.email || '',
+        phone: booking.phone || '',
+        address: booking.address,
+        lessonType: booking.lessonType || 'single',
+        date: booking.date || '',
+        time: booking.time || '',
+        price: totalPrice,
+        status: 'pending',
+        createdAt: new Date().toISOString(),
+      }
+      bookingsToCreate.push(newBooking)
     }
 
     // Store in localStorage for demo
     const existing = JSON.parse(localStorage.getItem('bookings') || '[]')
-    localStorage.setItem('bookings', JSON.stringify([...existing, newBooking]))
+    localStorage.setItem('bookings', JSON.stringify([...existing, ...bookingsToCreate]))
 
     alert('Booking confirmed! A confirmation email will be sent shortly.')
     window.location.href = '/'
@@ -243,9 +263,6 @@ export default function BookPage() {
                   </div>
                   {type.id === '5-pack' && (
                     <div className="text-green-600 text-sm mt-2">Save $5</div>
-                  )}
-                  {type.id === '10-pack' && (
-                    <div className="text-green-600 text-sm mt-2">Save $20</div>
                   )}
                 </div>
               ))}
@@ -505,7 +522,7 @@ export default function BookPage() {
                   </div>
                   <div>
                     <p className="text-gray-600 text-sm">Price</p>
-                    <p className="font-semibold text-primary">${booking.price}</p>
+                    <p className="font-semibold text-primary">${getLessonPrice(booking.lessonType || 'single')}</p>
                   </div>
                   <div className="col-span-2">
                     <p className="text-gray-600 text-sm">
@@ -548,7 +565,7 @@ export default function BookPage() {
                 <div className="border-t pt-4 mt-4">
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-semibold">Total</span>
-                    <span className="text-3xl font-bold text-primary">${booking.price}</span>
+                    <span className="text-3xl font-bold text-primary">${getLessonPrice(booking.lessonType || 'single')}</span>
                   </div>
                 </div>
               </div>
