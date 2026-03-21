@@ -1044,6 +1044,10 @@ export default function InstructorPage() {
     }
     return filtered.map((booking) => {
       const isTodayBooking = booking.date === today
+      // Determine if booking is a reschedule or new booking
+      const isReschedule = booking.originalDate && booking.originalDate !== booking.date;
+      const isNewBooking = !booking.originalDate || booking.originalDate === booking.date;
+      
       return (
         <div
           key={booking.id}
@@ -1053,11 +1057,23 @@ export default function InstructorPage() {
           onClick={() => setSelectedBooking(booking)}
         >
           <div className="flex items-center justify-between mb-3">
-            {isTodayBooking && (
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-400 text-yellow-900">
-                📅 TODAY
-              </span>
-            )}
+            <div className="flex items-center gap-2">
+              {isTodayBooking && (
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-400 text-yellow-900">
+                  📅 TODAY
+                </span>
+              )}
+              {isNewBooking && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-300">
+                  📅 New Booking
+                </span>
+              )}
+              {isReschedule && (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-800 border border-orange-300">
+                  🔄 Reschedule
+                </span>
+              )}
+            </div>
             {isTodayBooking && booking.status === 'confirmed' && (
               <button
                 onClick={(e) => { e.stopPropagation(); updateBookingStatus(booking.id, 'completed') }}
@@ -1071,6 +1087,11 @@ export default function InstructorPage() {
             <div>
               <p className="text-sm text-gray-600 mb-1">Date</p>
               <p className="font-semibold">{formatDate(booking.date)}</p>
+              {isReschedule && booking.originalDate && (
+                <p className="text-xs text-orange-600 mt-1">
+                  (was {formatDate(booking.originalDate)})
+                </p>
+              )}
             </div>
             <div>
               <p className="text-sm text-gray-600 mb-1">Time</p>
@@ -1161,35 +1182,53 @@ export default function InstructorPage() {
         {/* Pending Bookings Notification */}
         {bookings.filter(b => b.status === 'pending').length > 0 && (
           <div className="bg-yellow-50 border-2 border-yellow-400 rounded-xl p-6 mb-8 shadow-md">
-            <h2 className="text-xl font-bold text-yellow-800 mb-4">⚠️ Pending Bookings Confirmation Required</h2>
+            <h2 className="text-xl font-bold text-yellow-800 mb-4">⚠️ Pending Bookings - Awaiting Confirmation</h2>
             <div className="space-y-3">
-              {bookings.filter(b => b.status === 'pending').map((booking) => (
-                <div key={booking.id} className="flex items-center justify-between bg-white rounded-lg p-4 border border-yellow-300">
-                  <div>
-                    <p className="font-semibold text-gray-900">{booking.studentName}</p>
-                    <p className="text-sm text-gray-600">{formatDate(booking.date)} at {booking.time} - ${booking.price}</p>
-                    {booking.originalDate && booking.originalDate !== booking.date && (
-                      <p className="text-sm text-orange-600 mt-1">
-                        ⚠️ Rescheduled from {formatDate(booking.originalDate)} to {formatDate(booking.date)} (needs confirmation)
-                      </p>
-                    )}
+              {bookings.filter(b => b.status === 'pending').map((booking) => {
+                // Determine if booking is a reschedule or new booking
+                const isReschedule = booking.originalDate && booking.originalDate !== booking.date;
+                const isNewBooking = !booking.originalDate || booking.originalDate === booking.date;
+                
+                return (
+                  <div key={booking.id} className="flex items-center justify-between bg-white rounded-lg p-4 border border-yellow-300">
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        {isNewBooking && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-green-100 text-green-800 border border-green-300">
+                            📅 New Booking
+                          </span>
+                        )}
+                        {isReschedule && (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-800 border border-orange-300">
+                            🔄 Reschedule
+                          </span>
+                        )}
+                        <p className="font-semibold text-gray-900">{booking.studentName}</p>
+                      </div>
+                      <p className="text-sm text-gray-600">{formatDate(booking.date)} at {booking.time} - ${booking.price}</p>
+                      {isReschedule && booking.originalDate && (
+                        <p className="text-sm text-orange-600 mt-1">
+                          ⚠️ Originally booked for {formatDate(booking.originalDate)} (needs confirmation)
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { updateBookingStatus(booking.id, 'confirmed') }}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold"
+                      >
+                        Confirm
+                      </button>
+                      <button
+                        onClick={() => { updateBookingStatus(booking.id, 'cancelled') }}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
+                      >
+                        Cancel
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => { updateBookingStatus(booking.id, 'confirmed') }}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold"
-                    >
-                      Confirm
-                    </button>
-                    <button
-                      onClick={() => { updateBookingStatus(booking.id, 'cancelled') }}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
