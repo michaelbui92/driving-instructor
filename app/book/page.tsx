@@ -253,8 +253,8 @@ export default function BookPage() {
               </div>
             </div>
 
-            {/* 3. Fixed-height Description Box */}
-            <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-gray-200 h-64 overflow-y-auto">
+            {/* 3. Description Box - Natural Height */}
+            <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-gray-200">
               <h4 className="text-lg font-bold mb-3 text-gray-800">
                 {selectedLessonImage === 'single' ? 'Single Lesson' : 'Casual Driving'}
               </h4>
@@ -319,9 +319,11 @@ export default function BookPage() {
           <div>
             <h2 className="text-3xl font-bold mb-6">Select Date & Time</h2>
 
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
-              <p className="text-sm text-yellow-800">
-                <strong>Availability:</strong> Weekday evenings (6pm-8pm), weekends (8am-7pm). <strong>Note:</strong> If you book 6pm, 7pm is blocked to ensure full dedication to your lesson. 8pm is a night time booking. Some days may have limited availability due to max booking rules.
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+              <p className="text-sm text-blue-800">
+                <strong>Select your preferred date and time</strong>
+                <br />
+                Available slots will be shown for each date.
               </p>
             </div>
 

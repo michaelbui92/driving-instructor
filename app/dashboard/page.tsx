@@ -257,34 +257,34 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={groupId}
-                    className="border rounded-lg p-6 mb-4 hover:shadow-md transition"
+                    className="border rounded-lg p-8 mb-6 hover:shadow-lg transition bg-white"
                   >
                     {isPackage && (
-                      <div className="mb-4">
-                        <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-semibold">
+                      <div className="mb-6">
+                        <span className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-semibold">
                           {getLessonTypeName(packageLessonType)} ({groupBookings.length}/{packageTotal} lessons)
                         </span>
                       </div>
                     )}
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                       {groupBookings.map((booking) => (
-                        <div key={booking.id} className="grid md:grid-cols-6 gap-4 items-center border-b last:border-0 pb-3 last:pb-0">
+                        <div key={booking.id} className="grid md:grid-cols-6 gap-6 items-center border-b last:border-0 pb-4 last:pb-0">
                           <div className="md:col-span-2">
-                            <p className="text-sm text-gray-600 mb-1">Date & Time</p>
-                            <p className="font-semibold">{formatDate(booking.date)}</p>
+                            <p className="text-sm text-gray-600 mb-2">Date & Time</p>
+                            <p className="font-semibold text-lg">{formatDate(booking.date)}</p>
                             <p className="text-gray-600">{booking.time}</p>
                           </div>
                           <div>
-                            <p className="text-sm text-gray-600 mb-1">Lesson Type</p>
+                            <p className="text-sm text-gray-600 mb-2">Lesson Type</p>
                             <p className="font-semibold">{getLessonTypeName(booking.lessonType)}</p>
                           </div>
                           <div>
-                            <p className="text-sm text-gray-600 mb-1">Price</p>
-                            <p className="font-semibold text-primary">${booking.price}</p>
+                            <p className="text-sm text-gray-600 mb-2">Price</p>
+                            <p className="font-semibold text-primary text-lg">${booking.price}</p>
                           </div>
                           <div>
-                            <p className="text-sm text-gray-600 mb-1">Status</p>
-                            <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+                            <p className="text-sm text-gray-600 mb-2">Status</p>
+                            <span className={`inline-block px-4 py-2 rounded-full text-sm font-semibold ${
                               booking.status === 'pending'
                                 ? 'bg-yellow-100 text-yellow-800'
                                 : booking.status === 'confirmed'
@@ -294,18 +294,18 @@ export default function DashboardPage() {
                               {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                             </span>
                           </div>
-                          <div className="flex items-end space-x-2">
+                          <div className="flex items-end space-x-3">
                             {selectedTab === 'upcoming' && (
                               <>
                                 <button
                                   onClick={() => handleReschedule(booking)}
-                                  className="flex-1 px-4 py-2 border-2 border-orange-500 text-orange-500 rounded-lg hover:bg-orange-50 transition"
+                                  className="flex-1 px-4 py-3 border-2 border-orange-500 text-orange-500 rounded-lg hover:bg-orange-50 transition font-medium"
                                 >
                                   🔄 Reschedule
                                 </button>
                                 <button
                                   onClick={() => cancelBooking(booking.id)}
-                                  className="flex-1 px-4 py-2 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition"
+                                  className="flex-1 px-4 py-3 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition font-medium"
                                 >
                                   Cancel
                                 </button>
@@ -322,25 +322,25 @@ export default function DashboardPage() {
               completedBookings.map((booking) => (
                 <div
                   key={booking.id}
-                  className="border rounded-lg p-6 mb-4 hover:shadow-md transition"
+                  className="border rounded-lg p-8 mb-6 hover:shadow-lg transition bg-white"
                 >
-                  <div className="grid md:grid-cols-5 gap-4">
+                  <div className="grid md:grid-cols-5 gap-6">
                     <div className="md:col-span-2">
-                      <p className="text-sm text-gray-600 mb-1">Date & Time</p>
-                      <p className="font-semibold">{formatDate(booking.date)}</p>
+                      <p className="text-sm text-gray-600 mb-2">Date & Time</p>
+                      <p className="font-semibold text-lg">{formatDate(booking.date)}</p>
                       <p className="text-gray-600">{booking.time}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600 mb-1">Lesson Type</p>
+                      <p className="text-sm text-gray-600 mb-2">Lesson Type</p>
                       <p className="font-semibold">{getLessonTypeName(booking.lessonType)}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600 mb-1">Price</p>
-                      <p className="font-semibold text-primary">${booking.price}</p>
+                      <p className="text-sm text-gray-600 mb-2">Price</p>
+                      <p className="font-semibold text-primary text-lg">${booking.price}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600 mb-1">Status</p>
-                      <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+                      <p className="text-sm text-gray-600 mb-2">Status</p>
+                      <span className={`inline-block px-4 py-2 rounded-full text-sm font-semibold ${
                         booking.status === 'completed' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'
                       }`}>
                         {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
@@ -402,16 +402,10 @@ export default function DashboardPage() {
                 </select>
               </div>
 
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
-                <strong>Availability:</strong>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+                <strong>Select a new date and time</strong>
                 <br />
-                • Weekdays: 6pm, 7pm, 8pm only
-                <br />
-                • Weekends: 8am to 7pm
-                <br />
-                • If you book 6pm, 7pm is blocked automatically
-                <br />
-                <strong>Important:</strong> After rescheduling, your booking will require instructor confirmation again.
+                Your booking will be pending until confirmed by the instructor.
               </div>
             </div>
 
