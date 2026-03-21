@@ -127,7 +127,7 @@ export default function Home() {
       <section className="py-16 bg-gradient-to-b from-blue-50 to-indigo-100" id="pricing">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">Simple, Transparent Pricing</h2>
-          <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">Single lessons for flexibility, or save with a package — no hidden fees.</p>
+          <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">Simple, straightforward pricing — no hidden fees.</p>
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Single Lesson */}
             <div className="bg-white rounded-xl shadow-lg p-8 border-2 border-gray-200 hover:shadow-2xl transition">
@@ -146,23 +146,22 @@ export default function Home() {
                 Book Now
               </Link>
             </div>
-            {/* Package */}
+            {/* Casual Driving */}
             <div className="bg-white rounded-xl shadow-lg p-8 border-2 border-primary hover:shadow-2xl transition relative overflow-hidden">
               <div className="absolute top-0 right-0 bg-primary text-white text-xs px-3 py-1 rounded-bl-lg">Best Value</div>
-              <h3 className="text-2xl font-bold mb-4">5-Lesson Package</h3>
-              <div className="text-4xl font-bold text-primary mb-2">$250</div>
-              <p className="text-gray-500 mb-6">$50 per lesson (save $25)</p>
+              <h3 className="text-2xl font-bold mb-4">Casual Driving</h3>
+              <div className="text-4xl font-bold text-primary mb-2">$45</div>
+              <p className="text-gray-500 mb-6">per 60-minute lesson</p>
               <ul className="text-gray-600 mb-6 space-y-2">
-                <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> 5 x 60-minute lessons</li>
-                <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Consistent instructor</li>
-                <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Progress tracking</li>
-                <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Ideal for test preparation</li>
+                <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Experienced drivers only</li>
+                <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Maintenance & practice</li>
+                <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Stay road-ready</li>
               </ul>
               <Link
                 href="/book"
                 className="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-secondary transition font-semibold"
               >
-                Book Package
+                Book Now
               </Link>
             </div>
           </div>
