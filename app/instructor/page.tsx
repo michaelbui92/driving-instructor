@@ -101,8 +101,11 @@ export default function InstructorPage() {
     }
     if (selectedTab === 'all') {
       if (emailFilter.trim() === '') return allBookings
+      const filterLower = emailFilter.toLowerCase()
       return allBookings.filter(b => 
-        b.email.toLowerCase().includes(emailFilter.toLowerCase())
+        b.email.toLowerCase().includes(filterLower) ||
+        b.studentName.toLowerCase().includes(filterLower) ||
+        b.phone.includes(emailFilter) // Also search by phone number
       )
     }
     return []
@@ -984,7 +987,9 @@ export default function InstructorPage() {
                         }`}
                         onClick={() => setSelectedBooking(booking)}
                       >
-                        <div className="font-medium truncate">{booking.studentName}</div>
+                        <div className="font-medium truncate">
+                          {emailFilter ? highlightSearchTerm(booking.studentName, emailFilter) : booking.studentName}
+                        </div>
                         <div className="truncate">{booking.time}</div>
                       </div>
                     ))}
@@ -1031,14 +1036,52 @@ export default function InstructorPage() {
     )
   }
 
+  // Helper function to highlight search terms in text
+  const highlightSearchTerm = (text: string, searchTerm: string) => {
+    if (!searchTerm || !text) return text;
+    
+    const lowerText = text.toLowerCase();
+    const lowerSearch = searchTerm.toLowerCase();
+    const index = lowerText.indexOf(lowerSearch);
+    
+    if (index === -1) return text;
+    
+    const before = text.substring(0, index);
+    const match = text.substring(index, index + searchTerm.length);
+    const after = text.substring(index + searchTerm.length);
+    
+    return (
+      <>
+        {before}
+        <mark className="bg-yellow-200 px-1 rounded">{match}</mark>
+        {after}
+      </>
+    );
+  };
+
   const renderBookingList = () => {
     const filtered = getFilteredBookings()
     if (filtered.length === 0) {
       return (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">📋</div>
-          <h3 className="text-xl font-semibold mb-2">No Bookings Found</h3>
-          <p className="text-gray-600">Bookings will appear here once students schedule lessons</p>
+          <h3 className="text-xl font-semibold mb-2">
+            {emailFilter ? 'No Matching Bookings Found' : 'No Bookings Found'}
+          </h3>
+          <p className="text-gray-600">
+            {emailFilter 
+              ? `No bookings found matching "${emailFilter}". Try a different search term.`
+              : 'Bookings will appear here once students schedule lessons'
+            }
+          </p>
+          {emailFilter && (
+            <button
+              onClick={() => setEmailFilter('')}
+              className="mt-4 px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition"
+            >
+              Clear Search
+            </button>
+          )}
         </div>
       )
     }
@@ -1105,12 +1148,18 @@ export default function InstructorPage() {
             </div>
             <div>
               <p className="text-sm text-gray-600 mb-1">Student</p>
-              <p className="font-semibold">{booking.studentName}</p>
-              <p className="text-gray-600 text-sm">{booking.email}</p>
+              <p className="font-semibold">
+                {emailFilter ? highlightSearchTerm(booking.studentName, emailFilter) : booking.studentName}
+              </p>
+              <p className="text-gray-600 text-sm">
+                {emailFilter ? highlightSearchTerm(booking.email, emailFilter) : booking.email}
+              </p>
             </div>
             <div>
               <p className="text-sm text-gray-600 mb-1">Phone</p>
-              <p className="font-semibold">{booking.phone}</p>
+              <p className="font-semibold">
+                {emailFilter ? highlightSearchTerm(booking.phone, emailFilter) : booking.phone}
+              </p>
             </div>
             <div>
               <p className="text-sm text-gray-600 mb-1">Lesson Type</p>
@@ -1216,7 +1265,9 @@ export default function InstructorPage() {
                             🔄 Reschedule
                           </span>
                         )}
-                        <p className="font-semibold text-gray-900">{booking.studentName}</p>
+                        <p className="font-semibold text-gray-900">
+                          {emailFilter ? highlightSearchTerm(booking.studentName, emailFilter) : booking.studentName}
+                        </p>
                       </div>
                       <p className="text-sm text-gray-600">{formatDate(booking.date)} at {booking.time} - ${booking.price}</p>
                       {isReschedule && booking.originalDate && (
@@ -1298,13 +1349,28 @@ export default function InstructorPage() {
               <>
                 {selectedTab === 'all' && (
                   <div className="mb-4">
-                    <input
-                      type="text"
-                      value={emailFilter}
-                      onChange={(e) => setEmailFilter(e.target.value)}
-                      placeholder="Filter by email..."
-                      className="px-4 py-2 border rounded-lg w-full md:w-80"
-                    />
+                    <div className="flex flex-col md:flex-row md:items-center gap-2">
+                      <input
+                        type="text"
+                        value={emailFilter}
+                        onChange={(e) => setEmailFilter(e.target.value)}
+                        placeholder="Search by email, name, or phone..."
+                        className="px-4 py-2 border rounded-lg w-full md:w-80"
+                      />
+                      {emailFilter && (
+                        <button
+                          onClick={() => setEmailFilter('')}
+                          className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition"
+                        >
+                          Clear
+                        </button>
+                      )}
+                    </div>
+                    {emailFilter && (
+                      <p className="text-sm text-gray-600 mt-1">
+                        Found {getFilteredBookings().length} booking{getFilteredBookings().length !== 1 ? 's' : ''} matching "{emailFilter}"
+                      </p>
+                    )}
                   </div>
                 )}
                 {renderBookingList()}
@@ -1332,12 +1398,18 @@ export default function InstructorPage() {
                               </div>
                               <div>
                                 <p className="text-sm text-gray-600 mb-1">Student</p>
-                                <p className="font-semibold text-gray-700">{booking.studentName}</p>
-                                <p className="text-gray-500 text-sm">{booking.email}</p>
+                                <p className="font-semibold text-gray-700">
+                                  {emailFilter ? highlightSearchTerm(booking.studentName, emailFilter) : booking.studentName}
+                                </p>
+                                <p className="text-gray-500 text-sm">
+                                  {emailFilter ? highlightSearchTerm(booking.email, emailFilter) : booking.email}
+                                </p>
                               </div>
                               <div>
                                 <p className="text-sm text-gray-600 mb-1">Phone</p>
-                                <p className="font-semibold text-gray-700">{booking.phone}</p>
+                                <p className="font-semibold text-gray-700">
+                                  {emailFilter ? highlightSearchTerm(booking.phone, emailFilter) : booking.phone}
+                                </p>
                               </div>
                               <div>
                                 <p className="text-sm text-gray-600 mb-1">Lesson Type</p>
