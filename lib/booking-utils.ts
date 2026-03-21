@@ -456,7 +456,8 @@ export function getAvailableSlots(date: string, existingBookings?: Booking[]): T
 }
 
 // Format date for display
-export function formatDate(dateStr: string): string {
+export function formatDate(dateStr?: string): string {
+  if (!dateStr) return 'unknown date'
   const date = new Date(dateStr)
   return date.toLocaleDateString('en-AU', {
     weekday: 'long',
