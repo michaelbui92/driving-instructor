@@ -68,19 +68,6 @@ export default function DashboardPage() {
     }
   }
 
-  const completeBooking = (bookingId: string) => {
-    try {
-      const updatedBookings = bookings.map(b =>
-        b.id === bookingId ? { ...b, status: 'completed' as const } : b
-      )
-      setBookings(updatedBookings)
-      localStorage.setItem('bookings', JSON.stringify(updatedBookings))
-    } catch (error) {
-      console.error('Error completing booking:', error)
-      alert('Error updating booking status. Please try again.')
-    }
-  }
-
   const handleReschedule = (booking: Booking) => {
     setReschedulingBooking(booking)
     setSelectedNewDate(booking.date)

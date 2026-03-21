@@ -27,7 +27,7 @@ export default function BookPage() {
   })
   const [selectedSlotIds, setSelectedSlotIds] = useState<string[]>([])
   const [existingBookings, setExistingBookings] = useState<Booking[]>([])
-  const [hoveredLessonType, setHoveredLessonType] = useState<string | null>(null)
+  const [selectedLessonImage, setSelectedLessonImage] = useState<string>('single')
 
   // Load existing bookings on mount
   useEffect(() => {
@@ -208,24 +208,23 @@ export default function BookPage() {
             <h2 className="text-3xl font-bold mb-6">Choose Your Lesson</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
               {lessonTypes.map((type) => {
-                const info = lessonDescriptions[type.id]
                 return (
                   <div
                     key={type.id}
-                    className={`group relative p-6 rounded-xl border-2 cursor-pointer transition ${
+                    className={`p-6 rounded-xl border-2 cursor-pointer transition ${
                       booking.lessonType === type.id
                         ? 'border-primary bg-blue-50'
                         : 'border-gray-200 bg-white hover:border-primary'
                     }`}
-                    onClick={() => handleLessonTypeSelect(type.id)}
-                    onMouseEnter={() => setHoveredLessonType(type.id)}
-                    onMouseLeave={() => setHoveredLessonType(null)}
+                    onClick={() => {
+                      handleLessonTypeSelect(type.id)
+                      setSelectedLessonImage(type.id)
+                    }}
                   >
                     <div className="flex items-start justify-between">
                       <div>
                         <h3 className="text-xl font-bold mb-2">
                           {type.name}
-                          <span className="ml-2 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-help" title={info?.description}>ℹ️</span>
                         </h3>
                         <p className="text-gray-600 mb-4">{type.duration}</p>
                         <div className="text-3xl font-bold text-primary">
@@ -236,22 +235,55 @@ export default function BookPage() {
                         )}
                       </div>
                     </div>
-                    {/* Hover tooltip */}
-                    <div className="absolute left-0 right-0 mt-2 p-3 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                      {info?.description}
-                    </div>
                   </div>
                 )
               })}
             </div>
-            {/* Hover Image Display */}
-            <div className="mt-8 flex justify-center">
-              {/* Show single lesson image by default, casual on hover */}
-              <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-xl overflow-hidden shadow-xl bg-white border-2 border-gray-200">
-                {(hoveredLessonType === null || hoveredLessonType === 'single') ? (
+            {/* Selected Lesson Display */}
+            <div className="mt-8 flex flex-col md:flex-row justify-center items-center gap-6">
+              {/* Lesson Image */}
+              <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-xl overflow-hidden shadow-xl bg-white border-2 border-gray-200 flex-shrink-0">
+                {selectedLessonImage === 'single' ? (
                   <Image src="/images/hover-single.png" alt="Single Lesson" fill className="object-contain" />
                 ) : (
                   <Image src="/images/hover-casual.png" alt="Casual Driving" fill className="object-contain" />
+                )}
+              </div>
+              {/* Bullet Points */}
+              <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-gray-200 max-w-sm">
+                <h4 className="text-lg font-bold mb-3 text-gray-800">
+                  {selectedLessonImage === 'single' ? 'Single Lesson' : 'Casual Driving'}
+                </h4>
+                {selectedLessonImage === 'single' ? (
+                  <ul className="text-gray-600 space-y-2">
+                    <li className="flex items-start">
+                      <span className="text-primary mr-2">•</span>
+                      Learn parking skills
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-primary mr-2">•</span>
+                      Master driving techniques
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-primary mr-2">•</span>
+                      Safety tips & best practices
+                    </li>
+                  </ul>
+                ) : (
+                  <ul className="text-gray-600 space-y-2">
+                    <li className="flex items-start">
+                      <span className="text-primary mr-2">•</span>
+                      Build confidence
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-primary mr-2">•</span>
+                      Relaxed, unhurried practice
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-primary mr-2">•</span>
+                      Drive somewhere with an instructor
+                    </li>
+                  </ul>
                 )}
               </div>
             </div>

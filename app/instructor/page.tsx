@@ -25,7 +25,7 @@ import {
   getSortedRules
 } from '@/lib/booking-utils'
 
-type TabType = 'today' | 'upcoming' | 'all' | 'rules' | 'availability'
+type TabType = 'upcoming' | 'all' | 'rules' | 'availability'
 
 interface RuleFormData {
   name: string
@@ -40,7 +40,7 @@ interface RuleFormData {
 
 export default function InstructorPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
-  const [selectedTab, setSelectedTab] = useState<TabType>('today')
+  const [selectedTab, setSelectedTab] = useState<TabType>('upcoming')
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [blockedSlots, setBlockedSlots] = useState<BlockedSlot[]>([])
   const [selectedBlockDate, setSelectedBlockDate] = useState<string>('')
@@ -91,8 +91,10 @@ export default function InstructorPage() {
   const archivedBookings = bookings.filter(b => b.archived).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
   const getFilteredBookings = () => {
-    if (selectedTab === 'today') return todayBookings
-    if (selectedTab === 'upcoming') return upcomingBookings
+    if (selectedTab === 'upcoming') {
+      // Include today's bookings alongside future bookings
+      return [...todayBookings, ...upcomingBookings]
+    }
     if (selectedTab === 'all') {
       if (emailFilter.trim() === '') return allBookings
       return allBookings.filter(b => 
@@ -849,67 +851,87 @@ export default function InstructorPage() {
         </div>
       )
     }
-    return filtered.map((booking) => (
-      <div
-        key={booking.id}
-        className="border rounded-lg p-6 mb-4 hover:shadow-md transition cursor-pointer"
-        onClick={() => setSelectedBooking(booking)}
-      >
-        <div className="grid md:grid-cols-6 gap-4">
-          <div>
-            <p className="text-sm text-gray-600 mb-1">Date</p>
-            <p className="font-semibold">{formatDate(booking.date)}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 mb-1">Time</p>
-            <p className="font-semibold text-primary">{booking.time}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 mb-1">Student</p>
-            <p className="font-semibold">{booking.studentName}</p>
-            <p className="text-gray-600 text-sm">{booking.email}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 mb-1">Phone</p>
-            <p className="font-semibold">{booking.phone}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 mb-1">Lesson Type</p>
-            <p className="font-semibold">{getLessonTypeName(booking.lessonType)}</p>
-            <p className="text-primary font-bold">${booking.price}</p>
-          </div>
-          <div>
-            <p className="text-sm text-gray-600 mb-1">Status</p>
-            <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
-              booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800'
-              : booking.status === 'confirmed' ? 'bg-green-100 text-green-800'
-              : booking.status === 'completed' ? 'bg-blue-100 text-blue-800'
-              : 'bg-gray-100 text-gray-800'
-            }`}>
-              {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-            </span>
-            {booking.status === 'pending' && (
+    return filtered.map((booking) => {
+      const isTodayBooking = booking.date === today
+      return (
+        <div
+          key={booking.id}
+          className={`border-2 rounded-lg p-6 mb-4 hover:shadow-md transition cursor-pointer ${
+            isTodayBooking ? 'border-yellow-400 bg-yellow-50' : 'border-gray-200 bg-white'
+          }`}
+          onClick={() => setSelectedBooking(booking)}
+        >
+          <div className="flex items-center justify-between mb-3">
+            {isTodayBooking && (
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-yellow-400 text-yellow-900">
+                📅 TODAY
+              </span>
+            )}
+            {isTodayBooking && booking.status === 'confirmed' && (
               <button
-                onClick={(e) => { e.stopPropagation(); updateBookingStatus(booking.id, 'confirmed') }}
-                className="block mt-1 text-primary hover:text-secondary text-sm font-semibold"
+                onClick={(e) => { e.stopPropagation(); updateBookingStatus(booking.id, 'completed') }}
+                className="ml-auto px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold text-sm"
               >
-                Confirm
+                Mark as Completed
               </button>
             )}
           </div>
-          <div className="flex items-end">
+          <div className="grid md:grid-cols-6 gap-4">
+            <div>
+              <p className="text-sm text-gray-600 mb-1">Date</p>
+              <p className="font-semibold">{formatDate(booking.date)}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600 mb-1">Time</p>
+              <p className="font-semibold text-primary">{booking.time}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600 mb-1">Student</p>
+              <p className="font-semibold">{booking.studentName}</p>
+              <p className="text-gray-600 text-sm">{booking.email}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600 mb-1">Phone</p>
+              <p className="font-semibold">{booking.phone}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600 mb-1">Lesson Type</p>
+              <p className="font-semibold">{getLessonTypeName(booking.lessonType)}</p>
+              <p className="text-primary font-bold">${booking.price}</p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-600 mb-1">Status</p>
+              <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
+                booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800'
+                : booking.status === 'confirmed' ? 'bg-green-100 text-green-800'
+                : booking.status === 'completed' ? 'bg-blue-100 text-blue-800'
+                : 'bg-gray-100 text-gray-800'
+              }`}>
+                {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+              </span>
+              {booking.status === 'pending' && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); updateBookingStatus(booking.id, 'confirmed') }}
+                  className="block mt-1 text-primary hover:text-secondary text-sm font-semibold"
+                >
+                  Confirm
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="flex items-end mt-4">
             {selectedTab === 'all' && (
               <button
                 onClick={(e) => { e.stopPropagation(); archiveBooking(booking.id) }}
-                className="w-full px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition font-semibold"
+                className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition font-semibold"
               >
                 Archive
               </button>
             )}
           </div>
         </div>
-      </div>
-    ))
+      )
+    })
   }
 
   return (
@@ -963,16 +985,11 @@ export default function InstructorPage() {
           </div>
         )}
 
-        <div className="grid md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-lg">
-            <div className="text-3xl mb-2">📅</div>
-            <div className="text-3xl font-bold text-primary">{todayBookings.length}</div>
-            <p className="text-gray-600">Todays Lessons</p>
-          </div>
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-xl p-6 shadow-lg">
             <div className="text-3xl mb-2">🗓️</div>
-            <div className="text-3xl font-bold text-blue-600">{upcomingBookings.length}</div>
-            <p className="text-gray-600">Upcoming</p>
+            <div className="text-3xl font-bold text-blue-600">{todayBookings.length + upcomingBookings.length}</div>
+            <p className="text-gray-600">Today & Upcoming</p>
           </div>
           <div className="bg-white rounded-xl p-6 shadow-lg">
             <div className="text-3xl mb-2">✅</div>
@@ -990,13 +1007,9 @@ export default function InstructorPage() {
           <div className="border-b">
             <div className="flex">
               <button
-                className={`flex-1 px-6 py-4 font-semibold transition ${selectedTab === 'today' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
-                onClick={() => setSelectedTab('today')}
-              >Today ({todayBookings.length})</button>
-              <button
                 className={`flex-1 px-6 py-4 font-semibold transition ${selectedTab === 'upcoming' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
                 onClick={() => setSelectedTab('upcoming')}
-              >Upcoming ({upcomingBookings.length})</button>
+              >Upcoming ({todayBookings.length + upcomingBookings.length})</button>
               <button
                 className={`flex-1 px-6 py-4 font-semibold transition ${selectedTab === 'all' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
                 onClick={() => setSelectedTab('all')}

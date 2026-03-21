@@ -568,10 +568,10 @@ export function validateBooking(booking: Partial<Booking>, selectedSlotIds?: str
 // Get price for lesson type
 export function getLessonPrice(lessonType: string): number {
   const prices: Record<string, number> = {
-    'single': 50,
+    'single': 55,
     'casual': 45,
   }
-  return prices[lessonType] || 50
+  return prices[lessonType] || 55
 }
 
 // Get lesson type display name
@@ -598,7 +598,7 @@ export function getRequiredLessons(lessonType: string): number {
 // Get lesson type options
 export function getLessonTypes() {
   return [
-    { id: 'single', name: 'Single Lesson', duration: '60 min', price: 50 },
+    { id: 'single', name: 'Single Lesson', duration: '60 min', price: 55 },
     { id: 'casual', name: 'Casual Driving', duration: '60 min', price: 45 },
   ]
 }
