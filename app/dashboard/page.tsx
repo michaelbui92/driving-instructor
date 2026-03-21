@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { formatDate, getLessonTypeName, getRequiredLessons, type Booking } from '@/lib/booking-utils'
+import { formatDate, getLessonTypeName, getRequiredLessons, getAvailableSlots, type Booking } from '@/lib/booking-utils'
 
 export default function DashboardPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
@@ -75,6 +75,41 @@ export default function DashboardPage() {
 
   const saveReschedule = (newDate: string, newTime: string) => {
     try {
+      // 1. Validate: Cannot book past dates
+      const today = new Date()
+      today.setHours(0, 0, 0, 0) // Set to start of day for comparison
+      const selectedDate = new Date(newDate)
+      selectedDate.setHours(0, 0, 0, 0)
+      
+      if (selectedDate < today) {
+        alert('Cannot reschedule to a past date. Please select a future date.')
+        return
+      }
+
+      // 2. Validate: Check if time slot is already booked (excluding the current booking being rescheduled)
+      const existingBookingsForDate = bookings.filter(b => 
+        b.date === newDate && 
+        b.time === newTime && 
+        b.id !== reschedulingBooking?.id && // Exclude the current booking
+        (b.status === 'pending' || b.status === 'confirmed') // Only check pending/confirmed bookings
+      )
+
+      if (existingBookingsForDate.length > 0) {
+        alert('This time slot is already booked. Please select a different time.')
+        return
+      }
+
+      // 3. Validate: Check if slot is available (using availability rules and blocked slots)
+      // We'll use getAvailableSlots to check if the slot would be available
+      const availableSlots = getAvailableSlots(newDate, bookings.filter(b => b.id !== reschedulingBooking?.id))
+      const isSlotAvailable = availableSlots.some(slot => slot.time === newTime)
+      
+      if (!isSlotAvailable) {
+        alert('This time slot is not available. Please select a different time.')
+        return
+      }
+
+      // All validation passed, proceed with rescheduling
       const updatedBookings = bookings.map(b =>
         b.id === reschedulingBooking?.id
           ? { ...b, date: newDate, time: newTime, status: 'pending' as const }
@@ -98,24 +133,14 @@ export default function DashboardPage() {
 
   const getAvailableTimeOptions = (date: string) => {
     if (!date) return []
-
-    const dateObj = new Date(date)
-    const dayOfWeek = dateObj.getDay()
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
-
-    if (isWeekend) {
-      // Weekend: 8am to 7pm (every hour EXCEPT 12pm)
-      return [
-        '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM',
-        '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM'
-      ]
-    } else {
-      // Weekday: 9am to 8pm (every hour EXCEPT 12pm)
-      return [
-        '9:00 AM', '10:00 AM', '11:00 AM',
-        '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM'
-      ]
-    }
+    
+    // Use getAvailableSlots to get only actually available slots
+    // Exclude the current booking being rescheduled from the existing bookings check
+    const existingBookingsExcludingCurrent = bookings.filter(b => b.id !== reschedulingBooking?.id)
+    const availableSlots = getAvailableSlots(date, existingBookingsExcludingCurrent)
+    
+    // Return just the time strings from available slots
+    return availableSlots.map(slot => slot.time)
   }
 
   return (
@@ -371,23 +396,36 @@ export default function DashboardPage() {
                   id="newDate"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   defaultValue={reschedulingBooking.date}
+                  min={new Date().toISOString().split('T')[0]} // Prevent past dates
                   onChange={(e) => setSelectedNewDate(e.target.value)}
                 />
               </div>
 
               <div>
                 <p className="text-sm text-gray-600 mb-2">New Time:</p>
-                <select
-                  id="newTime"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  defaultValue={reschedulingBooking.time}
-                >
-                  {getAvailableTimeOptions(selectedNewDate || reschedulingBooking.date).map(time => (
-                    <option key={time} value={time}>
-                      {time === '8:00 PM' ? `${time} (Night Time)` : time}
-                    </option>
-                  ))}
-                </select>
+                {(() => {
+                  const availableTimes = getAvailableTimeOptions(selectedNewDate || reschedulingBooking.date)
+                  if (availableTimes.length === 0) {
+                    return (
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
+                        No available time slots for this date. Please select a different date.
+                      </div>
+                    )
+                  }
+                  return (
+                    <select
+                      id="newTime"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      defaultValue={reschedulingBooking.time}
+                    >
+                      {availableTimes.map(time => (
+                        <option key={time} value={time}>
+                          {time === '8:00 PM' ? `${time} (Night Time)` : time}
+                        </option>
+                      ))}
+                    </select>
+                  )
+                })()}
               </div>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
@@ -407,7 +445,15 @@ export default function DashboardPage() {
               <button
                 onClick={() => {
                   const newDate = (document.getElementById('newDate') as HTMLInputElement)?.value || ''
-                  const newTime = (document.getElementById('newTime') as HTMLSelectElement)?.value || ''
+                  const newTimeSelect = document.getElementById('newTime') as HTMLSelectElement
+                  
+                  // Check if time selector exists (it won't if there are no available slots)
+                  if (!newTimeSelect) {
+                    alert('No available time slots for this date. Please select a different date.')
+                    return
+                  }
+                  
+                  const newTime = newTimeSelect.value || ''
                   if (newDate && newTime) {
                     saveReschedule(newDate, newTime)
                   } else {
