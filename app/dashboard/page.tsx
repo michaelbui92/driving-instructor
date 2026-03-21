@@ -10,6 +10,7 @@ export default function DashboardPage() {
   const [selectedTab, setSelectedTab] = useState<'upcoming' | 'completed'>('upcoming')
   const [reschedulingBooking, setReschedulingBooking] = useState<Booking | null>(null)
   const [selectedNewDate, setSelectedNewDate] = useState<string>('')
+  const [dateHasNoSlots, setDateHasNoSlots] = useState<boolean>(false)
   const [portalImageIndex, setPortalImageIndex] = useState(0)
   const portalImages = ['/images/student-portal-1.png', '/images/student-portal-2.png']
 
@@ -71,6 +72,9 @@ export default function DashboardPage() {
   const handleReschedule = (booking: Booking) => {
     setReschedulingBooking(booking)
     setSelectedNewDate(booking.date)
+    // Check if current date has available slots (excluding current booking)
+    const availableSlots = getAvailableSlots(booking.date, bookings.filter(b => b.id !== booking.id))
+    setDateHasNoSlots(availableSlots.length === 0)
   }
 
   const saveReschedule = (newDate: string, newTime: string) => {
@@ -110,11 +114,28 @@ export default function DashboardPage() {
       }
 
       // All validation passed, proceed with rescheduling
-      const updatedBookings = bookings.map(b =>
-        b.id === reschedulingBooking?.id
-          ? { ...b, date: newDate, time: newTime, status: 'pending' as const }
-          : b
-      )
+      const updatedBookings = bookings.map(b => {
+        if (b.id === reschedulingBooking?.id) {
+          // Track reschedule history
+          const rescheduleHistory = b.rescheduleHistory || []
+          rescheduleHistory.push({
+            date: b.date,
+            time: b.time,
+            changedAt: new Date().toISOString()
+          })
+          
+          return { 
+            ...b, 
+            date: newDate, 
+            time: newTime, 
+            status: 'pending' as const,
+            originalDate: b.originalDate || b.date, // Store original date if not already set
+            previousDate: b.date, // Store previous date
+            rescheduleHistory
+          }
+        }
+        return b
+      })
       setBookings(updatedBookings)
       localStorage.setItem('bookings', JSON.stringify(updatedBookings))
       alert('Booking rescheduled successfully. Instructor confirmation required.')
@@ -397,8 +418,24 @@ export default function DashboardPage() {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   defaultValue={reschedulingBooking.date}
                   min={new Date().toISOString().split('T')[0]} // Prevent past dates
-                  onChange={(e) => setSelectedNewDate(e.target.value)}
+                  onChange={(e) => {
+                    const newDate = e.target.value
+                    setSelectedNewDate(newDate)
+                    // Check if date has available slots
+                    if (newDate) {
+                      const availableSlots = getAvailableSlots(newDate, bookings.filter(b => b.id !== reschedulingBooking?.id))
+                      setDateHasNoSlots(availableSlots.length === 0)
+                    } else {
+                      setDateHasNoSlots(false)
+                    }
+                  }}
                 />
+                <p className="text-xs text-gray-500 mt-1">Dates with no available slots are greyed out</p>
+                {dateHasNoSlots && selectedNewDate && (
+                  <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
+                    ⚠️ No available time slots for {formatDate(selectedNewDate)}. Please select a different date.
+                  </div>
+                )}
               </div>
 
               <div>
@@ -460,9 +497,14 @@ export default function DashboardPage() {
                     alert('Please select new date and time')
                   }
                 }}
-                className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition"
+                disabled={dateHasNoSlots}
+                className={`flex-1 px-4 py-2 rounded-lg transition ${
+                  dateHasNoSlots 
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                    : 'bg-primary text-white hover:bg-secondary'
+                }`}
               >
-                Save Changes
+                {dateHasNoSlots ? 'No Available Slots' : 'Save Changes'}
               </button>
             </div>
           </div>

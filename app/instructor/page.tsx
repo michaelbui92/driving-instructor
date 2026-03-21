@@ -25,7 +25,7 @@ import {
   getSortedRules
 } from '@/lib/booking-utils'
 
-type TabType = 'upcoming' | 'all' | 'rules' | 'availability'
+type TabType = 'upcoming' | 'all' | 'rules' | 'availability' | 'calendar'
 
 interface RuleFormData {
   name: string
@@ -54,6 +54,10 @@ export default function InstructorPage() {
 
   // Email filter state
   const [emailFilter, setEmailFilter] = useState<string>('')
+
+  // Calendar state
+  const [calendarMonth, setCalendarMonth] = useState<number>(new Date().getMonth())
+  const [calendarYear, setCalendarYear] = useState<number>(new Date().getFullYear())
 
   // Rules management state
   const [rules, setRules] = useState<AvailabilityRule[]>([])
@@ -840,6 +844,193 @@ export default function InstructorPage() {
     </div>
   )
 
+  const renderCalendarTab = () => {
+    // Use state for month/year navigation
+    const currentMonth = calendarMonth
+    const currentYear = calendarYear
+    const today = new Date()
+    
+    // Get first day of month
+    const firstDay = new Date(currentYear, currentMonth, 1)
+    const lastDay = new Date(currentYear, currentMonth + 1, 0)
+    
+    // Get day of week for first day (0 = Sunday, 6 = Saturday)
+    const firstDayOfWeek = firstDay.getDay()
+    
+    // Generate days in month
+    const daysInMonth = lastDay.getDate()
+    
+    // Create array of days
+    const days = []
+    
+    // Add empty cells for days before first day of month
+    for (let i = 0; i < firstDayOfWeek; i++) {
+      days.push(null)
+    }
+    
+    // Add days of month
+    for (let i = 1; i <= daysInMonth; i++) {
+      const date = new Date(currentYear, currentMonth, i)
+      const dateString = date.toISOString().split('T')[0]
+      days.push(dateString)
+    }
+    
+    // Group bookings by date
+    const bookingsByDate: Record<string, Booking[]> = {}
+    allBookings.forEach(booking => {
+      if (!bookingsByDate[booking.date]) {
+        bookingsByDate[booking.date] = []
+      }
+      bookingsByDate[booking.date].push(booking)
+    })
+    
+    // Day names
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    
+    return (
+      <div>
+        <h2 className="text-2xl font-bold mb-6">Calendar View</h2>
+        <p className="text-gray-600 mb-6">
+          View all bookings in a calendar format. Click on a booking to see details.
+        </p>
+        
+        <div className="bg-white border rounded-xl p-6 shadow-lg">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xl font-bold">
+              {new Date(currentYear, currentMonth).toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })}
+            </h3>
+            <div className="flex gap-2">
+              <button 
+                onClick={() => {
+                  if (calendarMonth === 0) {
+                    setCalendarMonth(11)
+                    setCalendarYear(calendarYear - 1)
+                  } else {
+                    setCalendarMonth(calendarMonth - 1)
+                  }
+                }}
+                className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+              >
+                Previous
+              </button>
+              <button 
+                onClick={() => {
+                  setCalendarMonth(new Date().getMonth())
+                  setCalendarYear(new Date().getFullYear())
+                }}
+                className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+              >
+                Today
+              </button>
+              <button 
+                onClick={() => {
+                  if (calendarMonth === 11) {
+                    setCalendarMonth(0)
+                    setCalendarYear(calendarYear + 1)
+                  } else {
+                    setCalendarMonth(calendarMonth + 1)
+                  }
+                }}
+                className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+          
+          {/* Calendar Grid */}
+          <div className="grid grid-cols-7 gap-2">
+            {/* Day headers */}
+            {dayNames.map(day => (
+              <div key={day} className="text-center font-semibold text-gray-700 py-2 border-b">
+                {day}
+              </div>
+            ))}
+            
+            {/* Calendar days */}
+            {days.map((date, index) => {
+              if (date === null) {
+                return <div key={`empty-${index}`} className="h-32 bg-gray-50 rounded-lg"></div>
+              }
+              
+              const dayBookings = bookingsByDate[date] || []
+              const isToday = date === new Date().toISOString().split('T')[0]
+              const dayNumber = new Date(date).getDate()
+              
+              return (
+                <div 
+                  key={date} 
+                  className={`h-32 border rounded-lg p-2 overflow-y-auto ${isToday ? 'bg-blue-50 border-blue-300' : 'bg-white'}`}
+                >
+                  <div className="flex justify-between items-start mb-1">
+                    <span className={`font-semibold ${isToday ? 'text-blue-600' : 'text-gray-700'}`}>
+                      {dayNumber}
+                    </span>
+                    {isToday && (
+                      <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">Today</span>
+                    )}
+                  </div>
+                  
+                  {/* Bookings for this day */}
+                  <div className="space-y-1">
+                    {dayBookings.slice(0, 3).map(booking => (
+                      <div 
+                        key={booking.id}
+                        className={`text-xs p-1 rounded cursor-pointer hover:opacity-90 ${
+                          booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800 border border-yellow-300' :
+                          booking.status === 'confirmed' ? 'bg-green-100 text-green-800 border border-green-300' :
+                          booking.status === 'completed' ? 'bg-gray-100 text-gray-800 border border-gray-300' :
+                          'bg-red-100 text-red-800 border border-red-300'
+                        }`}
+                        onClick={() => setSelectedBooking(booking)}
+                      >
+                        <div className="font-medium truncate">{booking.studentName}</div>
+                        <div className="truncate">{booking.time}</div>
+                      </div>
+                    ))}
+                    
+                    {dayBookings.length > 3 && (
+                      <div className="text-xs text-gray-500 text-center">
+                        +{dayBookings.length - 3} more
+                      </div>
+                    )}
+                    
+                    {dayBookings.length === 0 && (
+                      <div className="text-xs text-gray-400 text-center mt-4">No bookings</div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+          
+          {/* Legend */}
+          <div className="mt-6 pt-4 border-t">
+            <h4 className="font-semibold mb-2">Legend:</h4>
+            <div className="flex flex-wrap gap-3">
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-yellow-100 border border-yellow-300 rounded mr-2"></div>
+                <span className="text-sm">Pending</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-green-100 border border-green-300 rounded mr-2"></div>
+                <span className="text-sm">Confirmed</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-gray-100 border border-gray-300 rounded mr-2"></div>
+                <span className="text-sm">Completed</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-3 h-3 bg-red-100 border border-red-300 rounded mr-2"></div>
+                <span className="text-sm">Cancelled</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   const renderBookingList = () => {
     const filtered = getFilteredBookings()
     if (filtered.length === 0) {
@@ -964,6 +1155,11 @@ export default function InstructorPage() {
                   <div>
                     <p className="font-semibold text-gray-900">{booking.studentName}</p>
                     <p className="text-sm text-gray-600">{formatDate(booking.date)} at {booking.time} - ${booking.price}</p>
+                    {booking.originalDate && booking.originalDate !== booking.date && (
+                      <p className="text-sm text-orange-600 mt-1">
+                        ⚠️ {booking.studentName} has changed from {formatDate(booking.originalDate)} to {formatDate(booking.date)}, confirm cancel
+                      </p>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -1022,10 +1218,14 @@ export default function InstructorPage() {
                 className={`flex-1 px-6 py-4 font-semibold transition ${selectedTab === 'availability' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
                 onClick={() => setSelectedTab('availability')}
               >🚫 Availability</button>
+              <button
+                className={`flex-1 px-6 py-4 font-semibold transition ${selectedTab === 'calendar' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
+                onClick={() => setSelectedTab('calendar')}
+              >📅 Calendar</button>
             </div>
           </div>
           <div className="p-6">
-            {selectedTab === 'availability' ? renderAvailabilityTab() : selectedTab === 'rules' ? renderRulesTab() : (
+            {selectedTab === 'availability' ? renderAvailabilityTab() : selectedTab === 'rules' ? renderRulesTab() : selectedTab === 'calendar' ? renderCalendarTab() : (
               <>
                 {selectedTab === 'all' && (
                   <div className="mb-4">

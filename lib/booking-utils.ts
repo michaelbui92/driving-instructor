@@ -243,6 +243,9 @@ export interface Booking {
   archived?: boolean // Archive status (default: false)
   packageId?: string // ID to group individual bookings from a package
   packageLessonIndex?: number // Index of this lesson within a package (0-based)
+  originalDate?: string // For rescheduled bookings: original date before reschedule
+  previousDate?: string // For multiple reschedules: previous date
+  rescheduleHistory?: Array<{date: string, time: string, changedAt: string}> // Full history of reschedules
 }
 
 export interface LessonSlot {
