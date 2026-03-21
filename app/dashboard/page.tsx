@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import Navbar from '@/components/Navbar'
 import { formatDate, getLessonTypeName, getRequiredLessons, getAvailableSlots, generateTimeSlots, type Booking } from '@/lib/booking-utils'
 
 export default function DashboardPage() {
@@ -194,28 +195,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Navigation */}
-      <nav className="bg-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="text-2xl font-bold text-primary">🚗 Drive With Bui</Link>
-            <div className="flex space-x-4">
-              <Link
-                href="/book"
-                className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition"
-              >
-                New Booking
-              </Link>
-              <Link
-                href="/"
-                className="text-gray-700 hover:text-primary transition"
-              >
-                Home
-              </Link>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navbar showLocation={false} />
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 py-12">

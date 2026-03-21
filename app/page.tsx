@@ -1,71 +1,28 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import Navbar from '@/components/Navbar'
 import DynamicHeadline from '@/components/DynamicHeadline'
 
 export default function Home() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Navigation */}
-      <nav className="bg-white shadow-lg sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <span className="text-2xl font-bold text-primary">🚗 Drive With Bui</span>
-            </div>
-
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex space-x-8 items-center">
-              <Link href="#services" className="text-gray-700 hover:text-primary transition">Services</Link>
-              <Link href="#pricing" className="text-gray-700 hover:text-primary transition">Pricing</Link>
-              <Link href="#about" className="text-gray-700 hover:text-primary transition">About</Link>
-              <Link href="#contact" className="text-gray-700 hover:text-primary transition">Contact</Link>
-              <Link href="/dashboard" className="px-4 py-2 border-2 border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition">Student Portal</Link>
-              <Link href="/instructor" className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition">Instructor Portal</Link>
-            </div>
-
-            {/* Mobile menu button */}
-            <div className="md:hidden flex items-center">
-              <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="text-gray-700 hover:text-primary focus:outline-none"
-              >
-                {mobileMenuOpen ? (
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                ) : (
-                  <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                  </svg>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Mobile menu */}
-          {mobileMenuOpen && (
-            <div className="md:hidden pb-4 space-y-2">
-              <Link href="#services" className="block px-4 py-2 text-gray-700 hover:text-primary hover:bg-blue-50">Services</Link>
-              <Link href="#pricing" className="block px-4 py-2 text-gray-700 hover:text-primary hover:bg-blue-50">Pricing</Link>
-              <Link href="#about" className="block px-4 py-2 text-gray-700 hover:text-primary hover:bg-blue-50">About</Link>
-              <Link href="#contact" className="block px-4 py-2 text-gray-700 hover:text-primary hover:bg-blue-50">Contact</Link>
-              <Link href="/dashboard" className="block px-4 py-2 text-gray-700 hover:text-primary hover:bg-blue-50">Student Portal</Link>
-              <Link href="/instructor" className="block px-4 py-2 text-gray-700 hover:text-primary hover:bg-blue-50">Instructor Portal</Link>
-            </div>
-          )}
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
         <div className="flex flex-col lg:flex-row items-center gap-12">
           <div className="flex-1 text-center lg:text-left">
             <DynamicHeadline />
+            <div className="mb-4">
+              <span className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-800 text-sm font-medium">
+                <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                </svg>
+                Serving the Lidcombe Area
+              </span>
+            </div>
             <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto lg:mx-0">
               Patient, professional driving lessons tailored for international students and working holiday makers. Build confidence and get your NSW licence with an instructor who understands your needs.
             </p>
@@ -273,17 +230,28 @@ export default function Home() {
             </div>
             <div>
               <h3 className="text-xl font-bold mb-4">Contact</h3>
-              <p className="text-gray-400 mb-2">📍 Sydney, NSW, Australia</p>
-              <p className="text-gray-400 mb-2">✉️ drivewithbui@gmail.com</p>
-              <p className="text-gray-400 mb-2">📸 @DriveWithBui</p>
-              <a
-                href="https://instagram.com/DriveWithBui"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-400 hover:text-blue-300 transition"
-              >
-                Follow us on Instagram
-              </a>
+              <p className="text-gray-400 mb-2">📍 Lidcombe Area, Sydney NSW</p>
+              <p className="text-gray-400 mb-2">✉️ drivewithbui@agentmail.to</p>
+              <div className="mb-4">
+                <div className="flex items-center mb-2">
+                  <svg className="w-5 h-5 mr-2 text-pink-400" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                  </svg>
+                  <span className="text-gray-400">📸 @DriveWithBui</span>
+                </div>
+                <a
+                  href="https://instagram.com/DriveWithBui"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center text-pink-400 hover:text-pink-300 transition font-medium"
+                >
+                  Follow for driving tips & videos
+                  <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                  </svg>
+                </a>
+                <p className="text-gray-500 text-sm mt-2">Get weekly driving tips, lesson highlights, and student success stories</p>
+              </div>
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import Navbar from '@/components/Navbar'
 import {
   generateTimeSlots,
   formatDate,
@@ -160,20 +161,7 @@ export default function BookPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Navigation */}
-      <nav className="bg-white shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="text-2xl font-bold text-primary">🚗 Drive With Bui</Link>
-            <Link
-              href="/"
-              className="text-gray-700 hover:text-primary transition"
-            >
-              Back to Home
-            </Link>
-          </div>
-        </div>
-      </nav>
+      <Navbar showLocation={false} />
 
       {/* Progress Bar */}
       <div className="bg-white shadow-sm">
