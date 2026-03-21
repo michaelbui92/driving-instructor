@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import DynamicHeadline from '@/components/DynamicHeadline'
 
 export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -75,7 +74,8 @@ export default function Home() {
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
         <div className="text-center">
-          <DynamicHeadline />
+          <h1 className="text-4xl md:text-5xl font-bold text-primary mb-4">Drive With Bui</h1>
+          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">Professional driving lessons in Sydney</p>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
             Professional driving lessons tailored for international students and working holiday makers. Learn safe driving skills to confidently navigate Sydney's roads with patient, experienced instruction perfect for nervous drivers.
           </p>
@@ -113,7 +113,7 @@ export default function Home() {
             </div>
             <div className="text-center p-6 rounded-lg bg-blue-50 hover:shadow-xl transition">
               <div className="text-5xl mb-4">💰</div>
-              <h3 className="text-xl font-bold mb-2">Flexible Pricing</h3>
+              <h3 className="text-xl font-bold mb-2">Driving Packages</h3>
               <p className="text-gray-600">Book single lessons at competitive rates</p>
             </div>
           </div>
