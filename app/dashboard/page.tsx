@@ -175,7 +175,10 @@ export default function DashboardPage() {
       const dateString = date.toISOString().split('T')[0]
       
       // Check if this date has any available slots
-      const existingBookingsExcludingCurrent = bookings.filter(b => b.id !== reschedulingBooking?.id)
+      // Exclude the current booking being rescheduled (if any)
+      const existingBookingsExcludingCurrent = reschedulingBooking 
+        ? bookings.filter(b => b.id !== reschedulingBooking.id)
+        : bookings
       const availableSlots = getAvailableSlots(dateString, existingBookingsExcludingCurrent)
       const hasSlots = availableSlots.length > 0
       
