@@ -3,10 +3,9 @@
 import { useState, useEffect } from 'react'
 
 const phrases = [
-  " to go from anxious to assured",
-  " to unlock your Australian adventure",
-  " to learn skills for life, not just for the test",
-  " if you have never driven before"
+  " to Get Your License",
+  " to Become A Safe Driver",
+  " to Build Your Confidence"
 ]
 
 export default function DynamicHeadline() {
@@ -43,9 +42,10 @@ export default function DynamicHeadline() {
         }, 40) // deleting speed (faster than typing)
         return () => clearTimeout(timer)
       } else {
-        // Finished deleting, move to next phrase
+        // Finished deleting, move to next phrase (randomize, no repeats)
         const timer = setTimeout(() => {
-          setCurrentPhraseIndex((currentPhraseIndex + 1) % phrases.length)
+          const nextIndex = (currentPhraseIndex + 1 + Math.floor(Math.random() * (phrases.length - 1))) % phrases.length
+          setCurrentPhraseIndex(nextIndex)
           setIsTyping(true)
         }, 500) // pause before typing next
         return () => clearTimeout(timer)

@@ -206,85 +206,115 @@ export default function BookPage() {
         {step === 1 && (
           <div>
             <h2 className="text-3xl font-bold mb-6">Choose Your Lesson</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-              {lessonTypes.map((type) => {
-                return (
-                  <div
-                    key={type.id}
-                    className={`p-6 rounded-xl border-2 cursor-pointer transition ${
-                      booking.lessonType === type.id
-                        ? 'border-primary bg-blue-50'
-                        : 'border-gray-200 bg-white hover:border-primary'
-                    }`}
-                    onClick={() => {
-                      handleLessonTypeSelect(type.id)
-                      setSelectedLessonImage(type.id)
-                    }}
-                  >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="text-xl font-bold mb-2">
-                          {type.name}
-                        </h3>
-                        <p className="text-gray-600 mb-4">{type.duration}</p>
-                        <div className="text-3xl font-bold text-primary">
-                          ${type.price}
+            <div className="flex flex-col md:flex-row gap-8">
+              {/* LEFT: Two lesson cards stacked */}
+              <div className="flex flex-col gap-4 md:w-1/2">
+                {lessonTypes.map((type) => {
+                  return (
+                    <div
+                      key={type.id}
+                      className={`p-6 rounded-xl border-2 cursor-pointer transition ${
+                        booking.lessonType === type.id
+                          ? 'border-primary bg-blue-50'
+                          : 'border-gray-200 bg-white hover:border-primary'
+                      }`}
+                      onClick={() => {
+                        handleLessonTypeSelect(type.id)
+                        setSelectedLessonImage(type.id)
+                      }}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <h3 className="text-xl font-bold mb-2">
+                            {type.name}
+                          </h3>
+                          <p className="text-gray-600 mb-4">{type.duration}</p>
+                          <div className="text-3xl font-bold text-primary">
+                            ${type.price}
+                          </div>
+                          {type.id === 'casual' && (
+                            <p className="text-xs text-green-600 mt-2">Great value!</p>
+                          )}
                         </div>
-                        {type.id === 'casual' && (
-                          <p className="text-xs text-green-600 mt-2">Great value!</p>
-                        )}
                       </div>
                     </div>
-                  </div>
-                )
-              })}
-            </div>
-            {/* Selected Lesson Display */}
-            <div className="mt-8 flex flex-col md:flex-row justify-center items-center gap-6">
-              {/* Lesson Image */}
-              <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-xl overflow-hidden shadow-xl bg-white border-2 border-gray-200 flex-shrink-0">
-                {selectedLessonImage === 'single' ? (
-                  <Image src="/images/hover-single.png" alt="Single Lesson" fill className="object-contain" />
-                ) : (
-                  <Image src="/images/hover-casual.png" alt="Casual Driving" fill className="object-contain" />
-                )}
+                  )
+                })}
               </div>
-              {/* Bullet Points */}
-              <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-gray-200 max-w-sm">
-                <h4 className="text-lg font-bold mb-3 text-gray-800">
-                  {selectedLessonImage === 'single' ? 'Single Lesson' : 'Casual Driving'}
-                </h4>
-                {selectedLessonImage === 'single' ? (
-                  <ul className="text-gray-600 space-y-2">
-                    <li className="flex items-start">
-                      <span className="text-primary mr-2">•</span>
-                      Learn parking skills
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-primary mr-2">•</span>
-                      Master driving techniques
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-primary mr-2">•</span>
-                      Safety tips & best practices
-                    </li>
-                  </ul>
-                ) : (
-                  <ul className="text-gray-600 space-y-2">
-                    <li className="flex items-start">
-                      <span className="text-primary mr-2">•</span>
-                      Build confidence
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-primary mr-2">•</span>
-                      Relaxed, unhurried practice
-                    </li>
-                    <li className="flex items-start">
-                      <span className="text-primary mr-2">•</span>
-                      Drive somewhere with an instructor
-                    </li>
-                  </ul>
-                )}
+
+              {/* RIGHT: Image on top, description below */}
+              <div className="md:w-1/2 flex flex-col gap-4">
+                {/* Lesson Image */}
+                <div 
+                  className="relative w-full h-72 rounded-xl overflow-hidden shadow-xl bg-white border-2 border-gray-200 cursor-pointer"
+                  onClick={() => setBooking(prev => ({ ...prev }))}
+                >
+                  {selectedLessonImage === 'single' ? (
+                    <Image src="/images/hover-single.png" alt="Single Lesson" fill className="object-contain" />
+                  ) : (
+                    <Image src="/images/hover-casual.png" alt="Casual Driving" fill className="object-contain" />
+                  )}
+                </div>
+
+                {/* Fixed-height Description Box */}
+                <div className="bg-white rounded-xl p-5 shadow-lg border-2 border-gray-200 h-56 overflow-y-auto">
+                  <h4 className="text-lg font-bold mb-3 text-gray-800">
+                    {selectedLessonImage === 'single' ? 'Single Lesson' : 'Casual Driving'}
+                  </h4>
+                  {selectedLessonImage === 'single' ? (
+                    <div className="text-gray-600 text-sm leading-relaxed">
+                      <p className="mb-3">Perfect for new students taking their first steps. Learn essential driving skills including:</p>
+                      <ul className="space-y-2">
+                        <li className="flex items-start">
+                          <span className="text-primary mr-2">→</span>
+                          Proper steering and mirror checks
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-primary mr-2">→</span>
+                          Lane changing and merging safely
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-primary mr-2">→</span>
+                          Parking techniques (reversing, 3-point turns)
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-primary mr-2">→</span>
+                          Road rules and situational awareness
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-primary mr-2">→</span>
+                          Building confidence behind the wheel
+                        </li>
+                      </ul>
+                    </div>
+                  ) : (
+                    <div className="text-gray-600 text-sm leading-relaxed">
+                      <p className="mb-3">For students who already know the basics and want to maintain their skills. Practice real-world driving without pressure:</p>
+                      <ul className="space-y-2">
+                        <li className="flex items-start">
+                          <span className="text-primary mr-2">→</span>
+                          Keep skills sharp between lessons
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-primary mr-2">→</span>
+                          Gain experience on various road types
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-primary mr-2">→</span>
+                          Relaxed, stress-free driving practice
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-primary mr-2">→</span>
+                          Prepare for your driving test
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-primary mr-2">→</span>
+                          Build muscle memory and independence
+                        </li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
