@@ -1,11 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 const phrases = [
-  " to Get Your License",
-  " to Become A Safe Driver",
-  " to Build Your Confidence"
+  " to build your confidence",
+  " to be a Safe Driver",
+  " to go from anxious to assured",
+  " to unlock your Australian adventure",
+  " to learn skills for life, not just for the test",
+  " if you have never driven before"
 ]
 
 export default function DynamicHeadline() {
@@ -13,6 +16,9 @@ export default function DynamicHeadline() {
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0)
   const [isTyping, setIsTyping] = useState(true)
   const [charIndex, setCharIndex] = useState(0)
+  
+  // Keep last 2 shown indices to avoid repeats
+  const recentIndices = useRef<number[]>([])
 
   useEffect(() => {
     const currentPhrase = phrases[currentPhraseIndex]
@@ -44,7 +50,13 @@ export default function DynamicHeadline() {
       } else {
         // Finished deleting, move to next phrase (randomize, no repeats)
         const timer = setTimeout(() => {
-          const nextIndex = (currentPhraseIndex + 1 + Math.floor(Math.random() * (phrases.length - 1))) % phrases.length
+          // Filter out recent indices, pick random from remaining
+          const availableIndices = phrases.map((_, i) => i).filter(i => !recentIndices.current.includes(i))
+          const nextIndex = availableIndices[Math.floor(Math.random() * availableIndices.length)]
+          
+          // Update recent indices (keep last 2)
+          recentIndices.current = [...recentIndices.current.slice(-1), nextIndex]
+          
           setCurrentPhraseIndex(nextIndex)
           setIsTyping(true)
         }, 500) // pause before typing next
