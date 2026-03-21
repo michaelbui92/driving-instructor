@@ -70,6 +70,51 @@ const faqData: FAQItem[] = [
     question: "How do I book lessons?",
     answer: "You can book lessons through our online booking system on this website, or contact us directly via phone or email. We recommend booking in advance to secure your preferred time slots.",
     category: "Booking"
+  },
+  {
+    question: "What are the most common mistakes in the driving test?",
+    answer: "The most common mistakes include: not checking blind spots properly, speeding in school zones, incorrect lane positioning, and poor observation at intersections. We focus on these areas specifically during test preparation lessons.",
+    category: "Driving Test"
+  },
+  {
+    question: "How early should I arrive for my driving test?",
+    answer: "Arrive at least 15 minutes before your scheduled test time. This gives you time to check in, use the restroom, and calm your nerves. Being rushed can affect your performance.",
+    category: "Driving Test"
+  },
+  {
+    question: "What's the best way to practice parallel parking?",
+    answer: "Start with cones in an empty parking lot to build confidence. Practice the step-by-step method: position, reverse at 45 degrees, straighten, then complete. We teach a reliable method that works in tight Sydney spaces.",
+    category: "Skills"
+  },
+  {
+    question: "How do I handle roundabouts correctly?",
+    answer: "Approach at appropriate speed, give way to vehicles already in the roundabout, signal left when exiting, and maintain correct lane position. We practice on different types of roundabouts to build confidence.",
+    category: "Skills"
+  },
+  {
+    question: "What should I do if I stall during my driving test?",
+    answer: "Stay calm! Restart the car safely, check your mirrors and blind spots, then continue. Stalling once is usually a minor error unless it creates a dangerous situation. The key is how you recover.",
+    category: "Driving Test"
+  },
+  {
+    question: "How can I reduce nervousness before my test?",
+    answer: "Practice the test route, get a good night's sleep, eat a light meal, and do breathing exercises. We also offer mock tests that simulate the real experience to build confidence.",
+    category: "Driving Test"
+  },
+  {
+    question: "What's included in a test package?",
+    answer: "Our test package includes: use of our car for the test, a 1-hour warm-up lesson before the test, waiting during your test, and debrief afterward. We ensure the car meets all test requirements.",
+    category: "Driving Test"
+  },
+  {
+    question: "How do I improve my observation skills?",
+    answer: "Practice systematic scanning: mirrors every 5-8 seconds, head checks for blind spots, and constant awareness of surroundings. We use specific exercises to develop this crucial skill.",
+    category: "Skills"
+  },
+  {
+    question: "What are the new road rules I should know?",
+    answer: "Recent changes include: mobile phone detection cameras, lower speed limits in some areas, and updated give way rules. We stay current with all NSW road rule changes and incorporate them into lessons.",
+    category: "Road Rules"
   }
 ]
 

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /_next/
+Disallow: /*.json$
+Disallow: /*.js$
+
+Sitemap: https://drivewithbui.com/sitemap.xml
