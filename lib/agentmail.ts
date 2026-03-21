@@ -15,6 +15,7 @@ interface SendEmailResponse {
   success: boolean
   message?: string
   error?: string
+  messageId?: string
 }
 
 /**
@@ -35,105 +36,42 @@ export async function sendEmail(params: SendEmailParams): Promise<SendEmailRespo
       }
     }
 
-    // First, get the inbox details to get the pod_id
-    let podId = null
-    try {
-      const inboxResponse = await fetch(`https://api.agentmail.to/v0/inboxes/${encodeURIComponent(params.to)}`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-      })
-      
-      if (inboxResponse.ok) {
-        const inboxData = await inboxResponse.json()
-        podId = inboxData.pod_id
-        console.log(`Got pod_id for inbox ${params.to}: ${podId}`)
-      }
-    } catch (error) {
-      console.error('Failed to get inbox details:', error)
-    }
-
-    // Try multiple API endpoint patterns
-    const endpoints = [
-      // Pattern 1: v1 endpoint from task description
-      {
-        url: 'https://api.agentmail.to/v1/emails/send',
-        body: {
-          to: params.to,
-          subject: params.subject,
-          body: params.body,
-        }
-      },
-      // Pattern 2: v0 endpoint with inbox as sender (using email)
-      {
-        url: `https://api.agentmail.to/v0/inboxes/${encodeURIComponent(params.to)}/messages`,
-        body: {
-          to: [params.to], // Send to ourselves
-          subject: params.subject,
-          text: params.body,
-        }
-      },
-      // Pattern 3: v0 endpoint with pod_id as sender (if we got it)
-      ...(podId ? [{
-        url: `https://api.agentmail.to/v0/inboxes/${encodeURIComponent(podId)}/messages`,
-        body: {
-          to: [params.to],
-          subject: params.subject,
-          text: params.body,
-        }
-      }] : []),
-    ]
-
-    let lastError = ''
+    // Use the correct AgentMail API endpoint: POST /v0/inboxes/{inbox_id}/messages/send
+    // The inbox_id is the sender's email address (e.g., drivewithbui@agentmail.to)
+    // We're sending from and to the same inbox for contact form notifications
+    const endpoint = `https://api.agentmail.to/v0/inboxes/${encodeURIComponent(params.to)}/messages/send`
     
-    for (const endpoint of endpoints) {
-      try {
-        console.log(`Trying AgentMail endpoint: ${endpoint.url}`)
-        
-        const response = await fetch(endpoint.url, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(endpoint.body),
-        })
+    console.log(`Sending email via AgentMail API: ${endpoint}`)
+    
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        to: [params.to], // Send to ourselves (the inbox)
+        subject: params.subject,
+        text: params.body,
+      }),
+    })
 
-        if (response.ok) {
-          console.log(`✅ AgentMail API call successful to ${endpoint.url}`)
-          return {
-            success: true,
-            message: 'Email sent successfully'
-          }
-        } else {
-          const errorText = await response.text()
-          lastError = `Endpoint ${endpoint.url}: ${response.status} - ${errorText}`
-          console.error(`AgentMail API error (${endpoint.url}):`, response.status, errorText)
-          
-          // If it's a 404, try next endpoint
-          if (response.status === 404) {
-            continue
-          }
-          
-          // For other errors, return immediately
-          return {
-            success: false,
-            error: `Failed to send email: ${response.status}`
-          }
-        }
-      } catch (error) {
-        lastError = `Endpoint ${endpoint.url}: ${error instanceof Error ? error.message : 'Unknown error'}`
-        console.error(`Network error for ${endpoint.url}:`, error)
-        continue // Try next endpoint
+    if (response.ok) {
+      console.log(`✅ AgentMail API call successful`)
+      const data = await response.json()
+      return {
+        success: true,
+        message: 'Email sent successfully',
+        messageId: data.message_id
       }
-    }
-
-    // All endpoints failed
-    return {
-      success: false,
-      error: `All AgentMail API endpoints failed. Last error: ${lastError}`
+    } else {
+      const errorText = await response.text()
+      console.error(`AgentMail API error:`, response.status, errorText)
+      
+      return {
+        success: false,
+        error: `Failed to send email: ${response.status} - ${errorText}`
+      }
     }
 
   } catch (error) {
