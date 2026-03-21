@@ -43,6 +43,18 @@ export default function BookPage() {
   // Step 1: Lesson Type Selection
   const lessonTypes = getLessonTypes()
   const requiredLessons = getRequiredLessons(booking.lessonType || 'single')
+  
+  // Hover descriptions for lesson types
+  const lessonDescriptions: Record<string, { title: string; description: string }> = {
+    'casual': {
+      title: 'Casual Driving',
+      description: 'Best for students who want to build confidence, take it easy, drive somewhere with an experienced instructor'
+    },
+    'single': {
+      title: 'Single Lesson',
+      description: 'Learn practical skills such as parking, driving skills, safety tips and more'
+    }
+  }
 
   // Step 2: Date and Time Selection
   const allSlots = generateTimeSlots()
@@ -193,26 +205,40 @@ export default function BookPage() {
           <div>
             <h2 className="text-3xl font-bold mb-6">Choose Your Lesson</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
-              {lessonTypes.map((type) => (
-                <div
-                  key={type.id}
-                  className={`p-6 rounded-xl border-2 cursor-pointer transition ${
-                    booking.lessonType === type.id
-                      ? 'border-primary bg-blue-50'
-                      : 'border-gray-200 bg-white hover:border-primary'
-                  }`}
-                  onClick={() => handleLessonTypeSelect(type.id)}
-                >
-                  <h3 className="text-xl font-bold mb-2">{type.name}</h3>
-                  <p className="text-gray-600 mb-4">{type.duration}</p>
-                  <div className="text-3xl font-bold text-primary">
-                    ${type.price}
+              {lessonTypes.map((type) => {
+                const info = lessonDescriptions[type.id]
+                return (
+                  <div
+                    key={type.id}
+                    className={`group relative p-6 rounded-xl border-2 cursor-pointer transition ${
+                      booking.lessonType === type.id
+                        ? 'border-primary bg-blue-50'
+                        : 'border-gray-200 bg-white hover:border-primary'
+                    }`}
+                    onClick={() => handleLessonTypeSelect(type.id)}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h3 className="text-xl font-bold mb-2">
+                          {type.name}
+                          <span className="ml-2 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity cursor-help" title={info?.description}>ℹ️</span>
+                        </h3>
+                        <p className="text-gray-600 mb-4">{type.duration}</p>
+                        <div className="text-3xl font-bold text-primary">
+                          ${type.price}
+                        </div>
+                        {type.id === 'casual' && (
+                          <p className="text-xs text-green-600 mt-2">Great value!</p>
+                        )}
+                      </div>
+                    </div>
+                    {/* Hover tooltip */}
+                    <div className="absolute left-0 right-0 mt-2 p-3 bg-gray-800 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                      {info?.description}
+                    </div>
                   </div>
-                  {type.id === 'casual' && (
-                    <p className="text-xs text-green-600 mt-2">Great value!</p>
-                  )}
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         )}

@@ -142,7 +142,7 @@ export default function Home() {
               <div className="absolute top-0 right-0 bg-green-500 text-white text-xs px-3 py-1 rounded-bl-lg">Best Value</div>
               <h3 className="text-2xl font-bold mb-4">Casual Driving</h3>
               <div className="text-4xl font-bold text-green-600 mb-4">$45</div>
-              <p className="text-gray-600 mb-6">60 minutes of professional instruction</p>
+              <p className="text-gray-600 mb-6">60 minutes of relaxed driving</p>
               <Link
                 href="/book"
                 className="block w-full bg-green-600 text-white text-center py-3 rounded-lg hover:bg-green-700 transition font-semibold"

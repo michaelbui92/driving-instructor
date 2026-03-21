@@ -578,7 +578,7 @@ export function getLessonPrice(lessonType: string): number {
 export function getLessonTypeName(lessonType: string): string {
   const names: Record<string, string> = {
     'single': 'Single Lesson (60 min)',
-    'casual': 'Casual Driving (60 min)',
+    'casual': 'Casual Driving (60 min relaxed)',
   }
   return names[lessonType] || 'Single Lesson (60 min)'
 }
