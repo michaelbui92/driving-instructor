@@ -65,14 +65,10 @@ export default function DynamicHeadline() {
     return () => clearTimeout(timeoutId)
   }, [currentPhraseIndex, typedPortion, phase, phrases])
 
-  const isCursorBlinking = phase === 'blinking'
-  const showCursor = !isCursorBlinking || cursorVisible
-
   return (
     <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
       <span className="text-primary">{basePhrase}</span>
       <span className="text-gray-600">{typedPortion}</span>
-      {showCursor && <span className="text-primary animate-pulse">|</span>}
     </h1>
   )
 }

@@ -126,13 +126,26 @@ export default function Home() {
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Pricing</h2>
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Single Lesson */}
-            <div className="bg-white rounded-xl shadow-lg p-8 border-2 border-primary hover:shadow-2xl transition transform scale-105">
+            <div className="bg-white rounded-xl shadow-lg p-8 border-2 border-primary hover:shadow-2xl transition">
               <h3 className="text-2xl font-bold mb-4">Single Lesson</h3>
               <div className="text-4xl font-bold text-primary mb-4">$50</div>
               <p className="text-gray-600 mb-6">60 minutes of professional instruction</p>
               <Link
                 href="/book"
                 className="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-secondary transition font-semibold"
+              >
+                Book Now
+              </Link>
+            </div>
+            {/* Casual Driving */}
+            <div className="bg-white rounded-xl shadow-lg p-8 border-2 border-green-400 hover:shadow-2xl transition relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-green-500 text-white text-xs px-3 py-1 rounded-bl-lg">Best Value</div>
+              <h3 className="text-2xl font-bold mb-4">Casual Driving</h3>
+              <div className="text-4xl font-bold text-green-600 mb-4">$45</div>
+              <p className="text-gray-600 mb-6">60 minutes of professional instruction</p>
+              <Link
+                href="/book"
+                className="block w-full bg-green-600 text-white text-center py-3 rounded-lg hover:bg-green-700 transition font-semibold"
               >
                 Book Now
               </Link>

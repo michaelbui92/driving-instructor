@@ -452,16 +452,6 @@ export function getAvailableSlots(date: string, existingBookings?: Booking[]): T
   return slots.filter(slot => slot.available)
 }
 
-// Get the required number of lessons for a package
-export function getRequiredLessons(lessonType: string): number {
-  switch (lessonType) {
-    case 'single':
-      return 1
-    default:
-      return 1
-  }
-}
-
 // Format date for display
 export function formatDate(dateStr: string): string {
   const date = new Date(dateStr)
@@ -579,6 +569,7 @@ export function validateBooking(booking: Partial<Booking>, selectedSlotIds?: str
 export function getLessonPrice(lessonType: string): number {
   const prices: Record<string, number> = {
     'single': 50,
+    'casual': 45,
   }
   return prices[lessonType] || 50
 }
@@ -587,13 +578,27 @@ export function getLessonPrice(lessonType: string): number {
 export function getLessonTypeName(lessonType: string): string {
   const names: Record<string, string> = {
     'single': 'Single Lesson (60 min)',
+    'casual': 'Casual Driving (60 min)',
   }
   return names[lessonType] || 'Single Lesson (60 min)'
+}
+
+// Get the required number of lessons for a package
+export function getRequiredLessons(lessonType: string): number {
+  switch (lessonType) {
+    case 'single':
+      return 1
+    case 'casual':
+      return 1
+    default:
+      return 1
+  }
 }
 
 // Get lesson type options
 export function getLessonTypes() {
   return [
     { id: 'single', name: 'Single Lesson', duration: '60 min', price: 50 },
+    { id: 'casual', name: 'Casual Driving', duration: '60 min', price: 45 },
   ]
 }

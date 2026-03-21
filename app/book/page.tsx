@@ -192,7 +192,7 @@ export default function BookPage() {
         {step === 1 && (
           <div>
             <h2 className="text-3xl font-bold mb-6">Choose Your Lesson</h2>
-            <div className="grid grid-cols-1 max-w-md mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
               {lessonTypes.map((type) => (
                 <div
                   key={type.id}
@@ -201,12 +201,16 @@ export default function BookPage() {
                       ? 'border-primary bg-blue-50'
                       : 'border-gray-200 bg-white hover:border-primary'
                   }`}
+                  onClick={() => handleLessonTypeSelect(type.id)}
                 >
                   <h3 className="text-xl font-bold mb-2">{type.name}</h3>
                   <p className="text-gray-600 mb-4">{type.duration}</p>
                   <div className="text-3xl font-bold text-primary">
                     ${type.price}
                   </div>
+                  {type.id === 'casual' && (
+                    <p className="text-xs text-green-600 mt-2">Great value!</p>
+                  )}
                 </div>
               ))}
             </div>

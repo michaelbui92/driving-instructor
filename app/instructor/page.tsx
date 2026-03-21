@@ -9,6 +9,8 @@ import {
   getBlockedSlots,
   addBlockedSlot,
   removeBlockedSlot,
+  getAvailableSlots,
+  shouldBlockSlot,
   type Booking,
   type BlockedSlot,
   RuleType,
@@ -50,6 +52,9 @@ export default function InstructorPage() {
   const [bulkStartDate, setBulkStartDate] = useState<string>('')
   const [bulkEndDate, setBulkEndDate] = useState<string>('')
 
+  // Email filter state
+  const [emailFilter, setEmailFilter] = useState<string>('')
+
   // Rules management state
   const [rules, setRules] = useState<AvailabilityRule[]>([])
   const [showRuleForm, setShowRuleForm] = useState(false)
@@ -88,7 +93,12 @@ export default function InstructorPage() {
   const getFilteredBookings = () => {
     if (selectedTab === 'today') return todayBookings
     if (selectedTab === 'upcoming') return upcomingBookings
-    if (selectedTab === 'all') return allBookings
+    if (selectedTab === 'all') {
+      if (emailFilter.trim() === '') return allBookings
+      return allBookings.filter(b => 
+        b.email.toLowerCase().includes(emailFilter.toLowerCase())
+      )
+    }
     return []
   }
 
@@ -210,7 +220,20 @@ export default function InstructorPage() {
   }
 
   const getTimeSlotsForDate = (date: string): string[] => {
-    return generateTimeSlots().filter(slot => slot.date === date).map(slot => slot.time)
+    // For manual blocking, show only slots that are NOT blocked by rules
+    // This uses getAvailableSlots logic to determine which times CAN be blocked
+    const availableSlots = getAvailableSlots(date, [])
+    // Get all possible slots for this date
+    const allSlots = generateTimeSlots().filter(slot => slot.date === date).map(slot => slot.time)
+    // Only show slots that are available (not blocked by rules)
+    const availableTimes = availableSlots.map(slot => slot.time)
+    // Return all slots that are available in terms of rules
+    return allSlots
+  }
+
+  const isSlotBlockedByRule = (date: string, time: string): boolean => {
+    // Check if this slot is blocked by any availability rule
+    return shouldBlockSlot(date, time, [])
   }
 
   const isSlotBlocked = (date: string, time: string): boolean => {
@@ -699,7 +722,7 @@ export default function InstructorPage() {
                 <label className="block text-sm font-medium text-gray-700">Select Times to Block</label>
                 <button
                   onClick={() => {
-                    const available = getTimeSlotsForDate(selectedBlockDate).filter(t => !isSlotBlocked(selectedBlockDate, t))
+                    const available = getTimeSlotsForDate(selectedBlockDate).filter(t => !isSlotBlocked(selectedBlockDate, t) && !isSlotBlockedByRule(selectedBlockDate, t))
                     setSelectedBlockTimes(available)
                   }}
                   className="text-xs text-primary hover:underline"
@@ -708,32 +731,43 @@ export default function InstructorPage() {
                 </button>
               </div>
               <div className="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto">
-                {getTimeSlotsForDate(selectedBlockDate).map(time => (
-                  <label
-                    key={time}
-                    className={`flex items-center p-2 border rounded cursor-pointer ${
-                      isSlotBlocked(selectedBlockDate, time)
-                        ? 'bg-red-100 border-red-300 text-red-700'
-                        : 'bg-white hover:bg-gray-100'
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedBlockTimes.includes(time)}
-                      disabled={isSlotBlocked(selectedBlockDate, time)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedBlockTimes([...selectedBlockTimes, time])
-                        } else {
-                          setSelectedBlockTimes(selectedBlockTimes.filter(t => t !== time))
-                        }
-                      }}
-                      className="mr-2"
-                    />
-                    <span className="text-sm">{time}</span>
-                  </label>
-                ))}
+                {getTimeSlotsForDate(selectedBlockDate).map(time => {
+                  const isManuallyBlocked = isSlotBlocked(selectedBlockDate, time)
+                  const isRuleBlocked = isSlotBlockedByRule(selectedBlockDate, time)
+                  
+                  return (
+                    <label
+                      key={time}
+                      className={`flex items-center p-2 border rounded cursor-pointer ${
+                        isManuallyBlocked
+                          ? 'bg-red-100 border-red-300 text-red-700'
+                          : isRuleBlocked
+                          ? 'bg-gray-200 border-gray-400 text-gray-500 cursor-not-allowed'
+                          : 'bg-white hover:bg-gray-100'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedBlockTimes.includes(time)}
+                        disabled={isManuallyBlocked || isRuleBlocked}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedBlockTimes([...selectedBlockTimes, time])
+                          } else {
+                            setSelectedBlockTimes(selectedBlockTimes.filter(t => t !== time))
+                          }
+                        }}
+                        className="mr-2"
+                      />
+                      <span className="text-sm">{time}</span>
+                      {isRuleBlocked && <span className="text-xs ml-1">(rule)</span>}
+                    </label>
+                  )
+                })}
               </div>
+              <p className="text-xs text-gray-500 mt-2">
+                Grayed out times are blocked by availability rules and cannot be manually overridden.
+              </p>
             </div>
           )}
         </div>
@@ -977,6 +1011,17 @@ export default function InstructorPage() {
           <div className="p-6">
             {selectedTab === 'availability' ? renderAvailabilityTab() : selectedTab === 'rules' ? renderRulesTab() : (
               <>
+                {selectedTab === 'all' && (
+                  <div className="mb-4">
+                    <input
+                      type="text"
+                      value={emailFilter}
+                      onChange={(e) => setEmailFilter(e.target.value)}
+                      placeholder="Filter by email..."
+                      className="px-4 py-2 border rounded-lg w-full md:w-80"
+                    />
+                  </div>
+                )}
                 {renderBookingList()}
                 {selectedTab === 'all' && archivedBookings.length > 0 && (
                   <div className="mt-8 border-t pt-6">
