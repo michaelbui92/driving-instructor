@@ -857,9 +857,12 @@ export default function InstructorPage() {
       >
         <div className="grid md:grid-cols-6 gap-4">
           <div>
-            <p className="text-sm text-gray-600 mb-1">Date & Time</p>
+            <p className="text-sm text-gray-600 mb-1">Date</p>
             <p className="font-semibold">{formatDate(booking.date)}</p>
-            <p className="text-gray-600">{booking.time}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600 mb-1">Time</p>
+            <p className="font-semibold text-primary">{booking.time}</p>
           </div>
           <div>
             <p className="text-sm text-gray-600 mb-1">Student</p>

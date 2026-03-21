@@ -246,27 +246,12 @@ export default function BookPage() {
             </div>
             {/* Hover Image Display */}
             <div className="mt-8 flex justify-center">
+              {/* Show single lesson image by default, casual on hover */}
               <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-xl overflow-hidden shadow-xl bg-white border-2 border-gray-200">
-                {hoveredLessonType === 'single' && (
-                  <Image
-                    src="/images/hover-single.png"
-                    alt="Single Lesson"
-                    fill
-                    className="object-contain"
-                  />
-                )}
-                {hoveredLessonType === 'casual' && (
-                  <Image
-                    src="/images/hover-casual.png"
-                    alt="Casual Driving"
-                    fill
-                    className="object-contain"
-                  />
-                )}
-                {!hoveredLessonType && (
-                  <div className="flex items-center justify-center h-full text-gray-400">
-                    <p className="text-center px-4">Hover over a lesson type to see more</p>
-                  </div>
+                {(hoveredLessonType === null || hoveredLessonType === 'single') ? (
+                  <Image src="/images/hover-single.png" alt="Single Lesson" fill className="object-contain" />
+                ) : (
+                  <Image src="/images/hover-casual.png" alt="Casual Driving" fill className="object-contain" />
                 )}
               </div>
             </div>
