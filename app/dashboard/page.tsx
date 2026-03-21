@@ -74,21 +74,6 @@ export default function DashboardPage() {
   }
 
   const saveReschedule = (newDate: string, newTime: string) => {
-    // Validate time based on day of week
-    const dateObj = new Date(newDate)
-    const dayOfWeek = dateObj.getDay()
-    const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
-
-    // Weekday: only 6pm, 7pm, 8pm
-    // Weekend: 8am to 7pm
-    if (!isWeekend) {
-      const weekdayTimes = ['6:00 PM', '7:00 PM', '8:00 PM']
-      if (!weekdayTimes.includes(newTime)) {
-        alert(`Invalid time for weekday. Available: ${weekdayTimes.join(', ')}`)
-        return
-      }
-    }
-
     try {
       const updatedBookings = bookings.map(b =>
         b.id === reschedulingBooking?.id
@@ -119,14 +104,17 @@ export default function DashboardPage() {
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
 
     if (isWeekend) {
-      // Weekend: 8am to 7pm
+      // Weekend: 8am to 7pm (every hour EXCEPT 12pm)
       return [
-        '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM',
+        '8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM',
         '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM'
       ]
     } else {
-      // Weekday: 6pm, 7pm, 8pm only
-      return ['6:00 PM', '7:00 PM', '8:00 PM']
+      // Weekday: 9am to 8pm (every hour EXCEPT 12pm)
+      return [
+        '9:00 AM', '10:00 AM', '11:00 AM',
+        '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM'
+      ]
     }
   }
 
@@ -294,18 +282,18 @@ export default function DashboardPage() {
                               {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                             </span>
                           </div>
-                          <div className="flex items-end space-x-3">
+                          <div className="flex flex-col space-y-3">
                             {selectedTab === 'upcoming' && (
                               <>
                                 <button
                                   onClick={() => handleReschedule(booking)}
-                                  className="flex-1 px-4 py-3 border-2 border-orange-500 text-orange-500 rounded-lg hover:bg-orange-50 transition font-medium"
+                                  className="w-full px-4 py-3 border-2 border-orange-500 text-orange-500 rounded-lg hover:bg-orange-50 transition font-medium"
                                 >
-                                  🔄 Reschedule
+                                  Reschedule
                                 </button>
                                 <button
                                   onClick={() => cancelBooking(booking.id)}
-                                  className="flex-1 px-4 py-3 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition font-medium"
+                                  className="w-full px-4 py-3 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition font-medium"
                                 >
                                   Cancel
                                 </button>
