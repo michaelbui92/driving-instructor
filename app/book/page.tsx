@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import {
   generateTimeSlots,
   formatDate,
@@ -26,6 +27,7 @@ export default function BookPage() {
   })
   const [selectedSlotIds, setSelectedSlotIds] = useState<string[]>([])
   const [existingBookings, setExistingBookings] = useState<Booking[]>([])
+  const [hoveredLessonType, setHoveredLessonType] = useState<string | null>(null)
 
   // Load existing bookings on mount
   useEffect(() => {
@@ -216,6 +218,8 @@ export default function BookPage() {
                         : 'border-gray-200 bg-white hover:border-primary'
                     }`}
                     onClick={() => handleLessonTypeSelect(type.id)}
+                    onMouseEnter={() => setHoveredLessonType(type.id)}
+                    onMouseLeave={() => setHoveredLessonType(null)}
                   >
                     <div className="flex items-start justify-between">
                       <div>
@@ -239,6 +243,32 @@ export default function BookPage() {
                   </div>
                 )
               })}
+            </div>
+            {/* Hover Image Display */}
+            <div className="mt-8 flex justify-center">
+              <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-xl overflow-hidden shadow-xl bg-white border-2 border-gray-200">
+                {hoveredLessonType === 'single' && (
+                  <Image
+                    src="/images/hover-single.png"
+                    alt="Single Lesson"
+                    fill
+                    className="object-contain"
+                  />
+                )}
+                {hoveredLessonType === 'casual' && (
+                  <Image
+                    src="/images/hover-casual.png"
+                    alt="Casual Driving"
+                    fill
+                    className="object-contain"
+                  />
+                )}
+                {!hoveredLessonType && (
+                  <div className="flex items-center justify-center h-full text-gray-400">
+                    <p className="text-center px-4">Hover over a lesson type to see more</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         )}

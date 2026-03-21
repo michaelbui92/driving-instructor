@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import DynamicHeadline from '@/components/DynamicHeadline'
 
 export default function Home() {
@@ -61,25 +62,38 @@ export default function Home() {
       </nav>
 
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center">
-          <DynamicHeadline />
-          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            Patient, professional driving lessons tailored for international students and working holiday makers. Build confidence and get your NSW licence with an instructor who understands your needs.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              href="/book"
-              className="bg-primary text-white px-8 py-3 rounded-lg text-lg hover:bg-secondary transition font-semibold"
-            >
-              Book a Lesson
-            </Link>
-            <Link
-              href="#pricing"
-              className="border-2 border-primary text-primary px-8 py-3 rounded-lg text-lg hover:bg-primary hover:text-white transition font-semibold"
-            >
-              View Packages
-            </Link>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
+        <div className="flex flex-col lg:flex-row items-center gap-12">
+          <div className="flex-1 text-center lg:text-left">
+            <DynamicHeadline />
+            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto lg:mx-0">
+              Patient, professional driving lessons tailored for international students and working holiday makers. Build confidence and get your NSW licence with an instructor who understands your needs.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <Link
+                href="/book"
+                className="bg-primary text-white px-8 py-3 rounded-lg text-lg hover:bg-secondary transition font-semibold"
+              >
+                Book a Lesson
+              </Link>
+              <Link
+                href="#pricing"
+                className="border-2 border-primary text-primary px-8 py-3 rounded-lg text-lg hover:bg-primary hover:text-white transition font-semibold"
+              >
+                View Packages
+              </Link>
+            </div>
+          </div>
+          <div className="flex-shrink-0">
+            <div className="relative w-64 h-64 md:w-80 md:h-80">
+              <Image
+                src="/images/mascot-hero.png"
+                alt="Chibi Bui - Your friendly driving instructor"
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
           </div>
         </div>
       </section>

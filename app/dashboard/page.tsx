@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { formatDate, getLessonTypeName, getRequiredLessons, type Booking } from '@/lib/booking-utils'
 
 export default function DashboardPage() {
@@ -9,6 +10,16 @@ export default function DashboardPage() {
   const [selectedTab, setSelectedTab] = useState<'upcoming' | 'completed'>('upcoming')
   const [reschedulingBooking, setReschedulingBooking] = useState<Booking | null>(null)
   const [selectedNewDate, setSelectedNewDate] = useState<string>('')
+  const [portalImageIndex, setPortalImageIndex] = useState(0)
+  const portalImages = ['/images/student-portal-1.png', '/images/student-portal-2.png']
+
+  // Cycle between portal images every 2 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPortalImageIndex((prev) => (prev === 0 ? 1 : 0))
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [])
 
   useEffect(() => {
     try {
@@ -160,9 +171,21 @@ export default function DashboardPage() {
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Student Dashboard</h1>
-          <p className="text-gray-600">Manage your driving lessons and track your progress</p>
+        <div className="mb-8 flex flex-col md:flex-row items-start md:items-center gap-6">
+          <div className="flex-1">
+            <h1 className="text-4xl font-bold mb-2">Student Dashboard</h1>
+            <p className="text-gray-600">Manage your driving lessons and track your progress</p>
+          </div>
+          {/* Cycling Portal Image */}
+          <div className="relative w-32 h-32 md:w-40 md:h-40 flex-shrink-0">
+            <Image
+              src={portalImages[portalImageIndex]}
+              alt="Student Portal"
+              fill
+              className="object-contain rounded-xl shadow-lg"
+              priority
+            />
+          </div>
         </div>
 
         {/* Stats Cards */}
