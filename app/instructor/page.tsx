@@ -1045,8 +1045,10 @@ export default function InstructorPage() {
     return filtered.map((booking) => {
       const isTodayBooking = booking.date === today
       // Determine if booking is a reschedule or new booking
-      const isReschedule = booking.originalDate && booking.originalDate !== booking.date;
-      const isNewBooking = !booking.originalDate || booking.originalDate === booking.date;
+      // ANY booking with originalDate field is a Reschedule (because it was rescheduled at least once)
+      // Only bookings WITHOUT originalDate field are New Bookings
+      const isReschedule = !!booking.originalDate;
+      const isNewBooking = !booking.originalDate;
       
       return (
         <div
@@ -1089,7 +1091,11 @@ export default function InstructorPage() {
               <p className="font-semibold">{formatDate(booking.date)}</p>
               {isReschedule && booking.originalDate && (
                 <p className="text-xs text-orange-600 mt-1">
-                  (was {formatDate(booking.originalDate)})
+                  {booking.originalDate !== booking.date ? (
+                    <>Originally booked for {formatDate(booking.originalDate)}</>
+                  ) : (
+                    <>Rescheduled to same date</>
+                  )}
                 </p>
               )}
             </div>
@@ -1132,10 +1138,15 @@ export default function InstructorPage() {
             </div>
           </div>
           {/* Reschedule info */}
-          {booking.originalDate && booking.originalDate !== booking.date && (
+          {isReschedule && (
             <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
               <p className="text-sm text-orange-700">
-                <span className="font-semibold">⚠️ Rescheduled:</span> Originally booked for {formatDate(booking.originalDate)}, changed to {formatDate(booking.date)}
+                <span className="font-semibold">⚠️ Reschedule:</span> 
+                {booking.originalDate !== booking.date ? (
+                  <> Originally booked for {formatDate(booking.originalDate)}, changed to {formatDate(booking.date)}</>
+                ) : (
+                  <> Rescheduled to same date ({formatDate(booking.date)})</>
+                )}
                 {booking.previousDate && booking.previousDate !== booking.originalDate && (
                   <span className="block text-xs text-orange-600 mt-1">
                     (Previously rescheduled to {formatDate(booking.previousDate)})
@@ -1186,8 +1197,10 @@ export default function InstructorPage() {
             <div className="space-y-3">
               {bookings.filter(b => b.status === 'pending').map((booking) => {
                 // Determine if booking is a reschedule or new booking
-                const isReschedule = booking.originalDate && booking.originalDate !== booking.date;
-                const isNewBooking = !booking.originalDate || booking.originalDate === booking.date;
+                // ANY booking with originalDate field is a Reschedule (because it was rescheduled at least once)
+                // Only bookings WITHOUT originalDate field are New Bookings
+                const isReschedule = !!booking.originalDate;
+                const isNewBooking = !booking.originalDate;
                 
                 return (
                   <div key={booking.id} className="flex items-center justify-between bg-white rounded-lg p-4 border border-yellow-300">
@@ -1208,7 +1221,11 @@ export default function InstructorPage() {
                       <p className="text-sm text-gray-600">{formatDate(booking.date)} at {booking.time} - ${booking.price}</p>
                       {isReschedule && booking.originalDate && (
                         <p className="text-sm text-orange-600 mt-1">
-                          ⚠️ Originally booked for {formatDate(booking.originalDate)} (needs confirmation)
+                          ⚠️ {booking.originalDate !== booking.date ? (
+                            <>Originally booked for {formatDate(booking.originalDate)} (needs confirmation)</>
+                          ) : (
+                            <>Rescheduled to same date (needs confirmation)</>
+                          )}
                         </p>
                       )}
                     </div>
@@ -1388,7 +1405,7 @@ export default function InstructorPage() {
                 </div>
                 
                 {/* Reschedule History */}
-                {selectedBooking.originalDate && selectedBooking.originalDate !== selectedBooking.date && (
+                {selectedBooking.originalDate && (
                   <div className="border-t pt-6">
                     <p className="text-sm text-gray-600 mb-2">Reschedule History</p>
                     <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
@@ -1397,6 +1414,9 @@ export default function InstructorPage() {
                       </p>
                       <p className="text-sm text-orange-700">
                         <span className="font-semibold">Current date:</span> {formatDate(selectedBooking.date)}
+                        {selectedBooking.originalDate === selectedBooking.date && (
+                          <span className="text-xs text-orange-600 ml-2">(Rescheduled to same date)</span>
+                        )}
                       </p>
                       {selectedBooking.previousDate && selectedBooking.previousDate !== selectedBooking.originalDate && (
                         <p className="text-sm text-orange-700 mt-2">
