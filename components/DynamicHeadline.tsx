@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react'
 
 const phrases = [
-  " to Get Your License",
-  " to Become A Safe Driver",
-  " to Improve Your Confidence"
+  " to go from anxious to assured",
+  " to unlock your Australian adventure",
+  " to learn skills for life, not just for the test",
+  " if you have never driven before"
 ]
 
 export default function DynamicHeadline() {
