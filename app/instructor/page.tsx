@@ -1110,6 +1110,19 @@ export default function InstructorPage() {
               )}
             </div>
           </div>
+          {/* Reschedule info */}
+          {booking.originalDate && booking.originalDate !== booking.date && (
+            <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
+              <p className="text-sm text-orange-700">
+                <span className="font-semibold">⚠️ Rescheduled:</span> Originally booked for {formatDate(booking.originalDate)}, changed to {formatDate(booking.date)}
+                {booking.previousDate && booking.previousDate !== booking.originalDate && (
+                  <span className="block text-xs text-orange-600 mt-1">
+                    (Previously rescheduled to {formatDate(booking.previousDate)})
+                  </span>
+                )}
+              </p>
+            </div>
+          )}
           <div className="flex items-end mt-4">
             {selectedTab === 'all' && (
               <button
@@ -1157,7 +1170,7 @@ export default function InstructorPage() {
                     <p className="text-sm text-gray-600">{formatDate(booking.date)} at {booking.time} - ${booking.price}</p>
                     {booking.originalDate && booking.originalDate !== booking.date && (
                       <p className="text-sm text-orange-600 mt-1">
-                        ⚠️ {booking.studentName} has changed from {formatDate(booking.originalDate)} to {formatDate(booking.date)}, confirm cancel
+                        ⚠️ Rescheduled from {formatDate(booking.originalDate)} to {formatDate(booking.date)} (needs confirmation)
                       </p>
                     )}
                   </div>
@@ -1334,6 +1347,39 @@ export default function InstructorPage() {
                   <div><p className="text-sm text-gray-600 mb-1">Price</p><p className="font-semibold text-2xl text-primary">${selectedBooking.price}</p></div>
                   <div><p className="text-sm text-gray-600 mb-1">Booked On</p><p className="font-semibold">{new Date(selectedBooking.createdAt).toLocaleDateString()}</p></div>
                 </div>
+                
+                {/* Reschedule History */}
+                {selectedBooking.originalDate && selectedBooking.originalDate !== selectedBooking.date && (
+                  <div className="border-t pt-6">
+                    <p className="text-sm text-gray-600 mb-2">Reschedule History</p>
+                    <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                      <p className="text-sm text-orange-700 mb-2">
+                        <span className="font-semibold">⚠️ Originally booked for:</span> {formatDate(selectedBooking.originalDate)}
+                      </p>
+                      <p className="text-sm text-orange-700">
+                        <span className="font-semibold">Current date:</span> {formatDate(selectedBooking.date)}
+                      </p>
+                      {selectedBooking.previousDate && selectedBooking.previousDate !== selectedBooking.originalDate && (
+                        <p className="text-sm text-orange-700 mt-2">
+                          <span className="font-semibold">Previous reschedule:</span> {formatDate(selectedBooking.previousDate)}
+                        </p>
+                      )}
+                      {selectedBooking.rescheduleHistory && selectedBooking.rescheduleHistory.length > 0 && (
+                        <div className="mt-3">
+                          <p className="text-xs font-semibold text-orange-800 mb-1">Full reschedule history:</p>
+                          <ul className="text-xs text-orange-700 space-y-1">
+                            {selectedBooking.rescheduleHistory.map((change, idx) => (
+                              <li key={idx}>
+                                {formatDate(change.date)} at {change.time} (changed on {new Date(change.changedAt).toLocaleDateString()})
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
                 <div className="border-t pt-6">
                   <p className="text-sm text-gray-600 mb-4">Update Status</p>
                   <div className="flex flex-wrap gap-3">

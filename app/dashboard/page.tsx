@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { formatDate, getLessonTypeName, getRequiredLessons, getAvailableSlots, type Booking } from '@/lib/booking-utils'
+import { formatDate, getLessonTypeName, getRequiredLessons, getAvailableSlots, generateTimeSlots, type Booking } from '@/lib/booking-utils'
 
 export default function DashboardPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
@@ -162,6 +162,31 @@ export default function DashboardPage() {
     
     // Return just the time strings from available slots
     return availableSlots.map(slot => slot.time)
+  }
+
+  // Get dates with available slots for the next 28 days
+  const getDatesWithAvailableSlots = () => {
+    const dates: {date: string, formatted: string, hasSlots: boolean}[] = []
+    const today = new Date()
+    
+    for (let i = 1; i <= 28; i++) {
+      const date = new Date(today)
+      date.setDate(today.getDate() + i)
+      const dateString = date.toISOString().split('T')[0]
+      
+      // Check if this date has any available slots
+      const existingBookingsExcludingCurrent = bookings.filter(b => b.id !== reschedulingBooking?.id)
+      const availableSlots = getAvailableSlots(dateString, existingBookingsExcludingCurrent)
+      const hasSlots = availableSlots.length > 0
+      
+      dates.push({
+        date: dateString,
+        formatted: formatDate(dateString),
+        hasSlots
+      })
+    }
+    
+    return dates
   }
 
   return (
@@ -412,12 +437,10 @@ export default function DashboardPage() {
 
               <div className="border-t pt-4">
                 <p className="text-sm text-gray-600 mb-2">New Date:</p>
-                <input
-                  type="date"
+                <select
                   id="newDate"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   defaultValue={reschedulingBooking.date}
-                  min={new Date().toISOString().split('T')[0]} // Prevent past dates
                   onChange={(e) => {
                     const newDate = e.target.value
                     setSelectedNewDate(newDate)
@@ -429,7 +452,19 @@ export default function DashboardPage() {
                       setDateHasNoSlots(false)
                     }
                   }}
-                />
+                >
+                  <option value="">Select a date</option>
+                  {getDatesWithAvailableSlots().map(({date, formatted, hasSlots}) => (
+                    <option 
+                      key={date} 
+                      value={date}
+                      disabled={!hasSlots}
+                      className={!hasSlots ? 'text-gray-400 bg-gray-100' : ''}
+                    >
+                      {formatted} {!hasSlots ? '(No available slots)' : ''}
+                    </option>
+                  ))}
+                </select>
                 <p className="text-xs text-gray-500 mt-1">Dates with no available slots are greyed out</p>
                 {dateHasNoSlots && selectedNewDate && (
                   <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
@@ -481,8 +516,17 @@ export default function DashboardPage() {
               </button>
               <button
                 onClick={() => {
-                  const newDate = (document.getElementById('newDate') as HTMLInputElement)?.value || ''
+                  const newDateSelect = document.getElementById('newDate') as HTMLSelectElement
                   const newTimeSelect = document.getElementById('newTime') as HTMLSelectElement
+                  
+                  const newDate = newDateSelect?.value || ''
+                  const newTime = newTimeSelect?.value || ''
+                  
+                  // Check if date is selected
+                  if (!newDate) {
+                    alert('Please select a date')
+                    return
+                  }
                   
                   // Check if time selector exists (it won't if there are no available slots)
                   if (!newTimeSelect) {
@@ -490,16 +534,22 @@ export default function DashboardPage() {
                     return
                   }
                   
-                  const newTime = newTimeSelect.value || ''
+                  // Check if selected date has slots
+                  const selectedDateOption = newDateSelect.options[newDateSelect.selectedIndex]
+                  if (selectedDateOption.disabled) {
+                    alert('This date has no available slots. Please select a different date.')
+                    return
+                  }
+                  
                   if (newDate && newTime) {
                     saveReschedule(newDate, newTime)
                   } else {
                     alert('Please select new date and time')
                   }
                 }}
-                disabled={dateHasNoSlots}
+                disabled={dateHasNoSlots || !selectedNewDate}
                 className={`flex-1 px-4 py-2 rounded-lg transition ${
-                  dateHasNoSlots 
+                  dateHasNoSlots || !selectedNewDate
                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
                     : 'bg-primary text-white hover:bg-secondary'
                 }`}
