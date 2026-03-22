@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Navbar from '@/components/Navbar'
+import { supabase, type Booking as SupabaseBooking } from '@/lib/supabase'
 import { formatDate, getLessonTypeName, getRequiredLessons, getAvailableSlots, generateTimeSlots, type Booking } from '@/lib/booking-utils'
 
 export default function DashboardPage() {
@@ -24,16 +25,38 @@ export default function DashboardPage() {
   }, [])
 
   useEffect(() => {
-    try {
-      // Load bookings from localStorage
-      const storedBookings = localStorage.getItem('bookings')
-      if (storedBookings) {
-        setBookings(JSON.parse(storedBookings))
+    async function loadBookings() {
+      try {
+        const { data, error } = await supabase
+          .from('bookings')
+          .select('*')
+          .order('date', { ascending: false })
+
+        if (error) {
+          console.error('Error loading bookings:', error)
+          setBookings([])
+        } else {
+          // Convert Supabase format to app format
+          const formatted: Booking[] = (data || []).map((b: SupabaseBooking) => ({
+            id: b.id,
+            studentName: b.student_name,
+            email: b.email,
+            phone: b.phone,
+            date: b.date,
+            time: b.time,
+            lessonType: b.lesson_type,
+            status: b.status,
+            price: 0,
+            createdAt: b.created_at,
+          }))
+          setBookings(formatted)
+        }
+      } catch (error) {
+        console.error('Error loading bookings:', error)
+        setBookings([])
       }
-    } catch (error) {
-      console.error('Error loading bookings:', error)
-      setBookings([])
     }
+    loadBookings()
   }, [])
 
   const upcomingBookings = bookings.filter(b => b.status === 'pending' || b.status === 'confirmed')
@@ -56,13 +79,21 @@ export default function DashboardPage() {
     return acc
   }, {} as Record<string, Booking[]>)
 
-  const cancelBooking = (bookingId: string) => {
+  const cancelBooking = async (bookingId: string) => {
     try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ status: 'cancelled' })
+        .eq('id', bookingId)
+
+      if (error) {
+        throw error
+      }
+
       const updatedBookings = bookings.map(b =>
         b.id === bookingId ? { ...b, status: 'cancelled' as const } : b
       )
       setBookings(updatedBookings)
-      localStorage.setItem('bookings', JSON.stringify(updatedBookings))
       alert('Booking cancelled successfully')
     } catch (error) {
       console.error('Error cancelling booking:', error)
@@ -78,7 +109,7 @@ export default function DashboardPage() {
     setDateHasNoSlots(availableSlots.length === 0)
   }
 
-  const saveReschedule = (newDate: string, newTime: string) => {
+  const saveReschedule = async (newDate: string, newTime: string) => {
     try {
       // 1. Validate: Cannot book past dates
       const today = new Date()
@@ -138,7 +169,19 @@ export default function DashboardPage() {
         return b
       })
       setBookings(updatedBookings)
-      localStorage.setItem('bookings', JSON.stringify(updatedBookings))
+      
+      // Update in Supabase
+      if (reschedulingBooking?.id) {
+        await supabase
+          .from('bookings')
+          .update({ 
+            date: newDate, 
+            time: newTime, 
+            status: 'pending' 
+          })
+          .eq('id', reschedulingBooking.id)
+      }
+      
       alert('Booking rescheduled successfully. Instructor confirmation required.')
       setReschedulingBooking(null)
     } catch (error) {
