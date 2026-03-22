@@ -29,7 +29,24 @@ import {
   getSortedRules
 } from '@/lib/booking-utils'
 
-type TabType = 'upcoming' | 'all' | 'rules' | 'availability' | 'calendar'
+type TabType = 'upcoming' | 'all' | 'rules' | 'availability' | 'calendar' | 'profile'
+
+interface InstructorProfile {
+  id: string
+  bio: string
+  experience: string
+  teaching_philosophy: string
+  car_details: string
+  service_area: string
+}
+
+interface ProfileFormData {
+  bio: string
+  experience: string
+  teaching_philosophy: string
+  car_details: string
+  service_area: string
+}
 
 interface RuleFormData {
   name: string
@@ -67,6 +84,18 @@ export default function InstructorPage() {
   const [rules, setRules] = useState<AvailabilityRule[]>([])
   const [showRuleForm, setShowRuleForm] = useState(false)
   const [editingRule, setEditingRule] = useState<AvailabilityRule | null>(null)
+
+  // Instructor profile state
+  const [instructorProfile, setInstructorProfile] = useState<InstructorProfile | null>(null)
+  const [profileForm, setProfileForm] = useState<ProfileFormData>({
+    bio: '',
+    experience: '',
+    teaching_philosophy: '',
+    car_details: '',
+    service_area: ''
+  })
+  const [editingProfile, setEditingProfile] = useState(false)
+  const [savingProfile, setSavingProfile] = useState(false)
   const [ruleForm, setRuleForm] = useState<RuleFormData>({
     name: '',
     type: RuleType.TIME_BLOCK,
@@ -114,6 +143,35 @@ export default function InstructorPage() {
     loadBookings()
     setBlockedSlots(getBlockedSlots())
     setRules(getRules())
+  }, [])
+
+  // Load instructor profile from Supabase
+  useEffect(() => {
+    async function loadProfile() {
+      try {
+        const { data, error } = await supabase
+          .from('instructor_profile')
+          .select('*')
+          .single()
+
+        if (error) {
+          console.error('Error loading profile:', error)
+          return
+        }
+
+        setInstructorProfile(data)
+        setProfileForm({
+          bio: data.bio || '',
+          experience: data.experience || '',
+          teaching_philosophy: data.teaching_philosophy || '',
+          car_details: data.car_details || '',
+          service_area: data.service_area || ''
+        })
+      } catch (error) {
+        console.error('Error loading profile:', error)
+      }
+    }
+    loadProfile()
   }, [])
 
   const today = new Date().toISOString().split('T')[0]
@@ -404,6 +462,38 @@ export default function InstructorPage() {
     }
   }
 
+  const handleSaveProfile = async () => {
+    setSavingProfile(true)
+    try {
+      const { error } = await supabase
+        .from('instructor_profile')
+        .update({
+          bio: profileForm.bio,
+          experience: profileForm.experience,
+          teaching_philosophy: profileForm.teaching_philosophy,
+          car_details: profileForm.car_details,
+          service_area: profileForm.service_area,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', instructorProfile?.id || '')
+
+      if (error) {
+        throw error
+      }
+
+      setInstructorProfile({
+        ...instructorProfile!,
+        ...profileForm
+      })
+      setEditingProfile(false)
+      alert('Profile updated successfully!')
+    } catch (error) {
+      console.error('Error saving profile:', error)
+      alert('Error saving profile. Please try again.')
+    }
+    setSavingProfile(false)
+  }
+
   const handleToggleRule = (id: string, enabled: boolean) => {
     try {
       toggleRule(id, enabled)
@@ -443,6 +533,146 @@ export default function InstructorPage() {
   }
 
   const sortedRules = getSortedRules()
+
+  const renderProfileTab = () => (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-2xl font-bold">Instructor Profile</h2>
+        {!editingProfile && (
+          <button
+            onClick={() => setEditingProfile(true)}
+            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition"
+          >
+            Edit Profile
+          </button>
+        )}
+      </div>
+      
+      <p className="text-gray-600 mb-6">
+        This information is displayed on the public instructor profile page. Keep it up to date to attract new students.
+      </p>
+
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        {editingProfile ? (
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Bio</label>
+              <textarea
+                value={profileForm.bio}
+                onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
+                rows={4}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="Tell students about yourself..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Experience</label>
+              <textarea
+                value={profileForm.experience}
+                onChange={(e) => setProfileForm({ ...profileForm, experience: e.target.value })}
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="Describe your teaching experience..."
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Teaching Philosophy</label>
+              <textarea
+                value={profileForm.teaching_philosophy}
+                onChange={(e) => setProfileForm({ ...profileForm, teaching_philosophy: e.target.value })}
+                rows={3}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="What is your approach to teaching?"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Car Details</label>
+              <input
+                type="text"
+                value={profileForm.car_details}
+                onChange={(e) => setProfileForm({ ...profileForm, car_details: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="e.g., Automatic transmission, dual controls"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Service Area</label>
+              <input
+                type="text"
+                value={profileForm.service_area}
+                onChange={(e) => setProfileForm({ ...profileForm, service_area: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="e.g., Lidcombe and surrounding suburbs"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <button
+                onClick={handleSaveProfile}
+                disabled={savingProfile}
+                className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary disabled:opacity-50 transition"
+              >
+                {savingProfile ? 'Saving...' : 'Save Changes'}
+              </button>
+              <button
+                onClick={() => {
+                  setEditingProfile(false)
+                  if (instructorProfile) {
+                    setProfileForm({
+                      bio: instructorProfile.bio || '',
+                      experience: instructorProfile.experience || '',
+                      teaching_philosophy: instructorProfile.teaching_philosophy || '',
+                      car_details: instructorProfile.car_details || '',
+                      service_area: instructorProfile.service_area || ''
+                    })
+                  }
+                }}
+                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-sm font-medium text-gray-500 mb-1">Bio</h3>
+              <p className="text-gray-900">{instructorProfile?.bio || 'Not set'}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500 mb-1">Experience</h3>
+              <p className="text-gray-900">{instructorProfile?.experience || 'Not set'}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500 mb-1">Teaching Philosophy</h3>
+              <p className="text-gray-900">{instructorProfile?.teaching_philosophy || 'Not set'}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500 mb-1">Car Details</h3>
+              <p className="text-gray-900">{instructorProfile?.car_details || 'Not set'}</p>
+            </div>
+            <div>
+              <h3 className="text-sm font-medium text-gray-500 mb-1">Service Area</h3>
+              <p className="text-gray-900">{instructorProfile?.service_area || 'Not set'}</p>
+            </div>
+            <div className="pt-4 border-t">
+              <a
+                href="/instructor-profile"
+                target="_blank"
+                className="text-primary hover:underline"
+              >
+                View public profile →
+              </a>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
 
   const renderRulesTab = () => (
     <div>
@@ -1392,10 +1622,14 @@ export default function InstructorPage() {
                 className={`flex-1 px-6 py-4 font-semibold transition ${selectedTab === 'calendar' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
                 onClick={() => setSelectedTab('calendar')}
               >📅 Calendar</button>
+              <button
+                className={`flex-1 px-6 py-4 font-semibold transition ${selectedTab === 'profile' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
+                onClick={() => setSelectedTab('profile')}
+              >👤 Profile</button>
             </div>
           </div>
           <div className="p-6">
-            {selectedTab === 'availability' ? renderAvailabilityTab() : selectedTab === 'rules' ? renderRulesTab() : selectedTab === 'calendar' ? renderCalendarTab() : (
+            {selectedTab === 'availability' ? renderAvailabilityTab() : selectedTab === 'rules' ? renderRulesTab() : selectedTab === 'calendar' ? renderCalendarTab() : selectedTab === 'profile' ? renderProfileTab() : (
               <>
                 {selectedTab === 'all' && (
                   <div className="mb-4">
