@@ -54,6 +54,7 @@ export default function BookPage() {
             time: b.time,
             lessonType: b.lesson_type,
             status: b.status,
+            price: getLessonPrice(b.lesson_type),
             createdAt: b.created_at,
           }))
           setExistingBookings(formatted)
