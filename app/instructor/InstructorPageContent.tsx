@@ -159,7 +159,7 @@ export default function InstructorPage() {
     }
   }
 
-  const archiveBooking = (bookingId: string) => {
+  const archiveBooking = async (bookingId: string) => {
     try {
       const booking = bookings.find(b => b.id === bookingId)
       if (!booking) return
