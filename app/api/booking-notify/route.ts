@@ -1,0 +1,81 @@
+import { NextRequest, NextResponse } from 'next/server'
+
+interface BookingNotification {
+  studentName: string
+  email: string
+  phone: string
+  date: string
+  time: string
+  lessonType: string
+  price: number
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const booking: BookingNotification = await request.json()
+
+    const apiKey = process.env.NEXT_PUBLIC_AGENTMAIL_API_KEY
+    
+    if (!apiKey) {
+      console.error('AgentMail API key not configured')
+      return NextResponse.json({ error: 'Email service not configured' }, { status: 500 })
+    }
+
+    // Format the booking email
+    const lessonTypeName = booking.lessonType === 'single' ? 'Single Lesson' : 'Casual Driving'
+    const formattedDate = new Date(booking.date).toLocaleDateString('en-AU', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    })
+
+    const subject = `📅 New Booking Request - ${booking.studentName}`
+    const body = `
+New booking request received:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📛 Student: ${booking.studentName}
+📧 Email: ${booking.email}
+📱 Phone: ${booking.phone}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📅 Date: ${formattedDate}
+🕐 Time: ${booking.time}
+📚 Lesson: ${lessonTypeName}
+💰 Price: $${booking.price}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Please log in to the instructor portal to confirm or cancel this booking.
+
+- Auto-notification from Driving Instructor Website
+    `.trim()
+
+    // Send email to instructor
+    const response = await fetch(
+      `https://api.agentmail.to/v0/inboxes/drivewithbui@agentmail.to/messages/send`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: ['drivewithbui@agentmail.to'],
+          subject,
+          text: body,
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Failed to send booking notification:', errorText)
+      return NextResponse.json({ error: 'Failed to send notification' }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Error sending booking notification:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}

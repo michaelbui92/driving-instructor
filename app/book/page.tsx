@@ -174,7 +174,27 @@ export default function BookPage() {
       return
     }
 
-    alert('Booking confirmed! A confirmation email will be sent shortly.')
+    // Send email notification to instructor
+    try {
+      await fetch('/api/booking-notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentName: booking.studentName,
+          email: booking.email,
+          phone: booking.phone,
+          date: booking.date,
+          time: booking.time,
+          lessonType: booking.lessonType,
+          price: totalPrice,
+        }),
+      })
+    } catch (notifyError) {
+      // Don't fail the booking if email fails
+      console.error('Failed to send notification:', notifyError)
+    }
+
+    alert('Booking confirmed! You will receive a confirmation email shortly.')
     window.location.href = '/'
   }
 
