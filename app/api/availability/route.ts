@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
     }
     
     // Remove duplicates and sort
-    const uniqueSlots = [...new Set(availableSlots)].sort()
+    const uniqueSlots = Array.from(new Set(availableSlots)).sort()
     
     return NextResponse.json({
       date,

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Navbar from '@/components/Navbar'
+import { supabase, type Booking as SupabaseBooking } from '@/lib/supabase'
 import {
   generateTimeSlots,
   formatDate,
@@ -30,17 +31,39 @@ export default function BookPage() {
   const [existingBookings, setExistingBookings] = useState<Booking[]>([])
   const [selectedLessonImage, setSelectedLessonImage] = useState<string>('single')
 
-  // Load existing bookings on mount
+  // Load existing bookings from Supabase on mount
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('bookings')
-      if (stored) {
-        setExistingBookings(JSON.parse(stored))
+    async function loadBookings() {
+      try {
+        const { data, error } = await supabase
+          .from('bookings')
+          .select('*')
+          .in('status', ['pending', 'confirmed'])
+
+        if (error) {
+          console.error('Error loading bookings:', error)
+          setExistingBookings([])
+        } else {
+          // Convert Supabase booking format to app format
+          const formatted: Booking[] = (data || []).map((b: SupabaseBooking) => ({
+            id: b.id,
+            studentName: b.student_name,
+            email: b.email,
+            phone: b.phone,
+            date: b.date,
+            time: b.time,
+            lessonType: b.lesson_type,
+            status: b.status,
+            createdAt: b.created_at,
+          }))
+          setExistingBookings(formatted)
+        }
+      } catch (error) {
+        console.error('Error loading bookings:', error)
+        setExistingBookings([])
       }
-    } catch (error) {
-      console.error('Error loading bookings:', error)
-      setExistingBookings([])
     }
+    loadBookings()
   }, [])
 
   // Step 1: Lesson Type Selection
@@ -125,26 +148,30 @@ export default function BookPage() {
     }
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Single lesson: Create one booking record
     const totalPrice = getLessonPrice(booking.lessonType || 'single')
-    const newBooking: Booking = {
-      id: `BK-${Date.now()}`,
-      studentName: booking.studentName || '',
-      email: booking.email || '',
-      phone: booking.phone || '',
-      address: booking.address,
-      lessonType: booking.lessonType || 'single',
-      date: booking.date || '',
-      time: booking.time || '',
-      price: totalPrice,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-    }
 
-    // Store in localStorage for demo
-    const existing = JSON.parse(localStorage.getItem('bookings') || '[]')
-    localStorage.setItem('bookings', JSON.stringify([...existing, newBooking]))
+    const { data, error } = await supabase
+      .from('bookings')
+      .insert([
+        {
+          student_name: booking.studentName || '',
+          email: booking.email || '',
+          phone: booking.phone || '',
+          date: booking.date || '',
+          time: booking.time || '',
+          lesson_type: booking.lessonType || 'single',
+          status: 'pending',
+        },
+      ])
+      .select()
+
+    if (error) {
+      console.error('Error creating booking:', error)
+      alert('Failed to create booking. Please try again.')
+      return
+    }
 
     alert('Booking confirmed! A confirmation email will be sent shortly.')
     window.location.href = '/'
