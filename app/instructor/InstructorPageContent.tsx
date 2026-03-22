@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import { logout } from '@/lib/auth'
+import { supabase, type Booking as SupabaseBooking } from '@/lib/supabase'
 import {
   formatDate,
   getLessonTypeName,
@@ -77,16 +78,40 @@ export default function InstructorPage() {
     repeatType: RepeatType.REPEATING
   })
 
+  // Load bookings from Supabase
   useEffect(() => {
-    try {
-      const storedBookings = localStorage.getItem('bookings')
-      if (storedBookings) {
-        setBookings(JSON.parse(storedBookings))
+    async function loadBookings() {
+      try {
+        const { data, error } = await supabase
+          .from('bookings')
+          .select('*')
+          .order('date', { ascending: false })
+
+        if (error) {
+          console.error('Error loading bookings:', error)
+          setBookings([])
+        } else {
+          // Convert Supabase format to app format
+          const formatted: Booking[] = (data || []).map((b: SupabaseBooking) => ({
+            id: b.id,
+            studentName: b.student_name,
+            email: b.email,
+            phone: b.phone,
+            date: b.date,
+            time: b.time,
+            lessonType: b.lesson_type,
+            status: b.status,
+            price: 0,
+            createdAt: b.created_at,
+          }))
+          setBookings(formatted)
+        }
+      } catch (error) {
+        console.error('Error loading bookings:', error)
+        setBookings([])
       }
-    } catch (error) {
-      console.error('Error loading bookings:', error)
-      setBookings([])
     }
+    loadBookings()
     setBlockedSlots(getBlockedSlots())
     setRules(getRules())
   }, [])
@@ -114,11 +139,19 @@ export default function InstructorPage() {
     return []
   }
 
-  const updateBookingStatus = (bookingId: string, newStatus: Booking['status']) => {
+  const updateBookingStatus = async (bookingId: string, newStatus: Booking['status']) => {
     try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ status: newStatus })
+        .eq('id', bookingId)
+
+      if (error) {
+        throw error
+      }
+
       const updatedBookings = bookings.map(b => b.id === bookingId ? { ...b, status: newStatus } : b)
       setBookings(updatedBookings)
-      localStorage.setItem('bookings', JSON.stringify(updatedBookings))
       alert(`Booking status updated to: ${newStatus}`)
     } catch (error) {
       console.error('Error updating booking status:', error)
@@ -131,11 +164,20 @@ export default function InstructorPage() {
       const booking = bookings.find(b => b.id === bookingId)
       if (!booking) return
 
+      const newArchived = !booking.archived
+      const { error } = await supabase
+        .from('bookings')
+        .update({ archived: newArchived })
+        .eq('id', bookingId)
+
+      if (error) {
+        throw error
+      }
+
       const updatedBookings = bookings.map(b => 
         b.id === bookingId ? { ...b, archived: !b.archived } : b
       )
       setBookings(updatedBookings)
-      localStorage.setItem('bookings', JSON.stringify(updatedBookings))
       alert(booking.archived ? 'Booking unarchived successfully' : 'Booking archived successfully')
     } catch (error) {
       console.error('Error archiving booking:', error)
