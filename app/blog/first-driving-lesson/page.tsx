@@ -209,7 +209,7 @@ export default function FirstDrivingLessonPage() {
             <p className="text-green-700">
               "I was so nervous for my first lesson that I almost cancelled. My instructor was incredibly 
               patient and started me in a quiet area. By the end, I was driving around the block! 
-              That first lesson gave me the confidence to keep going." — Sarah, Lidcombe
+              That first lesson gave me the confidence to keep going." — A recent student
             </p>
           </div>
 

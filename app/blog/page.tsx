@@ -49,15 +49,6 @@ const blogPosts = [
     category: 'Skills'
   },
   {
-    id: 'night-driving-safety',
-    title: 'Night Driving Safety: Essential Tips for Sydney Roads',
-    excerpt: 'Driving at night presents unique challenges. Learn essential safety tips for navigating Sydney roads after dark.',
-    date: 'February 28, 2026',
-    readTime: '4 min read',
-    image: '/images/blog/night-driving.jpg',
-    category: 'Safety'
-  },
-  {
     id: 'choosing-driving-instructor',
     title: 'How to Choose the Right Driving Instructor in Sydney',
     excerpt: 'What to look for when selecting a driving instructor to ensure you get the best learning experience.',
