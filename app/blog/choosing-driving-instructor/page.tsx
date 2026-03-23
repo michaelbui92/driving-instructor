@@ -300,10 +300,10 @@ export default function ChoosingDrivingInstructorPage() {
               </div>
               <div className="mt-4 md:mt-0 space-y-2">
                 <Link
-                  href="/instructor-profile"
+                  href="/about"
                   className="inline-block bg-teal-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-teal-700 transition"
                 >
-                  View My Instructor Profile
+                  View My About Page
                 </Link>
                 <p className="text-sm text-gray-600 text-center md:text-left">
                   See if my teaching style might be right for you

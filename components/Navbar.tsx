@@ -48,13 +48,12 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
             <Link href="/#services" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">Services</Link>
             <Link href="/#pricing" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">Pricing</Link>
             <Link href="/about" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">About</Link>
-            <Link href="/instructor-profile" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">Instructor</Link>
             <Link href="/blog" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">Blog</Link>
             <Link href="/faq" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">FAQ</Link>
             <Link href="/contact" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">Contact</Link>
             <div className="flex space-x-2 ml-2">
-              <Link href="/dashboard" className="px-3 py-1.5 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition font-medium text-sm">Student</Link>
-              <Link href="/instructor" className="px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-secondary transition font-medium text-sm">Instructor</Link>
+              <Link href="/dashboard" className="px-3 py-1.5 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition font-medium text-sm">Student Portal</Link>
+              <Link href="/instructor" className="px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-secondary transition font-medium text-sm">Instructor Portal</Link>
             </div>
           </div>
 
@@ -84,7 +83,6 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
             <Link href="/#services" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium">Services</Link>
             <Link href="/#pricing" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium">Pricing</Link>
             <Link href="/about" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium">About</Link>
-            <Link href="/instructor-profile" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium">Instructor</Link>
             <Link href="/blog" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium">Blog</Link>
             <Link href="/faq" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium">FAQ</Link>
             <Link href="/contact" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium">Contact</Link>
