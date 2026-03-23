@@ -129,14 +129,6 @@ export default function SydneyDrivingTestTipsPage() {
             </div>
           </div>
 
-          <div className="bg-green-50 border border-green-200 rounded-xl p-6 my-8">
-            <h3 className="text-lg font-bold text-green-800 mb-3">Student Success Story</h3>
-            <p className="text-green-700">
-              "I failed my first test because I was too nervous. My instructor helped me work on my 
-              observation skills and confidence. On my second attempt, I passed with only 3 minor errors!" 
-            </p>
-          </div>
-
           <div className="bg-gradient-to-r from-green-600 to-green-700 rounded-2xl p-8 text-white text-center mt-12">
             <h3 className="text-2xl font-bold mb-4">Need Test Preparation Help?</h3>
             <p className="mb-6 opacity-90">

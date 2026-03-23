@@ -4,6 +4,15 @@ import Image from 'next/image'
 
 const blogPosts = [
   {
+    id: 'night-driving-tips',
+    title: 'Night Driving Safety Tips for Sydney',
+    excerpt: 'Essential night driving safety tips for navigating Sydney roads after dark. Learn how to improve visibility and stay safe.',
+    date: 'March 23, 2026',
+    readTime: '5 min read',
+    image: '/images/blog/night-driving.jpg',
+    category: 'Safety Guide'
+  },
+  {
     id: 'quick-driving-tips',
     title: 'Quick Driving Tips for Sydney Roads',
     excerpt: 'Essential quick driving tips for navigating Sydney roads safely. Learn simple techniques to improve your driving confidence and safety.',
@@ -14,12 +23,21 @@ const blogPosts = [
   },
   {
     id: 'sydney-driving-challenges',
-    title: 'Local Sydney Driving Challenges & How to Overcome Them',
-    excerpt: 'Learn about common driving challenges in Western Sydney and practical solutions. Master Sydney roads with confidence.',
+    title: 'Common Sydney Driving Challenges & Solutions',
+    excerpt: 'Learn about common driving challenges in Sydney and practical solutions. Master Sydney roads with confidence.',
+    date: 'March 23, 2026',
+    readTime: '5 min read',
+    image: '/images/blog/local-challenges.jpg',
+    category: 'Practical Guide'
+  },
+  {
+    id: 'choosing-driving-instructor',
+    title: 'How to Choose the Right Driving Instructor',
+    excerpt: 'What to look for when selecting a driving instructor to ensure you get the best learning experience.',
     date: 'March 23, 2026',
     readTime: '6 min read',
-    image: '/images/blog/local-challenges.jpg',
-    category: 'Local Guide'
+    image: '/images/blog/choose-instructor.jpg',
+    category: 'Helpful Advice'
   },
   {
     id: 'first-driving-lesson',
@@ -28,7 +46,7 @@ const blogPosts = [
     date: 'March 15, 2026',
     readTime: '5 min read',
     image: '/images/blog/first-lesson.jpg',
-    category: 'Beginners'
+    category: 'Beginners Guide'
   },
   {
     id: 'sydney-driving-test-tips',
@@ -46,16 +64,7 @@ const blogPosts = [
     date: 'March 5, 2026',
     readTime: '6 min read',
     image: '/images/blog/parallel-parking.jpg',
-    category: 'Skills'
-  },
-  {
-    id: 'choosing-driving-instructor',
-    title: 'How to Choose the Right Driving Instructor in Sydney',
-    excerpt: 'What to look for when selecting a driving instructor to ensure you get the best learning experience.',
-    date: 'February 20, 2026',
-    readTime: '5 min read',
-    image: '/images/blog/choose-instructor.jpg',
-    category: 'Advice'
+    category: 'Driving Skills'
   }
 ]
 
@@ -171,31 +180,7 @@ export default function BlogPage() {
           </div>
         </div>
 
-        {/* Newsletter CTA */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl shadow-xl p-8 text-white text-center">
-          <h2 className="text-2xl font-bold mb-4">Stay Updated</h2>
-          <p className="mb-6 opacity-90 max-w-2xl mx-auto">
-            Subscribe to get the latest driving tips, test updates, and exclusive offers delivered to your inbox.
-          </p>
-          <form className="max-w-md mx-auto">
-            <div className="flex flex-col sm:flex-row gap-3">
-              <input
-                type="email"
-                placeholder="Your email address"
-                className="flex-grow px-4 py-3 rounded-lg text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                type="submit"
-                className="px-6 py-3 bg-white text-blue-700 font-semibold rounded-lg hover:bg-gray-100 transition"
-              >
-                Subscribe
-              </button>
-            </div>
-            <p className="text-sm opacity-75 mt-3">
-              No spam. Unsubscribe anytime.
-            </p>
-          </form>
-        </div>
+
       </main>
     </div>
   )

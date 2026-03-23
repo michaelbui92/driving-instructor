@@ -207,9 +207,7 @@ export default function FirstDrivingLessonPage() {
           <div className="bg-green-50 border border-green-200 rounded-xl p-6 my-8">
             <h3 className="text-lg font-bold text-green-800 mb-3">Success Story</h3>
             <p className="text-green-700">
-              "I was so nervous for my first lesson that I almost cancelled. My instructor was incredibly 
-              patient and started me in a quiet area. By the end, I was driving around the block! 
-              That first lesson gave me the confidence to keep going." — A recent student
+              "I was nervous to drive but I needed to drive to complete my rural work placement to achieve my 2nd year for working holiday. Thanks to Michael I learnt to drive in a few weeks and drove from Sydney to Victoria. The patient instruction gave me the confidence I needed for such a big journey." — A working holiday student
             </p>
           </div>
 

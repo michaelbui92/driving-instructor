@@ -43,17 +43,19 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
             )}
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex space-x-8 items-center">
-            <Link href="/#services" className="text-gray-700 hover:text-primary transition font-medium">Services</Link>
-            <Link href="/#pricing" className="text-gray-700 hover:text-primary transition font-medium">Pricing</Link>
-            <Link href="/about" className="text-gray-700 hover:text-primary transition font-medium">About</Link>
-            <Link href="/instructor-profile" className="text-gray-700 hover:text-primary transition font-medium">Instructor Profile</Link>
-            <Link href="/blog" className="text-gray-700 hover:text-primary transition font-medium">Blog & Tips</Link>
-            <Link href="/faq" className="text-gray-700 hover:text-primary transition font-medium">FAQ</Link>
-            <Link href="/contact" className="text-gray-700 hover:text-primary transition font-medium">Contact</Link>
-            <Link href="/dashboard" className="px-4 py-2 border-2 border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition font-medium">Student Portal</Link>
-            <Link href="/instructor" className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition font-medium">Instructor Portal</Link>
+          {/* Desktop Navigation - Simplified without dropdowns */}
+          <div className="hidden md:flex space-x-4 items-center">
+            <Link href="/#services" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">Services</Link>
+            <Link href="/#pricing" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">Pricing</Link>
+            <Link href="/about" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">About</Link>
+            <Link href="/instructor-profile" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">Instructor</Link>
+            <Link href="/blog" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">Blog</Link>
+            <Link href="/faq" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">FAQ</Link>
+            <Link href="/contact" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">Contact</Link>
+            <div className="flex space-x-2 ml-2">
+              <Link href="/dashboard" className="px-3 py-1.5 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition font-medium text-sm">Student</Link>
+              <Link href="/instructor" className="px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-secondary transition font-medium text-sm">Instructor</Link>
+            </div>
           </div>
 
           {/* Mobile menu button */}
@@ -76,31 +78,30 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
           </div>
         </div>
 
-        {/* Mobile menu with slide animation */}
+        {/* Mobile menu with slide animation - Simplified */}
         <div className={`md:hidden overflow-hidden transition-all duration-500 ease-in-out ${mobileMenuOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
           <div className="pb-4 space-y-1 pt-3">
-            <Link href="/#services" onClick={handleLinkClick} className="block px-4 py-3.5 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition-all duration-200 active:scale-95 active:bg-blue-100 font-medium">Services</Link>
-            <Link href="/#pricing" onClick={handleLinkClick} className="block px-4 py-3.5 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition-all duration-200 active:scale-95 active:bg-blue-100 font-medium">Pricing</Link>
-            <Link href="/about" onClick={handleLinkClick} className="block px-4 py-3.5 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition-all duration-200 active:scale-95 active:bg-blue-100 font-medium">About</Link>
-            <Link href="/instructor-profile" onClick={handleLinkClick} className="block px-4 py-3.5 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition-all duration-200 active:scale-95 active:bg-blue-100 font-medium">Instructor Profile</Link>
-            <Link href="/blog" onClick={handleLinkClick} className="block px-4 py-3.5 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition-all duration-200 active:scale-95 active:bg-blue-100 font-medium">Blog & Tips</Link>
-            <Link href="/faq" onClick={handleLinkClick} className="block px-4 py-3.5 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition-all duration-200 active:scale-95 active:bg-blue-100 font-medium">FAQ</Link>
-            <Link href="/contact" onClick={handleLinkClick} className="block px-4 py-3.5 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition-all duration-200 active:scale-95 active:bg-blue-100 font-medium">Contact</Link>
+            <Link href="/#services" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium">Services</Link>
+            <Link href="/#pricing" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium">Pricing</Link>
+            <Link href="/about" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium">About</Link>
+            <Link href="/instructor-profile" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium">Instructor</Link>
+            <Link href="/blog" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium">Blog</Link>
+            <Link href="/faq" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium">FAQ</Link>
+            <Link href="/contact" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium">Contact</Link>
             
-            <div className="pt-2 space-y-2">
-              <Link href="/dashboard" onClick={handleLinkClick} className="block px-4 py-3 border-2 border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition-all duration-200 active:scale-95 font-medium text-center">Student Portal</Link>
-              <Link href="/instructor" onClick={handleLinkClick} className="block px-4 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition-all duration-200 active:scale-95 font-medium text-center">Instructor Portal</Link>
+            <div className="pt-3 space-y-2 border-t border-gray-200">
+              <Link href="/dashboard" onClick={handleLinkClick} className="block px-4 py-3 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition font-medium text-center">Student Portal</Link>
+              <Link href="/instructor" onClick={handleLinkClick} className="block px-4 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition font-medium text-center">Instructor Portal</Link>
             </div>
             
             {showLocation && (
-              <div className="px-4 py-4 text-sm text-gray-600 border-t border-gray-200 mt-4 pt-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center mb-2">
-                  <svg className="w-5 h-5 mr-2 text-primary" fill="currentColor" viewBox="0 0 24 24">
+              <div className="px-4 py-3 text-sm text-gray-600 border-t border-gray-200 mt-3 pt-3">
+                <div className="flex items-center">
+                  <svg className="w-4 h-4 mr-2 text-primary" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                   </svg>
-                  <span className="font-semibold text-gray-800">📍 Lidcombe Area</span>
+                  <span className="font-medium text-gray-800">📍 Lidcombe Area</span>
                 </div>
-                <p className="text-gray-600 pl-7">Serving Lidcombe, Auburn, Berala, Regents Park & surrounding suburbs</p>
               </div>
             )}
           </div>
