@@ -4,6 +4,24 @@ import Image from 'next/image'
 
 const blogPosts = [
   {
+    id: 'quick-driving-tips',
+    title: 'Quick Driving Tips for Sydney Roads',
+    excerpt: 'Essential quick driving tips for navigating Sydney roads safely. Learn simple techniques to improve your driving confidence and safety.',
+    date: 'March 23, 2026',
+    readTime: '4 min read',
+    image: '/images/blog/quick-tips.jpg',
+    category: 'Essential Tips'
+  },
+  {
+    id: 'sydney-driving-challenges',
+    title: 'Local Sydney Driving Challenges & How to Overcome Them',
+    excerpt: 'Learn about common driving challenges in Western Sydney and practical solutions. Master Sydney roads with confidence.',
+    date: 'March 23, 2026',
+    readTime: '6 min read',
+    image: '/images/blog/local-challenges.jpg',
+    category: 'Local Guide'
+  },
+  {
     id: 'first-driving-lesson',
     title: 'Your First Driving Lesson: What to Expect',
     excerpt: 'Feeling nervous about your first driving lesson? Learn what to expect and how to prepare for a successful start to your driving journey.',

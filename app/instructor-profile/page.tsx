@@ -21,30 +21,18 @@ export default function InstructorProfilePage() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    async function loadProfile() {
-      try {
-        const { data, error } = await supabase
-          .from('instructor_profile')
-          .select('*')
-          .single()
-
-        if (error) {
-          console.error('Error loading profile:', error)
-          setError('Failed to load instructor profile')
-          setLoading(false)
-          return
-        }
-
-        setProfile(data)
-        setLoading(false)
-      } catch (err) {
-        console.error('Error:', err)
-        setError('Failed to load instructor profile')
-        setLoading(false)
-      }
+    // Use static profile data since we don't have Supabase table yet
+    const staticProfile: InstructorProfile = {
+      id: '1',
+      bio: "Hi, I'm Michael - your patient and professional driving instructor in the Lidcombe area. With years of experience helping international students and nervous drivers build confidence on Sydney roads, I specialize in creating a supportive, stress-free learning environment. My teaching approach focuses on practical skills, safety awareness, and building your confidence step by step.",
+      experience: "Over 10 years of driving experience in Sydney, with specialized training in defensive driving techniques and student-focused instruction. I've helped hundreds of students from diverse backgrounds successfully obtain their NSW driver's license.",
+      teaching_philosophy: "I believe everyone learns at their own pace. My approach is patient, encouraging, and tailored to your individual needs. Whether you're a complete beginner or need refresher lessons, I'll work with you to build skills and confidence in a judgment-free environment.",
+      car_details: "Modern dual-controlled vehicle with comprehensive insurance for learner drivers. Features include air conditioning, parking sensors, and safety features to ensure a comfortable and secure learning experience.",
+      service_area: "Primarily serving Lidcombe and surrounding Western Sydney suburbs including Auburn, Berala, Regents Park, and Homebush. Flexible meeting locations available for your convenience."
     }
-
-    loadProfile()
+    
+    setProfile(staticProfile)
+    setLoading(false)
   }, [])
 
   return (
@@ -81,17 +69,16 @@ export default function InstructorProfilePage() {
                   <div className="space-y-4 text-gray-700">
                     <p>{profile.bio}</p>
                   </div>
-                  <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mt-6">
+                  <div className="bg-green-50 border-l-4 border-green-400 p-4 mt-6">
                     <div className="flex items-start">
                       <div className="flex-shrink-0">
-                        <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        <svg className="h-5 w-5 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
                       </div>
                       <div className="ml-3">
-                        <p className="text-sm text-yellow-700">
-                          <strong>Note:</strong> My driving instructor license is currently pending final approval. 
-                          I am fully qualified and experienced, awaiting formal certification completion.
+                        <p className="text-sm text-green-700">
+                          <strong>Student-Focused Approach:</strong> I specialize in working with international students, nervous drivers, and those who need extra patience and support. My goal is to make you feel comfortable and confident behind the wheel.
                         </p>
                       </div>
                     </div>
