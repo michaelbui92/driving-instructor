@@ -341,7 +341,7 @@ export default function BookPage() {
                   <ul className="space-y-2">
                     <li className="flex items-start">
                       <span className="text-primary mr-2">→</span>
-                      Keep skills sharp between lessons
+                      Keep your skills up to date
                     </li>
                     <li className="flex items-start">
                       <span className="text-primary mr-2">→</span>

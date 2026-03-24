@@ -117,20 +117,20 @@ export default function Home() {
                 Book Now
               </Link>
             </div>
-            {/* Casual Driving - Best Value with animated gradient border */}
-            <div className="gradient-border-card p-8 hover-lift" data-aos="fade-up" data-aos-delay="100">
+            {/* Casual Driving - Best Value */}
+            <div className="bg-white rounded-xl shadow-lg p-8 border-2 border-gray-200 hover:shadow-2xl transition hover-lift" data-aos="fade-up" data-aos-delay="100">
               <div className="absolute top-0 right-0 bg-primary text-white text-xs px-3 py-1 rounded-bl-lg">Best Value</div>
               <h3 className="text-2xl font-bold mb-4">Casual Driving</h3>
-              <div className="text-4xl font-bold text-primary mb-2">$45</div>
+              <div className="text-4xl font-bold text-gray-900 mb-2">$45</div>
               <p className="text-gray-500 mb-6">per 60-minute lesson</p>
               <ul className="text-gray-600 mb-6 space-y-2">
-                <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Experienced drivers only</li>
+                <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Any Drivers welcome</li>
                 <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Maintenance & practice</li>
                 <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Stay road-ready</li>
               </ul>
               <Link
                 href="/book"
-                className="shimmer-btn block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-secondary transition font-semibold"
+                className="shimmer-btn block w-full bg-gray-800 text-white text-center py-3 rounded-lg hover:bg-gray-900 transition font-semibold"
               >
                 Book Now
               </Link>
