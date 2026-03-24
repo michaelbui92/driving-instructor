@@ -13,9 +13,9 @@ export default function Home() {
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
         <div className="flex flex-col lg:flex-row items-center gap-12">
-          <div className="flex-1 text-center lg:text-left">
+          <div className="flex-1 text-center lg:text-left" data-aos="fade-right">
             <DynamicHeadline />
-            <div className="mb-4">
+            <div className="mb-4" data-aos="fade-up" data-aos-delay="100">
               <span className="inline-flex items-center px-4 py-2 rounded-full bg-blue-100 text-blue-800 text-sm font-medium">
                 <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
@@ -23,25 +23,25 @@ export default function Home() {
                 Serving the Lidcombe Area
               </span>
             </div>
-            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto lg:mx-0">
+            <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto lg:mx-0" data-aos="fade-up" data-aos-delay="200">
               Patient, professional driving lessons tailored for international students and working holiday makers. Build confidence and get your NSW licence with an instructor who understands your needs.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start" data-aos="fade-up" data-aos-delay="300">
               <Link
                 href="/book"
-                className="bg-primary text-white px-8 py-3 rounded-lg text-lg hover:bg-secondary transition font-semibold"
+                className="shimmer-btn bg-primary text-white px-8 py-3 rounded-lg text-lg hover:bg-secondary transition font-semibold text-center"
               >
                 Book a Lesson
               </Link>
               <Link
                 href="#pricing"
-                className="border-2 border-primary text-primary px-8 py-3 rounded-lg text-lg hover:bg-primary hover:text-white transition font-semibold"
+                className="border-2 border-primary text-primary px-8 py-3 rounded-lg text-lg hover:bg-primary hover:text-white transition font-semibold text-center"
               >
                 View Packages
               </Link>
             </div>
           </div>
-          <div className="flex-shrink-0">
+          <div className="flex-shrink-0" data-aos="fade-left" data-aos-delay="200">
             <div className="relative w-64 h-64 md:w-80 md:h-80">
               <Image
                 src="/images/mascot-hero.png"
@@ -58,34 +58,34 @@ export default function Home() {
       {/* Features Section */}
       <section className="bg-white py-16" id="services">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Why Choose Drive With Bui?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12" data-aos="fade-up">Why Choose Drive With Bui?</h2>
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center p-6 rounded-lg bg-blue-50 hover:shadow-xl transition">
+            <div className="text-center p-6 rounded-lg bg-blue-50 hover:shadow-xl transition hover-lift" data-aos="fade-up" data-aos-delay="0">
               <div className="text-5xl mb-4">🕐</div>
               <h3 className="text-xl font-bold mb-2">Flexible Hours</h3>
               <p className="text-gray-600">Weekdays 9am-8pm, weekends 8am-7pm — lessons that fit around your study or work schedule</p>
             </div>
-            <div className="text-center p-6 rounded-lg bg-blue-50 hover:shadow-xl transition">
+            <div className="text-center p-6 rounded-lg bg-blue-50 hover:shadow-xl transition hover-lift" data-aos="fade-up" data-aos-delay="100">
               <div className="text-5xl mb-4">🎯</div>
               <h3 className="text-xl font-bold mb-2">Personalized Lessons</h3>
               <p className="text-gray-600">Tailored instruction based on your experience level, from complete beginner to test preparation</p>
             </div>
-            <div className="text-center p-6 rounded-lg bg-blue-50 hover:shadow-xl transition">
+            <div className="text-center p-6 rounded-lg bg-blue-50 hover:shadow-xl transition hover-lift" data-aos="fade-up" data-aos-delay="200">
               <div className="text-5xl mb-4">🌍</div>
               <h3 className="text-xl font-bold mb-2">International Students Welcome</h3>
               <p className="text-gray-600">Experienced helping students from diverse backgrounds pass their NSW driving test</p>
             </div>
-            <div className="text-center p-6 rounded-lg bg-blue-50 hover:shadow-xl transition">
+            <div className="text-center p-6 rounded-lg bg-blue-50 hover:shadow-xl transition hover-lift" data-aos="fade-up" data-aos-delay="300">
               <div className="text-5xl mb-4">😌</div>
               <h3 className="text-xl font-bold mb-2">Nervous Driver Friendly</h3>
               <p className="text-gray-600">Patient, supportive approach to help you build confidence behind the wheel</p>
             </div>
-            <div className="text-center p-6 rounded-lg bg-blue-50 hover:shadow-xl transition">
+            <div className="text-center p-6 rounded-lg bg-blue-50 hover:shadow-xl transition hover-lift" data-aos="fade-up" data-aos-delay="400">
               <div className="text-5xl mb-4">💯</div>
               <h3 className="text-xl font-bold mb-2">No Rushing</h3>
               <p className="text-gray-600">Full 60-minute lessons with your instructor's complete attention — if needed, I'll take you home safely</p>
             </div>
-            <div className="text-center p-6 rounded-lg bg-blue-50 hover:shadow-xl transition">
+            <div className="text-center p-6 rounded-lg bg-blue-50 hover:shadow-xl transition hover-lift" data-aos="fade-up" data-aos-delay="500">
               <div className="text-5xl mb-4">📱</div>
               <h3 className="text-xl font-bold mb-2">Easy Online Booking</h3>
               <p className="text-gray-600">Book lessons anytime through our simple online system</p>
@@ -97,11 +97,11 @@ export default function Home() {
       {/* Pricing Section */}
       <section className="py-16 bg-gradient-to-b from-blue-50 to-indigo-100" id="pricing">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4">Simple, Transparent Pricing</h2>
-          <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">Simple, straightforward pricing — no hidden fees.</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4" data-aos="fade-up">Simple, Transparent Pricing</h2>
+          <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="100">Simple, straightforward pricing — no hidden fees.</p>
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Single Lesson */}
-            <div className="bg-white rounded-xl shadow-lg p-8 border-2 border-gray-200 hover:shadow-2xl transition">
+            <div className="bg-white rounded-xl shadow-lg p-8 border-2 border-gray-200 hover:shadow-2xl transition hover-lift" data-aos="fade-up" data-aos-delay="0">
               <h3 className="text-2xl font-bold mb-4">Single Lesson</h3>
               <div className="text-4xl font-bold text-gray-900 mb-2">$55</div>
               <p className="text-gray-500 mb-6">per 60-minute lesson</p>
@@ -112,13 +112,13 @@ export default function Home() {
               </ul>
               <Link
                 href="/book"
-                className="block w-full bg-gray-800 text-white text-center py-3 rounded-lg hover:bg-gray-900 transition font-semibold"
+                className="shimmer-btn block w-full bg-gray-800 text-white text-center py-3 rounded-lg hover:bg-gray-900 transition font-semibold"
               >
                 Book Now
               </Link>
             </div>
-            {/* Casual Driving */}
-            <div className="bg-white rounded-xl shadow-lg p-8 border-2 border-primary hover:shadow-2xl transition relative overflow-hidden">
+            {/* Casual Driving - Best Value with animated gradient border */}
+            <div className="gradient-border-card p-8 hover-lift" data-aos="fade-up" data-aos-delay="100">
               <div className="absolute top-0 right-0 bg-primary text-white text-xs px-3 py-1 rounded-bl-lg">Best Value</div>
               <h3 className="text-2xl font-bold mb-4">Casual Driving</h3>
               <div className="text-4xl font-bold text-primary mb-2">$45</div>
@@ -130,7 +130,7 @@ export default function Home() {
               </ul>
               <Link
                 href="/book"
-                className="block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-secondary transition font-semibold"
+                className="shimmer-btn block w-full bg-primary text-white text-center py-3 rounded-lg hover:bg-secondary transition font-semibold"
               >
                 Book Now
               </Link>
@@ -142,48 +142,48 @@ export default function Home() {
       {/* About Section */}
       <section className="bg-white py-16" id="about">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Your Path to a NSW Licence</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12" data-aos="fade-up">Your Path to a NSW Licence</h2>
           <div className="max-w-4xl mx-auto">
-            <p className="text-gray-600 text-center text-lg mb-12">
+            <p className="text-gray-600 text-center text-lg mb-12" data-aos="fade-up" data-aos-delay="100">
               Whether you're an international student, working holiday maker, or just need to build confidence on the road, I'm here to help you every step of the way. Together, we'll work toward getting you safely licensed and road-ready.
             </p>
             <div className="grid md:grid-cols-2 gap-8">
-              <div className="flex items-start">
+              <div className="flex items-start" data-aos="fade-up" data-aos-delay="0">
                 <span className="text-3xl mr-4">✓</span>
                 <div>
                   <h3 className="text-xl font-bold mb-2">Safe Driving Skills</h3>
                   <p className="text-gray-600">Learn essential skills for navigating Sydney's roads safely and confidently</p>
                 </div>
               </div>
-              <div className="flex items-start">
+              <div className="flex items-start" data-aos="fade-up" data-aos-delay="100">
                 <span className="text-3xl mr-4">✓</span>
                 <div>
                   <h3 className="text-xl font-bold mb-2">Test Preparation</h3>
                   <p className="text-gray-600">Mock tests and practice routes to prepare you for your NSW driving test</p>
                 </div>
               </div>
-              <div className="flex items-start">
+              <div className="flex items-start" data-aos="fade-up" data-aos-delay="200">
                 <span className="text-3xl mr-4">✓</span>
                 <div>
                   <h3 className="text-xl font-bold mb-2">Experienced Instructor</h3>
                   <p className="text-gray-600">Years of experience helping students from all backgrounds pass their tests</p>
                 </div>
               </div>
-              <div className="flex items-start">
+              <div className="flex items-start" data-aos="fade-up" data-aos-delay="300">
                 <span className="text-3xl mr-4">✓</span>
                 <div>
                   <h3 className="text-xl font-bold mb-2">Flexible Scheduling</h3>
                   <p className="text-gray-600">Weekdays 9am-8pm, weekends 8am-7pm — lessons that fit around your life</p>
                 </div>
               </div>
-              <div className="flex items-start">
+              <div className="flex items-start" data-aos="fade-up" data-aos-delay="400">
                 <span className="text-3xl mr-4">✓</span>
                 <div>
                   <h3 className="text-xl font-bold mb-2">Patient & Supportive</h3>
                   <p className="text-gray-600">No judgment, just encouragement — everyone learns at their own pace</p>
                 </div>
               </div>
-              <div className="flex items-start">
+              <div className="flex items-start" data-aos="fade-up" data-aos-delay="500">
                 <span className="text-3xl mr-4">✓</span>
                 <div>
                   <h3 className="text-xl font-bold mb-2">Dedicated to Your Progress</h3>
@@ -197,14 +197,14 @@ export default function Home() {
 
       {/* CTA Section */}
       <section className="py-16 bg-primary">
-        <div className="max-w-4xl mx-auto px-4 text-center">
+        <div className="max-w-4xl mx-auto px-4 text-center" data-aos="fade-up">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Ready to Get Your NSW Licence?</h2>
           <p className="text-xl text-blue-100 mb-8">
             Join hundreds of students who have successfully passed their driving test with Drive With Bui
           </p>
           <Link
             href="/book"
-            className="inline-block bg-white text-primary px-8 py-3 rounded-lg text-lg hover:bg-gray-100 transition font-semibold"
+            className="shimmer-btn inline-block bg-white text-primary px-8 py-3 rounded-lg text-lg hover:bg-gray-100 transition font-semibold"
           >
             Book Your First Lesson
           </Link>

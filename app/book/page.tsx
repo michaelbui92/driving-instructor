@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Navbar from '@/components/Navbar'
@@ -30,6 +30,8 @@ export default function BookPage() {
   const [selectedSlotIds, setSelectedSlotIds] = useState<string[]>([])
   const [existingBookings, setExistingBookings] = useState<Booking[]>([])
   const [selectedLessonImage, setSelectedLessonImage] = useState<string>('single')
+  const [showConfirmation, setShowConfirmation] = useState(false)
+  const confirmationRef = useRef<HTMLDivElement>(null)
 
   // Load existing bookings from Supabase on mount
   useEffect(() => {
@@ -66,6 +68,19 @@ export default function BookPage() {
     }
     loadBookings()
   }, [])
+
+  // Trigger confirmation animation when step 4 is reached
+  useEffect(() => {
+    if (step === 4) {
+      setShowConfirmation(true)
+      // Scroll to confirmation card
+      setTimeout(() => {
+        confirmationRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 100)
+    } else {
+      setShowConfirmation(false)
+    }
+  }, [step])
 
   // Step 1: Lesson Type Selection
   const lessonTypes = getLessonTypes()
@@ -111,7 +126,7 @@ export default function BookPage() {
     setSelectedSlotIds([slotId])
   }
 
-  const handlePersonalInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePersonalInfoChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setBooking(prev => ({
       ...prev,
       [e.target.name]: e.target.value,
@@ -211,19 +226,19 @@ export default function BookPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Navbar showLocation={false} />
 
-      {/* Progress Bar */}
+      {/* Progress Bar with smooth transitions */}
       <div className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             {[1, 2, 3, 4].map((s) => (
               <div key={s} className="flex items-center">
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
+                <div className={`progress-step flex items-center justify-center w-10 h-10 rounded-full ${
                   step >= s ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'
                 }`}>
                   {s < 4 ? s : '✓'}
                 </div>
                 {s < 4 && (
-                  <div className={`w-24 h-1 mx-2 ${step > s ? 'bg-primary' : 'bg-gray-200'}`} />
+                  <div className={`progress-bar-segment w-24 h-1 mx-2 ${step > s ? 'bg-primary' : 'bg-gray-200'}`} />
                 )}
               </div>
             ))}
@@ -249,7 +264,7 @@ export default function BookPage() {
                 return (
                   <div
                     key={type.id}
-                    className={`p-6 rounded-xl border-2 cursor-pointer transition ${
+                    className={`p-6 rounded-xl border-2 cursor-pointer transition hover-lift ${
                       booking.lessonType === type.id
                         ? 'border-primary bg-blue-50'
                         : 'border-gray-200 bg-white hover:border-primary'
@@ -377,7 +392,7 @@ export default function BookPage() {
                       <button
                         key={date}
                         disabled={isDisabled}
-                        className={`p-4 rounded-lg border-2 transition ${
+                        className={`p-4 rounded-lg border-2 transition hover-lift ${
                           isSelected
                             ? 'border-primary bg-blue-50'
                             : isDisabled
@@ -413,7 +428,7 @@ export default function BookPage() {
                         <button
                           key={slot.id}
                           disabled={selectedSlotIds.includes(slot.id)}
-                          className={`p-4 rounded-lg border-2 transition ${
+                          className={`p-4 rounded-lg border-2 transition hover-lift ${
                             selectedSlotIds.includes(slot.id)
                               ? 'border-primary bg-blue-50'
                               : slot.isNightTime
@@ -444,77 +459,74 @@ export default function BookPage() {
             <h2 className="text-3xl font-bold mb-6">Your Details</h2>
             <div className="bg-white rounded-xl p-6 shadow-lg">
               <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Full Name *
-                  </label>
+                {/* Floating Label Inputs */}
+                <div className="floating-label-group">
                   <input
                     type="text"
                     name="studentName"
+                    id="studentName"
                     value={booking.studentName || ''}
                     onChange={handlePersonalInfoChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Enter your full name"
+                    className="floating-label-input"
+                    placeholder="Full Name"
                     required
                   />
+                  <label htmlFor="studentName" className="floating-label">Full Name *</label>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email Address *
-                  </label>
+                <div className="floating-label-group">
                   <input
                     type="email"
                     name="email"
+                    id="email"
                     value={booking.email || ''}
                     onChange={handlePersonalInfoChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="you@example.com"
+                    className="floating-label-input"
+                    placeholder="Email Address"
                     required
                   />
+                  <label htmlFor="email" className="floating-label">Email Address *</label>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone Number *
-                  </label>
+                <div className="floating-label-group">
                   <input
                     type="tel"
                     name="phone"
+                    id="phone"
                     value={booking.phone || ''}
                     onChange={handlePersonalInfoChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="(02) 1234-5678"
+                    className="floating-label-input"
+                    placeholder="Phone Number"
                     required
                   />
+                  <label htmlFor="phone" className="floating-label">Phone Number *</label>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Pickup/Drop-off Address *
-                  </label>
+                <div className="floating-label-group">
                   <input
                     type="text"
                     name="address"
+                    id="address"
                     value={booking.address || ''}
                     onChange={handlePersonalInfoChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="123 Main Street, Sydney NSW 2000"
+                    className="floating-label-input"
+                    placeholder="Pickup/Drop-off Address"
                     required
                   />
-                  <p className="text-sm text-gray-500 mt-1">This will be saved for future bookings</p>
+                  <label htmlFor="address" className="floating-label">Pickup/Drop-off Address *</label>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Notes (Optional)
-                  </label>
+                <div className="floating-label-group">
                   <textarea
                     name="notes"
+                    id="notes"
                     rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Any specific requirements or preferences?"
+                    value={booking.notes || ''}
+                    onChange={handlePersonalInfoChange}
+                    className="floating-label-input resize-none"
+                    placeholder="Notes (Optional)"
                   />
+                  <label htmlFor="notes" className="floating-label">Notes (Optional)</label>
                 </div>
               </div>
             </div>
@@ -522,9 +534,32 @@ export default function BookPage() {
         )}
 
         {step === 4 && (
-          <div>
+          <div ref={confirmationRef}>
             <h2 className="text-3xl font-bold mb-6">Confirm Your Booking</h2>
-            <div className="bg-white rounded-xl p-6 shadow-lg">
+            <div className={`confirmation-card bg-white rounded-xl p-6 shadow-lg ${showConfirmation ? 'animate-scale-in' : ''}`}>
+              {/* Animated SVG Checkmark */}
+              <div className="flex justify-center mb-6">
+                <svg className="w-24 h-24" viewBox="0 0 100 100">
+                  <circle
+                    className="checkmark-circle stroke-primary"
+                    cx="50"
+                    cy="50"
+                    r="45"
+                    fill="none"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    className="checkmark-check stroke-green-500"
+                    d="M30 50 L45 65 L70 35"
+                    fill="none"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -592,14 +627,14 @@ export default function BookPage() {
                 (step === 2 && (!booking.date || !booking.time)) ||
                 (step === 3 && !validateStep3(booking).valid)
               }
-              className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="shimmer-btn px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               {step === 3 ? 'Review Booking' : 'Next →'}
             </button>
           ) : (
             <button
               onClick={handleSubmit}
-              className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition"
+              className="shimmer-btn px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition"
             >
               Confirm Booking ✓
             </button>
