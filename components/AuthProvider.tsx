@@ -48,13 +48,20 @@ export function AuthProvider({ children }: AuthProviderProps) {
       checkAuth();
     };
 
+    // Also refresh immediately when auth state changes (login/logout)
+    const handleAuthChange = () => {
+      checkAuth();
+    };
+
     window.addEventListener('focus', handleFocus);
+    window.addEventListener('auth-change', handleAuthChange);
     
     // Also check periodically (every 5 minutes) to catch expired sessions
     const interval = setInterval(checkAuth, 5 * 60 * 1000);
 
     return () => {
       window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('auth-change', handleAuthChange);
       clearInterval(interval);
     };
   }, []);

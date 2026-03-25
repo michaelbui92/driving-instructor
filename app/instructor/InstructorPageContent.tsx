@@ -9,6 +9,7 @@ import { supabase, type Booking as SupabaseBooking } from '@/lib/supabase'
 import {
   formatDate,
   getLessonTypeName,
+  getLessonPrice,
   generateTimeSlots,
   getBlockedSlots,
   addBlockedSlot,
@@ -130,7 +131,7 @@ export default function InstructorPage() {
             time: b.time,
             lessonType: b.lesson_type,
             status: b.status,
-            price: 0,
+            price: getLessonPrice(b.lesson_type),
             createdAt: b.created_at,
           }))
           setBookings(formatted)

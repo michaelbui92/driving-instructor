@@ -248,15 +248,23 @@ export default function DashboardPage() {
             <h1 className="text-4xl font-bold mb-2">Student Dashboard</h1>
             <p className="text-gray-600">Manage your driving lessons and track your progress</p>
           </div>
-          {/* Cycling Portal Image */}
-          <div className="relative w-32 h-32 md:w-40 md:h-40 flex-shrink-0">
-            <Image
-              src={portalImages[portalImageIndex]}
-              alt="Student Portal"
-              fill
-              className="object-contain rounded-xl shadow-lg"
-              priority
-            />
+          <div className="flex items-center gap-4">
+            <Link
+              href="/book"
+              className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold shadow-md hover:-translate-y-0.5"
+            >
+              📅 Book a Lesson
+            </Link>
+            {/* Cycling Portal Image */}
+            <div className="relative w-32 h-32 md:w-40 md:h-40 flex-shrink-0">
+              <Image
+                src={portalImages[portalImageIndex]}
+                alt="Student Portal"
+                fill
+                className="object-contain rounded-xl shadow-lg"
+                priority
+              />
+            </div>
           </div>
         </div>
 

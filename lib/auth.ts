@@ -101,6 +101,8 @@ function createAuthSession(): void {
   
   const expiresAt = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
   localStorage.setItem(AUTH_KEY, JSON.stringify({ expiresAt }));
+  // Dispatch custom event to notify auth state change
+  window.dispatchEvent(new Event('auth-change'));
 }
 
 /**
@@ -109,6 +111,8 @@ function createAuthSession(): void {
 export function logout(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(AUTH_KEY);
+  // Dispatch custom event to notify auth state change
+  window.dispatchEvent(new Event('auth-change'));
 }
 
 /**
