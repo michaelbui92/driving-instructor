@@ -40,6 +40,7 @@ export async function GET(request: NextRequest) {
 
     // Create student record if doesn't exist
     if (!student) {
+      console.log('Creating student for user:', user.id, user.email)
       const { data: newStudent, error: createError } = await adminClient
         .from('students')
         .insert({ auth_user_id: user.id, email: user.email } as any)
@@ -48,7 +49,7 @@ export async function GET(request: NextRequest) {
 
       if (createError) {
         console.error('Error creating student:', createError)
-        return NextResponse.json({ error: 'Failed to create student record' }, { status: 500 })
+        return NextResponse.json({ error: 'Failed to create student record', details: createError.message }, { status: 500 })
       }
 
       student = newStudent
