@@ -17,7 +17,7 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
 
   // Check auth status
   useEffect(() => {
-    setIsLoggedIn(document.cookie.includes('sb-access-token'))
+    setIsLoggedIn(document.cookie.includes('sb-logged-in'))
   }, [])
 
   // Close student dropdown when clicking outside

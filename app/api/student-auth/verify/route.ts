@@ -48,6 +48,15 @@ export async function POST(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 7,
     })
 
+    // Set a visible cookie for client-side auth state checking (navbar dropdown)
+    response.cookies.set('sb-logged-in', 'true', {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7,
+    })
+
     return response
   } catch (error) {
     console.error('Verify error:', error)

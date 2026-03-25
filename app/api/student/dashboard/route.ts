@@ -27,15 +27,32 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
     }
 
-    // Get student's own record
-    const { data: student } = await supabase
+    // Get student's own record (create if doesn't exist)
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    let { data: student } = await adminClient
       .from('students')
       .select('*')
       .eq('auth_user_id', user.id)
       .single()
 
+    // Create student record if doesn't exist
     if (!student) {
-      return NextResponse.json({ error: 'Student not found' }, { status: 404 })
+      const { data: newStudent, error: createError } = await adminClient
+        .from('students')
+        .insert({ auth_user_id: user.id, email: user.email } as any)
+        .select()
+        .single()
+
+      if (createError) {
+        console.error('Error creating student:', createError)
+        return NextResponse.json({ error: 'Failed to create student record' }, { status: 500 })
+      }
+
+      student = newStudent
     }
 
     // Get bookings (RLS enforces email matching)

@@ -10,6 +10,7 @@ export async function POST() {
     // Clear session cookies
     response.cookies.delete('sb-access-token')
     response.cookies.delete('sb-refresh-token')
+    response.cookies.delete('sb-logged-in')
 
     return response
   } catch (error) {
