@@ -64,7 +64,7 @@ export default function StudentLoginPage() {
       const res = await fetch('/api/student-auth/verify', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, token: otp }),
+        body: JSON.stringify({ email, code: otp }),
       })
 
       const data = await res.json()
