@@ -189,7 +189,7 @@ export default function StudentLoginPage() {
                 disabled={loading || otp.length < 6}
                 className="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition disabled:opacity-50"
               >
-                {loading ? 'Verifying...' : 'Verify & Login'}
+                {loading ? 'Verifying...' : 'Enter & Login'}
               </button>
 
               <div className="text-center space-y-2">

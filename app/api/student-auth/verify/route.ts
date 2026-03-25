@@ -1,26 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { verifyOTPAndSignIn, getOrCreateStudent } from '@/lib/student-auth'
-import { createClient } from '@supabase/supabase-js'
-
-// Admin client for server-side operations
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-)
+import { verifyLoginCodeAndSignIn } from '@/lib/student-auth'
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, token } = await request.json()
+    const { email, code } = await request.json()
 
-    if (!email || !token) {
+    if (!email || !code) {
       return NextResponse.json(
-        { error: 'Email and token are required' },
+        { error: 'Email and code are required' },
         { status: 400 }
       )
     }
 
-    // Verify the OTP and sign in
-    const result = await verifyOTPAndSignIn(email, token)
+    // Verify the code and sign in
+    const result = await verifyLoginCodeAndSignIn(email, code)
 
     if (!result.success) {
       return NextResponse.json(
@@ -28,9 +21,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
-
-    // Ensure student record exists
-    await getOrCreateStudent(result.session.user.id, email)
 
     // Create response with session cookie
     const response = NextResponse.json({
@@ -41,7 +31,7 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Set session cookie
+    // Set session cookies
     response.cookies.set('sb-access-token', result.session.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',

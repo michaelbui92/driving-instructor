@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sendLoginOTP } from '@/lib/student-auth'
+import { sendLoginCode } from '@/lib/student-auth'
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const result = await sendLoginOTP(email)
+    const result = await sendLoginCode(email)
 
     if (!result.success) {
       return NextResponse.json(
