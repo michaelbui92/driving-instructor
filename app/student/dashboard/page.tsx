@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import Navbar from '@/components/Navbar'
-import { formatDate, getLessonTypeName, getAvailableSlots, generateTimeSlots } from '@/lib/booking-utils'
+import { formatDate, getLessonTypeName, type Booking } from '@/lib/booking-utils'
 
-type Booking = {
+type StudentBooking = {
   id: string
   studentName: string
   email: string
@@ -28,22 +29,26 @@ type Student = {
 }
 
 export default function StudentDashboardPage() {
+  const [bookings, setBookings] = useState<StudentBooking[]>([])
   const [student, setStudent] = useState<Student | null>(null)
-  const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
-  const [activeTab, setActiveTab] = useState<'upcoming' | 'completed' | 'cancelled'>('upcoming')
-  const [reschedulingBooking, setReschedulingBooking] = useState<Booking | null>(null)
+  const [selectedTab, setSelectedTab] = useState<'upcoming' | 'completed' | 'cancelled'>('upcoming')
+  const [reschedulingBooking, setReschedulingBooking] = useState<StudentBooking | null>(null)
   const [newDate, setNewDate] = useState('')
   const [newTime, setNewTime] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const router = useRouter()
+  const [portalImageIndex, setPortalImageIndex] = useState(0)
+  const portalImages = ['/images/student-portal-1.png', '/images/student-portal-2.png']
 
-  // Calculate upcoming lessons count
-  const upcomingBookings = bookings.filter(b => b.status === 'pending' || b.status === 'confirmed')
-  const completedBookings = bookings.filter(b => b.status === 'completed')
-  const upcomingLessonsCount = upcomingBookings.length
-  const upcomingCost = upcomingBookings.reduce((sum, b) => sum + b.price, 0)
+  // Cycle between portal images every 2 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setPortalImageIndex((prev) => (prev === 0 ? 1 : 0))
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [])
 
   useEffect(() => {
     loadDashboard()
@@ -72,6 +77,10 @@ export default function StudentDashboardPage() {
       setLoading(false)
     }
   }
+
+  const upcomingBookings = bookings.filter(b => b.status === 'pending' || b.status === 'confirmed')
+  const completedBookings = bookings.filter(b => b.status === 'completed')
+  const cancelledBookings = bookings.filter(b => b.status === 'cancelled')
 
   const handleLogout = async () => {
     try {
@@ -105,7 +114,7 @@ export default function StudentDashboardPage() {
     }
   }
 
-  const handleReschedule = async (booking: Booking) => {
+  const handleReschedule = async (booking: StudentBooking) => {
     if (!newDate || !newTime) {
       setMessage({ type: 'error', text: 'Please select date and time' })
       return
@@ -140,23 +149,6 @@ export default function StudentDashboardPage() {
     }
   }
 
-  const filteredBookings = bookings.filter((b) => {
-    if (activeTab === 'upcoming') return b.status === 'pending' || b.status === 'confirmed'
-    if (activeTab === 'completed') return b.status === 'completed'
-    if (activeTab === 'cancelled') return b.status === 'cancelled'
-    return true
-  })
-
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr + 'T00:00:00')
-    return date.toLocaleDateString('en-AU', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    })
-  }
-
   const getLessonName = (type: string) => {
     const names: Record<string, string> = {
       single: 'Single Lesson',
@@ -167,21 +159,29 @@ export default function StudentDashboardPage() {
     return names[type] || type
   }
 
+  const filteredBookings = bookings.filter((b) => {
+    if (selectedTab === 'upcoming') return b.status === 'pending' || b.status === 'confirmed'
+    if (selectedTab === 'completed') return b.status === 'completed'
+    if (selectedTab === 'cancelled') return b.status === 'cancelled'
+    return true
+  })
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
-        <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-          <p className="text-gray-500">Loading...</p>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <Navbar showLocation={false} />
+        <div className="max-w-6xl mx-auto px-4 py-16 text-center">
+          <p className="text-gray-600">Loading...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <Navbar showLocation={false} />
 
+      {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="mb-8 flex flex-col md:flex-row items-start md:items-center gap-6">
@@ -192,10 +192,20 @@ export default function StudentDashboardPage() {
           <div className="flex items-center gap-4">
             <Link
               href="/book"
-              className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold shadow-md"
+              className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold shadow-md hover:-translate-y-0.5"
             >
               📅 Book a Lesson
             </Link>
+            {/* Cycling Portal Image */}
+            <div className="relative w-32 h-32 md:w-40 md:h-40 flex-shrink-0">
+              <Image
+                src={portalImages[portalImageIndex]}
+                alt="Student Portal"
+                fill
+                className="object-contain rounded-xl shadow-lg"
+                priority
+              />
+            </div>
           </div>
         </div>
 
@@ -216,7 +226,7 @@ export default function StudentDashboardPage() {
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-xl p-6 shadow-lg">
             <div className="text-3xl mb-2">📅</div>
-            <div className="text-3xl font-bold text-primary">{upcomingLessonsCount}</div>
+            <div className="text-3xl font-bold text-primary">{upcomingBookings.length}</div>
             <p className="text-gray-600">Upcoming Lessons</p>
           </div>
           <div className="bg-white rounded-xl p-6 shadow-lg">
@@ -226,54 +236,101 @@ export default function StudentDashboardPage() {
           </div>
           <div className="bg-white rounded-xl p-6 shadow-lg">
             <div className="text-3xl mb-2">💰</div>
-            <div className="text-3xl font-bold text-accent">${upcomingCost}</div>
+            <div className="text-3xl font-bold text-accent">
+              ${upcomingBookings.reduce((sum, b) => sum + b.price, 0)}
+            </div>
             <p className="text-gray-600">Upcoming Cost</p>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b border-gray-200">
-          {(['upcoming', 'completed', 'cancelled'] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 font-medium capitalize transition ${
-                activeTab === tab
-                  ? 'text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-
-        {/* Bookings List */}
-        {filteredBookings.length === 0 ? (
-          <div className="bg-white rounded-xl p-8 shadow-sm text-center">
-            <p className="text-gray-500 mb-4">No {activeTab} bookings</p>
-            {activeTab === 'upcoming' && (
-              <Link
-                href="/book"
-                className="text-blue-600 hover:underline"
-              >
-                Book your first lesson →
-              </Link>
-            )}
+        <div className="bg-white rounded-xl shadow-lg">
+          <div className="border-b">
+            <div className="flex items-center justify-between px-6 py-3 border-b">
+              <div className="flex">
+                <button
+                  className={`px-4 py-2 font-semibold transition ${
+                    selectedTab === 'upcoming'
+                      ? 'border-b-2 border-primary text-primary'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                  onClick={() => setSelectedTab('upcoming')}
+                >
+                  Upcoming ({upcomingBookings.length})
+                </button>
+                <button
+                  className={`px-4 py-2 font-semibold transition ${
+                    selectedTab === 'completed'
+                      ? 'border-b-2 border-primary text-primary'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                  onClick={() => setSelectedTab('completed')}
+                >
+                  Completed ({completedBookings.length})
+                </button>
+                <button
+                  className={`px-4 py-2 font-semibold transition ${
+                    selectedTab === 'cancelled'
+                      ? 'border-b-2 border-red-500 text-red-500'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                  onClick={() => setSelectedTab('cancelled')}
+                >
+                  Cancelled ({cancelledBookings.length})
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Filter by email..."
+                  className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                  disabled
+                />
+              </div>
+            </div>
           </div>
-        ) : (
-          <div className="space-y-4">
+
+          {/* Bookings List */}
+          <div className="p-6">
+            {selectedTab === 'upcoming' && upcomingBookings.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">📅</div>
+                <h3 className="text-xl font-semibold mb-2">No Upcoming Lessons</h3>
+                <p className="text-gray-600 mb-6">Book your first lesson to get started</p>
+                <Link
+                  href="/book"
+                  className="inline-block px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition"
+                >
+                  Book Now
+                </Link>
+              </div>
+            )}
+
+            {selectedTab === 'completed' && completedBookings.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">🎯</div>
+                <h3 className="text-xl font-semibold mb-2">No Completed Lessons Yet</h3>
+                <p className="text-gray-600">Your completed lessons will appear here</p>
+              </div>
+            )}
+
+            {selectedTab === 'cancelled' && cancelledBookings.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">✅</div>
+                <h3 className="text-xl font-semibold mb-2">No Cancelled Bookings</h3>
+                <p className="text-gray-600">Cancelled bookings will appear here</p>
+              </div>
+            )}
+
             {filteredBookings.map((booking) => (
               <div
                 key={booking.id}
-                className="bg-white rounded-xl p-6 shadow-sm"
+                className="border rounded-lg p-6 mb-4 hover:shadow-lg transition bg-white last:mb-0"
               >
-                <div className="flex items-start justify-between">
-                  <div>
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-gray-900">
-                        {getLessonName(booking.lessonType)}
-                      </h3>
+                      <h3 className="font-semibold text-lg">{getLessonName(booking.lessonType)}</h3>
                       <span
                         className={`px-2 py-0.5 text-xs font-medium rounded-full ${
                           booking.status === 'confirmed'
@@ -285,7 +342,7 @@ export default function StudentDashboardPage() {
                             : 'bg-gray-100 text-gray-700'
                         }`}
                       >
-                        {booking.status}
+                        {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                       </span>
                     </div>
                     <p className="text-gray-600">
@@ -293,91 +350,83 @@ export default function StudentDashboardPage() {
                     </p>
                   </div>
 
-                  {activeTab === 'upcoming' && booking.status !== 'cancelled' && (
+                  {selectedTab === 'upcoming' && booking.status !== 'cancelled' && (
                     <div className="flex gap-2">
                       <button
-                        onClick={() => setReschedulingBooking(booking)}
-                        className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                        onClick={() => {
+                          setReschedulingBooking(booking)
+                          setNewDate(booking.date)
+                          setNewTime(booking.time)
+                        }}
+                        className="px-4 py-2 border-2 border-orange-500 text-orange-500 rounded-lg hover:bg-orange-50 transition font-medium"
                       >
                         Reschedule
                       </button>
                       <button
                         onClick={() => handleCancel(booking.id)}
                         disabled={actionLoading}
-                        className="px-3 py-1.5 text-sm bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition disabled:opacity-50"
+                        className="px-4 py-2 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition font-medium disabled:opacity-50"
                       >
                         Cancel
                       </button>
                     </div>
                   )}
                 </div>
+
+                {/* Reschedule Modal */}
+                {reschedulingBooking?.id === booking.id && (
+                  <div className="mt-4 pt-4 border-t border-gray-100">
+                    <div className="bg-blue-50 rounded-lg p-4 mb-4">
+                      <p className="text-sm font-medium text-gray-700 mb-2">Current booking:</p>
+                      <p className="text-gray-600">{formatDate(booking.date)} at {booking.time}</p>
+                    </div>
+                    <div className="flex gap-4 items-end">
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1">New Date</label>
+                        <input
+                          type="date"
+                          value={newDate}
+                          onChange={(e) => setNewDate(e.target.value)}
+                          min={new Date().toISOString().split('T')[0]}
+                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-gray-500 mb-1">New Time</label>
+                        <input
+                          type="time"
+                          value={newTime}
+                          onChange={(e) => setNewTime(e.target.value)}
+                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary outline-none"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => handleReschedule(booking)}
+                          disabled={actionLoading || !newDate || !newTime}
+                          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition disabled:opacity-50"
+                        >
+                          {actionLoading ? 'Saving...' : 'Save'}
+                        </button>
+                        <button
+                          onClick={() => {
+                            setReschedulingBooking(null)
+                            setNewDate('')
+                            setNewTime('')
+                          }}
+                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
-        )}
-      </div>
-
-      {/* Reschedule Modal */}
-      {reschedulingBooking && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">Reschedule Booking</h2>
-              <button
-                onClick={() => setReschedulingBooking(null)}
-                className="text-gray-500 hover:text-gray-700 text-2xl"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-600 mb-2">Current Date & Time:</p>
-                <p className="font-semibold">{formatDate(reschedulingBooking.date)}</p>
-                <p className="text-gray-600">{reschedulingBooking.time}</p>
-              </div>
-
-              <div className="border-t pt-4">
-                <p className="text-sm text-gray-600 mb-2">New Date:</p>
-                <input
-                  type="date"
-                  value={newDate}
-                  onChange={(e) => setNewDate(e.target.value)}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                />
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-600 mb-2">New Time:</p>
-                <input
-                  type="time"
-                  value={newTime}
-                  onChange={(e) => setNewTime(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                />
-              </div>
-
-              <div className="flex gap-3 pt-4">
-                <button
-                  onClick={() => handleReschedule(reschedulingBooking)}
-                  disabled={actionLoading || !newDate || !newTime}
-                  className="flex-1 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
-                >
-                  {actionLoading ? 'Saving...' : 'Confirm Reschedule'}
-                </button>
-                <button
-                  onClick={() => setReschedulingBooking(null)}
-                  className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }
