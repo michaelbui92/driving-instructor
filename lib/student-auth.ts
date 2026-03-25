@@ -120,49 +120,68 @@ export async function verifyLoginCodeAndSignIn(
       .update({ used_at: new Date().toISOString() })
       .eq('id', codeRecord.id)
 
-    // Now sign in or sign up the user via Supabase Auth
-    // Using the admin client to bypass RLS
+    // Use admin client to create or get user
+    const adminClient = getSupabaseAdmin()
+
+    // Try to get existing user by email
+    const { data: users, error: listError } = await adminClient.auth.admin.listUsers()
+    let user = users?.users.find(u => u.email === email)
+
+    // If user doesn't exist, create one with the code as password
+    if (!user) {
+      const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+        email,
+        password: code, // Use the OTP code as password
+        email_confirm: true,
+      })
+
+      if (createError) {
+        console.error('Create user error:', createError)
+        return { success: false, error: 'Failed to create user account' }
+      }
+
+      user = newUser.user
+    }
+
+    // Ensure student record exists
+    await getOrCreateStudent(user!.id, email)
+
+    // Now sign in with the code (works because we just set password to code)
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
 
-    // Try to sign in first
-    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+    const { data: sessionData, error: signInError } = await supabase.auth.signInWithPassword({
       email,
-      password: code, // Use code as password (hacky but works for OTP flow)
+      password: code,
     })
 
-    if (!signInError && signInData.session) {
-      // Ensure student record exists
-      await getOrCreateStudent(signInData.user.id, email)
-      return { success: true, session: signInData.session }
+    if (signInError) {
+      console.error('Sign in error:', signInError)
+      // User exists but password doesn't match - update password
+      const { error: updateError } = await adminClient.auth.admin.updateUserById(user!.id, {
+        password: code,
+      })
+
+      if (updateError) {
+        return { success: false, error: 'Failed to update password' }
+      }
+
+      // Try signing in again
+      const retryResult = await supabase.auth.signInWithPassword({
+        email,
+        password: code,
+      })
+
+      if (retryResult.error) {
+        return { success: false, error: 'Failed to sign in after password update' }
+      }
+
+      return { success: true, session: retryResult.data.session }
     }
 
-    // If sign in fails, create a new user
-    // We need to set a password for the user
-    const tempPassword = `${code}-${Date.now()}` // Temporary password
-
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-      email,
-      password: tempPassword,
-      options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/student/dashboard`,
-      },
-    })
-
-    if (signUpError) {
-      console.error('Sign up error:', signUpError)
-      // Try one more time - maybe user exists but password conflict
-      return { success: false, error: signUpError.message }
-    }
-
-    // Ensure student record exists
-    if (signUpData.user) {
-      await getOrCreateStudent(signUpData.user.id, email)
-    }
-
-    return { success: true, session: signUpData.session }
+    return { success: true, session: sessionData.session }
   } catch (err) {
     console.error('Unexpected verify error:', err)
     return { success: false, error: 'Failed to verify login code' }
