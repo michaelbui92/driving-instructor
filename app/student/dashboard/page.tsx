@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
+import { formatDate, getLessonTypeName, getAvailableSlots, generateTimeSlots } from '@/lib/booking-utils'
 
 type Booking = {
   id: string
@@ -76,8 +77,6 @@ export default function StudentDashboardPage() {
   }
 
   const handleCancel = async (bookingId: string) => {
-    if (!confirm('Are you sure you want to cancel this booking?')) return
-
     setActionLoading(true)
     try {
       const res = await fetch(`/api/student/bookings/${bookingId}/cancel`, {
@@ -92,7 +91,7 @@ export default function StudentDashboardPage() {
       setBookings((prev) =>
         prev.map((b) => (b.id === bookingId ? { ...b, status: 'cancelled' } : b))
       )
-      setMessage({ type: 'success', text: 'Booking cancelled successfully' })
+      setMessage({ type: 'success', text: 'Booking cancelled' })
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message })
     } finally {
@@ -191,12 +190,6 @@ export default function StudentDashboardPage() {
             >
               Book New Lesson
             </Link>
-            <button
-              onClick={handleLogout}
-              className="px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition"
-            >
-              Log Out
-            </button>
           </div>
         </div>
 
@@ -293,11 +286,6 @@ export default function StudentDashboardPage() {
                     <p className="text-gray-600">
                       📅 {formatDate(booking.date)} at {booking.time}
                     </p>
-                    {booking.claimCode && (
-                      <p className="text-sm text-gray-400 mt-1">
-                        Booking ref: {booking.claimCode}
-                      </p>
-                    )}
                   </div>
 
                   {activeTab === 'upcoming' && booking.status !== 'cancelled' && (
@@ -318,58 +306,73 @@ export default function StudentDashboardPage() {
                     </div>
                   )}
                 </div>
-
-                {/* Reschedule Modal */}
-                {reschedulingBooking?.id === booking.id && (
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <p className="text-sm font-medium text-gray-700 mb-3">Select new date & time:</p>
-                    <div className="flex gap-4 items-end">
-                      <div>
-                        <label className="block text-xs text-gray-500 mb-1">Date</label>
-                        <input
-                          type="date"
-                          value={newDate}
-                          onChange={(e) => setNewDate(e.target.value)}
-                          min={new Date().toISOString().split('T')[0]}
-                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-500 mb-1">Time</label>
-                        <input
-                          type="time"
-                          value={newTime}
-                          onChange={(e) => setNewTime(e.target.value)}
-                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleReschedule(booking)}
-                          disabled={actionLoading || !newDate || !newTime}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
-                        >
-                          Confirm
-                        </button>
-                        <button
-                          onClick={() => {
-                            setReschedulingBooking(null)
-                            setNewDate('')
-                            setNewTime('')
-                          }}
-                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Reschedule Modal */}
+      {reschedulingBooking && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Reschedule Booking</h2>
+              <button
+                onClick={() => setReschedulingBooking(null)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-gray-600 mb-2">Current Date & Time:</p>
+                <p className="font-semibold">{formatDate(reschedulingBooking.date)}</p>
+                <p className="text-gray-600">{reschedulingBooking.time}</p>
+              </div>
+
+              <div className="border-t pt-4">
+                <p className="text-sm text-gray-600 mb-2">New Date:</p>
+                <input
+                  type="date"
+                  value={newDate}
+                  onChange={(e) => setNewDate(e.target.value)}
+                  min={new Date().toISOString().split('T')[0]}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <p className="text-sm text-gray-600 mb-2">New Time:</p>
+                <input
+                  type="time"
+                  value={newTime}
+                  onChange={(e) => setNewTime(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </div>
+
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => handleReschedule(reschedulingBooking)}
+                  disabled={actionLoading || !newDate || !newTime}
+                  className="flex-1 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                >
+                  {actionLoading ? 'Saving...' : 'Confirm Reschedule'}
+                </button>
+                <button
+                  onClick={() => setReschedulingBooking(null)}
+                  className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -61,6 +61,20 @@ export default function BookPage() {
             createdAt: b.created_at,
           }))
           setExistingBookings(formatted)
+
+          // Auto-fill from most recent booking if logged in and no details set
+          const accessToken = document.cookie.includes('sb-access-token')
+          if (accessToken && formatted.length > 0) {
+            const mostRecent = formatted[0]
+            if (mostRecent.studentName || mostRecent.email || mostRecent.phone) {
+              setBooking(prev => ({
+                ...prev,
+                studentName: mostRecent.studentName || prev.studentName,
+                email: mostRecent.email || prev.email,
+                phone: mostRecent.phone || prev.phone,
+              }))
+            }
+          }
         }
       } catch (error) {
         console.error('Error loading bookings:', error)
