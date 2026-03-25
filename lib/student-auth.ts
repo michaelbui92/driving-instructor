@@ -1,10 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Booking } from './supabase'
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+// Lazy-initialized admin client (requires SUPABASE_SERVICE_ROLE_KEY)
+function getSupabaseAdmin() {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured')
+  }
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 // Generate a 6-digit login code
 export function generateLoginCode(): string {
@@ -18,13 +24,13 @@ export async function sendLoginCode(email: string): Promise<{ success: boolean; 
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000) // 10 minutes
 
     // Clean up any existing codes for this email
-    await supabaseAdmin
+    await getSupabaseAdmin()
       .from('login_codes')
       .delete()
       .eq('email', email)
 
     // Store the plain code (expires in 10 min, single use)
-    const { error: insertError } = await supabaseAdmin
+    const { error: insertError } = await getSupabaseAdmin()
       .from('login_codes')
       .insert({
         email,
@@ -91,7 +97,7 @@ export async function verifyLoginCodeAndSignIn(
 ): Promise<{ success: boolean; error?: string; session?: any }> {
   try {
     // Find the code record
-    const { data: codeRecord, error: findError } = await supabaseAdmin
+    const { data: codeRecord, error: findError } = await getSupabaseAdmin()
       .from('login_codes')
       .select('*')
       .eq('email', email)
@@ -109,7 +115,7 @@ export async function verifyLoginCodeAndSignIn(
     }
 
     // Mark code as used
-    await supabaseAdmin
+    await getSupabaseAdmin()
       .from('login_codes')
       .update({ used_at: new Date().toISOString() })
       .eq('id', codeRecord.id)
@@ -183,7 +189,7 @@ export async function getOrCreateStudent(
   email: string
 ) {
   // Check if student exists
-  const { data: existing } = await supabaseAdmin
+  const { data: existing } = await getSupabaseAdmin()
     .from('students')
     .select('*')
     .eq('auth_user_id', authUserId)
@@ -192,7 +198,7 @@ export async function getOrCreateStudent(
   if (existing) return existing
 
   // Create student record
-  const { data: student, error } = await supabaseAdmin
+  const { data: student, error } = await getSupabaseAdmin()
     .from('students')
     .insert({ auth_user_id: authUserId, email } as any)
     .select()
