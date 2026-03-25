@@ -8,6 +8,7 @@ interface BookingNotification {
   time: string
   lessonType: string
   price: number
+  claimCode?: string
 }
 
 export async function POST(request: NextRequest) {
@@ -21,8 +22,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email service not configured' }, { status: 500 })
     }
 
-    // Format the booking email
-    const lessonTypeName = booking.lessonType === 'single' ? 'Single Lesson' : 'Casual Driving'
+    const lessonTypeName = booking.lessonType === 'single' ? 'Single Lesson' : 
+                          booking.lessonType === 'package10' ? '10 Lesson Package' :
+                          booking.lessonType === 'package20' ? '20 Lesson Package' : 'Driving Lesson'
     const formattedDate = new Date(booking.date).toLocaleDateString('en-AU', {
       weekday: 'long',
       year: 'numeric',
@@ -30,8 +32,52 @@ export async function POST(request: NextRequest) {
       day: 'numeric'
     })
 
-    const subject = `📅 New Booking Request - ${booking.studentName}`
-    const body = `
+    // Send confirmation email to student
+    if (booking.email && booking.claimCode) {
+      const studentSubject = `✅ Booking Confirmed - ${formattedDate} at ${booking.time}`
+      const studentBody = `
+Hi ${booking.studentName},
+
+Your driving lesson has been booked successfully!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📅 Date: ${formattedDate}
+🕐 Time: ${booking.time}
+📚 Lesson: ${lessonTypeName}
+💰 Price: $${booking.price}
+🔖 Booking Ref: ${booking.claimCode}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📍 I'll pick you up at your provided address.
+
+Need to reschedule or cancel? Log in to your student portal:
+${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/student/login
+
+See you soon!
+Bui
+Drive with Bui
+`.trim()
+
+      await fetch(
+        `https://api.agentmail.to/v0/inboxes/drivewithbui@agentmail.to/messages/send`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            to: [booking.email],
+            subject: studentSubject,
+            text: studentBody,
+          }),
+        }
+      )
+    }
+
+    // Send notification to instructor
+    const instructorSubject = `📅 New Booking Request - ${booking.studentName}`
+    const instructorBody = `
 New booking request received:
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -43,6 +89,7 @@ New booking request received:
 🕐 Time: ${booking.time}
 📚 Lesson: ${lessonTypeName}
 💰 Price: $${booking.price}
+🔖 Booking Ref: ${booking.claimCode || 'N/A'}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Please log in to the instructor portal to confirm or cancel this booking.
@@ -50,7 +97,6 @@ Please log in to the instructor portal to confirm or cancel this booking.
 - Auto-notification from Driving Instructor Website
     `.trim()
 
-    // Send email to instructor
     const response = await fetch(
       `https://api.agentmail.to/v0/inboxes/drivewithbui@agentmail.to/messages/send`,
       {
@@ -61,8 +107,8 @@ Please log in to the instructor portal to confirm or cancel this booking.
         },
         body: JSON.stringify({
           to: ['drivewithbui@agentmail.to'],
-          subject,
-          text: body,
+          subject: instructorSubject,
+          text: instructorBody,
         }),
       }
     )

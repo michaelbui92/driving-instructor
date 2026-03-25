@@ -18,6 +18,9 @@ export type Booking = {
   created_at: string
 }
 
+// Alias for Supabase-format bookings (snake_case)
+export type SupabaseBooking = Booking
+
 export type AvailabilityRule = {
   id: string
   type: 'weekly' | 'specific_date' | 'recurring'

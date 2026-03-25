@@ -31,6 +31,7 @@ export default function BookPage() {
   const [existingBookings, setExistingBookings] = useState<Booking[]>([])
   const [selectedLessonImage, setSelectedLessonImage] = useState<string>('single')
   const [showConfirmation, setShowConfirmation] = useState(false)
+  const [confirmedClaimCode, setConfirmedClaimCode] = useState<string>('')
   const confirmationRef = useRef<HTMLDivElement>(null)
 
   // Load existing bookings from Supabase on mount
@@ -165,7 +166,8 @@ export default function BookPage() {
   }
 
   const handleSubmit = async () => {
-    // Single lesson: Create one booking record
+    // Generate claim code for this booking
+    const claimCode = Math.floor(100000 + Math.random() * 900000).toString()
     const totalPrice = getLessonPrice(booking.lessonType || 'single')
 
     const { data, error } = await supabase
@@ -179,6 +181,7 @@ export default function BookPage() {
           time: booking.time || '',
           lesson_type: booking.lessonType || 'single',
           status: 'pending',
+          claim_code: claimCode,
         },
       ])
       .select()
@@ -189,7 +192,10 @@ export default function BookPage() {
       return
     }
 
-    // Send email notification to instructor
+    // Store claim code and show success state
+    setConfirmedClaimCode(claimCode)
+
+    // Send email notification to instructor + student confirmation
     try {
       await fetch('/api/booking-notify', {
         method: 'POST',
@@ -202,15 +208,13 @@ export default function BookPage() {
           time: booking.time,
           lessonType: booking.lessonType,
           price: totalPrice,
+          claimCode,
         }),
       })
     } catch (notifyError) {
       // Don't fail the booking if email fails
       console.error('Failed to send notification:', notifyError)
     }
-
-    alert('Booking confirmed! You will receive a confirmation email shortly.')
-    window.location.href = '/'
   }
 
   const getSelectedSlots = (): TimeSlot[] => {
@@ -533,7 +537,7 @@ export default function BookPage() {
           </div>
         )}
 
-        {step === 4 && (
+        {step === 4 && !confirmedClaimCode && (
           <div ref={confirmationRef}>
             <h2 className="text-3xl font-bold mb-6">Confirm Your Booking</h2>
             <div className={`confirmation-card bg-white rounded-xl p-6 shadow-lg ${showConfirmation ? 'animate-scale-in' : ''}`}>
@@ -602,6 +606,60 @@ export default function BookPage() {
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        )}
+
+        {step === 4 && confirmedClaimCode && (
+          <div className="text-center">
+            <div className="bg-white rounded-xl p-8 shadow-lg">
+              {/* Animated SVG Checkmark */}
+              <div className="flex justify-center mb-6">
+                <svg className="w-24 h-24" viewBox="0 0 100 100">
+                  <circle
+                    className="checkmark-circle stroke-primary"
+                    cx="50"
+                    cy="50"
+                    r="45"
+                    fill="none"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    className="checkmark-check stroke-green-500"
+                    d="M30 50 L45 65 L70 35"
+                    fill="none"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </div>
+
+              <h2 className="text-3xl font-bold text-green-600 mb-4">Booking Confirmed!</h2>
+              <p className="text-gray-600 mb-6">
+                Your lesson has been booked. Check your email for confirmation details.
+              </p>
+
+              <div className="bg-blue-50 rounded-xl p-6 mb-6">
+                <p className="text-sm text-blue-600 font-medium mb-2">Your Booking Reference</p>
+                <p className="text-4xl font-bold tracking-widest text-blue-700">{confirmedClaimCode}</p>
+                <p className="text-xs text-blue-500 mt-2">Save this code to access your booking later</p>
+              </div>
+
+              <p className="text-gray-600 mb-6">
+                Want to manage your bookings?{' '}
+                <a href="/student/login" className="text-blue-600 hover:underline font-medium">
+                  Log in to your student portal →
+                </a>
+              </p>
+
+              <button
+                onClick={() => window.location.href = '/'}
+                className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition"
+              >
+                Back to Home
+              </button>
             </div>
           </div>
         )}

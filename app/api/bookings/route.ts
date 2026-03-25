@@ -35,6 +35,11 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// Generate a 6-digit booking claim code
+function generateClaimCode(): string {
+  return Math.floor(100000 + Math.random() * 900000).toString()
+}
+
 export async function POST(request: NextRequest) {
   try {
     const bookingData = await request.json()
@@ -73,6 +78,9 @@ export async function POST(request: NextRequest) {
       )
     }
     
+    // Generate claim code for this booking
+    const claimCode = generateClaimCode()
+    
     // Create booking
     const { data, error } = await supabase
       .from('bookings')
@@ -84,7 +92,8 @@ export async function POST(request: NextRequest) {
         time: bookingData.time,
         lesson_type: bookingData.lesson_type,
         status: 'pending',
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        claim_code: claimCode,
       }])
       .select()
     
@@ -100,6 +109,7 @@ export async function POST(request: NextRequest) {
       { 
         success: true, 
         booking: data[0],
+        claimCode,
         message: 'Booking created successfully!'
       },
       { status: 201 }

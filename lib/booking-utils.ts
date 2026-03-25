@@ -247,6 +247,7 @@ export interface Booking {
   originalDate?: string // For rescheduled bookings: original date before reschedule
   previousDate?: string // For multiple reschedules: previous date
   rescheduleHistory?: Array<{date: string, time: string, changedAt: string}> // Full history of reschedules
+  claimCode?: string // 6-digit booking reference code
 }
 
 export interface LessonSlot {
