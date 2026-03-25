@@ -14,6 +14,7 @@ export default function DashboardPage() {
   const [selectedNewDate, setSelectedNewDate] = useState<string>('')
   const [dateHasNoSlots, setDateHasNoSlots] = useState<boolean>(false)
   const [portalImageIndex, setPortalImageIndex] = useState(0)
+  const [emailFilter, setEmailFilter] = useState('')
   const portalImages = ['/images/student-portal-1.png', '/images/student-portal-2.png']
 
   // Cycle between portal images every 2 seconds
@@ -59,8 +60,14 @@ export default function DashboardPage() {
     loadBookings()
   }, [])
 
-  const upcomingBookings = bookings.filter(b => b.status === 'pending' || b.status === 'confirmed')
-  const completedBookings = bookings.filter(b => b.status === 'completed')
+  const upcomingBookings = bookings.filter(b => 
+    (b.status === 'pending' || b.status === 'confirmed') &&
+    (!emailFilter || b.email.toLowerCase().includes(emailFilter.toLowerCase()))
+  )
+  const completedBookings = bookings.filter(b => 
+    b.status === 'completed' &&
+    (!emailFilter || b.email.toLowerCase().includes(emailFilter.toLowerCase()))
+  )
 
   // Group bookings by packageId for display
   const groupedUpcomingBookings = upcomingBookings.reduce((acc, booking) => {
@@ -98,6 +105,27 @@ export default function DashboardPage() {
     } catch (error) {
       console.error('Error cancelling booking:', error)
       alert('Error cancelling booking. Please try again.')
+    }
+  }
+
+  const deleteBooking = async (bookingId: string) => {
+    if (!confirm('Permanently delete this booking? This cannot be undone.')) return
+    
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .delete()
+        .eq('id', bookingId)
+
+      if (error) {
+        throw error
+      }
+
+      setBookings(bookings.filter(b => b.id !== bookingId))
+      alert('Booking deleted successfully')
+    } catch (error) {
+      console.error('Error deleting booking:', error)
+      alert('Error deleting booking. Please try again.')
     }
   }
 
@@ -292,27 +320,46 @@ export default function DashboardPage() {
         {/* Tabs */}
         <div className="bg-white rounded-xl shadow-lg">
           <div className="border-b">
-            <div className="flex">
-              <button
-                className={`flex-1 px-6 py-4 font-semibold transition ${
-                  selectedTab === 'upcoming'
-                    ? 'border-b-2 border-primary text-primary'
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
-                onClick={() => setSelectedTab('upcoming')}
-              >
-                Upcoming ({upcomingBookings.length})
-              </button>
-              <button
-                className={`flex-1 px-6 py-4 font-semibold transition ${
-                  selectedTab === 'completed'
-                    ? 'border-b-2 border-primary text-primary'
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
-                onClick={() => setSelectedTab('completed')}
-              >
-                Completed ({completedBookings.length})
-              </button>
+            <div className="flex items-center justify-between px-6 py-3 border-b">
+              <div className="flex">
+                <button
+                  className={`px-4 py-2 font-semibold transition ${
+                    selectedTab === 'upcoming'
+                      ? 'border-b-2 border-primary text-primary'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                  onClick={() => setSelectedTab('upcoming')}
+                >
+                  Upcoming ({upcomingBookings.length})
+                </button>
+                <button
+                  className={`px-4 py-2 font-semibold transition ${
+                    selectedTab === 'completed'
+                      ? 'border-b-2 border-primary text-primary'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                  onClick={() => setSelectedTab('completed')}
+                >
+                  Completed ({completedBookings.length})
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  placeholder="Filter by email..."
+                  value={emailFilter}
+                  onChange={(e) => setEmailFilter(e.target.value)}
+                  className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
+                />
+                {emailFilter && (
+                  <button
+                    onClick={() => setEmailFilter('')}
+                    className="p-1.5 text-gray-500 hover:text-gray-700"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -401,6 +448,12 @@ export default function DashboardPage() {
                                   className="w-full px-4 py-3 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition font-medium"
                                 >
                                   Cancel
+                                </button>
+                                <button
+                                  onClick={() => deleteBooking(booking.id)}
+                                  className="w-full px-4 py-3 border-2 border-gray-700 text-gray-700 rounded-lg hover:bg-gray-700 hover:text-white transition font-medium"
+                                >
+                                  Delete
                                 </button>
                               </>
                             )}
