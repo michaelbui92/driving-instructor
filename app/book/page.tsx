@@ -641,16 +641,10 @@ export default function BookPage() {
                 Your lesson has been booked. Check your email for confirmation details.
               </p>
 
-              <div className="bg-blue-50 rounded-xl p-6 mb-6">
-                <p className="text-sm text-blue-600 font-medium mb-2">Your Booking Reference</p>
-                <p className="text-4xl font-bold tracking-widest text-blue-700">{confirmedClaimCode}</p>
-                <p className="text-xs text-blue-500 mt-2">Save this code to access your booking later</p>
-              </div>
-
               <p className="text-gray-600 mb-6">
                 Want to manage your bookings?{' '}
-                <a href="/student/login" className="text-blue-600 hover:underline font-medium">
-                  Log in to your student portal →
+                <a href="/student/dashboard" className="text-blue-600 hover:underline font-medium">
+                  Go to your student dashboard →
                 </a>
               </p>
 

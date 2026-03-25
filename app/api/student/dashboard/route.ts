@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { getStudentBookings } from '@/lib/student-auth'
 
 export async function GET(request: NextRequest) {
   try {
@@ -55,8 +54,30 @@ export async function GET(request: NextRequest) {
       student = newStudent
     }
 
-    // Get bookings (RLS enforces email matching)
-    const bookings = await getStudentBookings(student.email)
+    // Get bookings using admin client to bypass RLS
+    const { data: bookingsData, error: bookingsError } = await adminClient
+      .from('bookings')
+      .select('*')
+      .eq('email', student.email)
+      .order('date', { ascending: false })
+
+    if (bookingsError) {
+      console.error('Error fetching bookings:', bookingsError)
+    }
+
+    const bookings = (bookingsData || []).map((b: any) => ({
+      id: b.id,
+      studentName: b.student_name,
+      email: b.email,
+      phone: b.phone,
+      date: b.date,
+      time: b.time,
+      lessonType: b.lesson_type,
+      status: b.status,
+      price: 0,
+      createdAt: b.created_at,
+      claimCode: b.claim_code,
+    }))
 
     // Group by status
     const upcoming = bookings.filter(
