@@ -9,7 +9,7 @@ import { formatDate, getLessonTypeName, getRequiredLessons, getAvailableSlots, g
 
 export default function DashboardPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
-  const [selectedTab, setSelectedTab] = useState<'upcoming' | 'completed'>('upcoming')
+  const [selectedTab, setSelectedTab] = useState<'upcoming' | 'completed' | 'cancelled'>('upcoming')
   const [reschedulingBooking, setReschedulingBooking] = useState<Booking | null>(null)
   const [selectedNewDate, setSelectedNewDate] = useState<string>('')
   const [dateHasNoSlots, setDateHasNoSlots] = useState<boolean>(false)
@@ -66,6 +66,10 @@ export default function DashboardPage() {
   )
   const completedBookings = bookings.filter(b => 
     b.status === 'completed' &&
+    (!emailFilter || b.email.toLowerCase().includes(emailFilter.toLowerCase()))
+  )
+  const cancelledBookings = bookings.filter(b => 
+    b.status === 'cancelled' &&
     (!emailFilter || b.email.toLowerCase().includes(emailFilter.toLowerCase()))
   )
 
@@ -342,6 +346,16 @@ export default function DashboardPage() {
                 >
                   Completed ({completedBookings.length})
                 </button>
+                <button
+                  className={`px-4 py-2 font-semibold transition ${
+                    selectedTab === 'cancelled'
+                      ? 'border-b-2 border-red-500 text-red-500'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                  onClick={() => setSelectedTab('cancelled')}
+                >
+                  Cancelled ({cancelledBookings.length})
+                </button>
               </div>
               <div className="flex items-center gap-2">
                 <input
@@ -384,6 +398,14 @@ export default function DashboardPage() {
                 <div className="text-6xl mb-4">🎯</div>
                 <h3 className="text-xl font-semibold mb-2">No Completed Lessons Yet</h3>
                 <p className="text-gray-600">Your completed lessons will appear here</p>
+              </div>
+            )}
+
+            {selectedTab === 'cancelled' && cancelledBookings.length === 0 && (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">✅</div>
+                <h3 className="text-xl font-semibold mb-2">No Cancelled Bookings</h3>
+                <p className="text-gray-600">Cancelled bookings will appear here</p>
               </div>
             )}
 
@@ -464,6 +486,44 @@ export default function DashboardPage() {
                   </div>
                 )
               })
+            ) : selectedTab === 'cancelled' ? (
+              cancelledBookings.map((booking) => (
+                <div
+                  key={booking.id}
+                  className="border rounded-lg p-8 mb-6 hover:shadow-lg transition bg-white"
+                >
+                  <div className="grid md:grid-cols-5 gap-6">
+                    <div className="md:col-span-2">
+                      <p className="text-sm text-gray-600 mb-2">Date & Time</p>
+                      <p className="font-semibold text-lg">{formatDate(booking.date)}</p>
+                      <p className="text-gray-600">{booking.time}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-2">Student</p>
+                      <p className="font-semibold">{booking.studentName}</p>
+                      <p className="text-sm text-gray-500">{booking.email}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-2">Lesson Type</p>
+                      <p className="font-semibold">{getLessonTypeName(booking.lessonType)}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-2">Status</p>
+                      <span className="inline-block px-4 py-2 rounded-full text-sm font-semibold bg-red-100 text-red-800">
+                        Cancelled
+                      </span>
+                    </div>
+                    <div className="flex flex-col space-y-3">
+                      <button
+                        onClick={() => deleteBooking(booking.id)}
+                        className="w-full px-4 py-3 border-2 border-gray-700 text-gray-700 rounded-lg hover:bg-gray-700 hover:text-white transition font-medium"
+                      >
+                        Delete Permanently
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
             ) : (
               completedBookings.map((booking) => (
                 <div

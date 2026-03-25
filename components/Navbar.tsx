@@ -100,22 +100,15 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
                 </button>
                 {studentDropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50">
-                    <Link
-                      href="/student/dashboard"
-                      onClick={handleLinkClick}
-                      className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-primary transition"
-                    >
-                      📊 Dashboard
-                    </Link>
-                    <Link
-                      href="/student/login"
-                      onClick={handleLinkClick}
-                      className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-primary transition"
-                    >
-                      🔐 Login
-                    </Link>
-                    {isLoggedIn && (
+                    {isLoggedIn ? (
                       <>
+                        <Link
+                          href="/student/dashboard"
+                          onClick={handleLinkClick}
+                          className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-primary transition"
+                        >
+                          📊 Dashboard
+                        </Link>
                         <div className="border-t border-gray-100 my-1" />
                         <button
                           onClick={handleLogout}
@@ -124,6 +117,14 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
                           🚪 Logout
                         </button>
                       </>
+                    ) : (
+                      <Link
+                        href="/student/login"
+                        onClick={handleLinkClick}
+                        className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-primary transition"
+                      >
+                        🔐 Login
+                      </Link>
                     )}
                   </div>
                 )}
