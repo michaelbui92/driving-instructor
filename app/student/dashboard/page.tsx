@@ -51,15 +51,16 @@ export default function StudentDashboardPage() {
           router.push('/student/login')
           return
         }
-        throw new Error('Failed to load dashboard')
+        const data = await res.json()
+        throw new Error(data.error || data.details || 'Failed to load dashboard')
       }
 
       const data = await res.json()
       setStudent(data.student)
       setBookings(data.bookings.all)
-    } catch (err) {
+    } catch (err: any) {
       console.error('Dashboard load error:', err)
-      setMessage({ type: 'error', text: 'Failed to load dashboard' })
+      setMessage({ type: 'error', text: err.message || 'Failed to load dashboard' })
     } finally {
       setLoading(false)
     }
