@@ -39,6 +39,12 @@ export default function StudentDashboardPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const router = useRouter()
 
+  // Calculate upcoming lessons count
+  const upcomingBookings = bookings.filter(b => b.status === 'pending' || b.status === 'confirmed')
+  const completedBookings = bookings.filter(b => b.status === 'completed')
+  const upcomingLessonsCount = upcomingBookings.length
+  const upcomingCost = upcomingBookings.reduce((sum, b) => sum + b.price, 0)
+
   useEffect(() => {
     loadDashboard()
   }, [])
@@ -176,19 +182,19 @@ export default function StudentDashboardPage() {
     <div className="min-h-screen bg-gray-50">
       <Navbar />
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">My Dashboard</h1>
-            <p className="text-gray-600">{student?.email}</p>
+        <div className="mb-8 flex flex-col md:flex-row items-start md:items-center gap-6">
+          <div className="flex-1">
+            <h1 className="text-4xl font-bold mb-2">My Dashboard</h1>
+            <p className="text-gray-600">Manage your driving lessons and track your progress</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex items-center gap-4">
             <Link
               href="/book"
-              className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
+              className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold shadow-md"
             >
-              Book New Lesson
+              📅 Book a Lesson
             </Link>
           </div>
         </div>
@@ -206,23 +212,22 @@ export default function StudentDashboardPage() {
           </div>
         )}
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <p className="text-sm text-gray-500">Upcoming</p>
-            <p className="text-2xl font-bold text-blue-600">
-              {bookings.filter((b) => b.status === 'pending' || b.status === 'confirmed').length}
-            </p>
+        {/* Stats Cards */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-xl p-6 shadow-lg">
+            <div className="text-3xl mb-2">📅</div>
+            <div className="text-3xl font-bold text-primary">{upcomingLessonsCount}</div>
+            <p className="text-gray-600">Upcoming Lessons</p>
           </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <p className="text-sm text-gray-500">Completed</p>
-            <p className="text-2xl font-bold text-green-600">
-              {bookings.filter((b) => b.status === 'completed').length}
-            </p>
+          <div className="bg-white rounded-xl p-6 shadow-lg">
+            <div className="text-3xl mb-2">✅</div>
+            <div className="text-3xl font-bold text-green-600">{completedBookings.length}</div>
+            <p className="text-gray-600">Completed Bookings</p>
           </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <p className="text-sm text-gray-500">Total</p>
-            <p className="text-2xl font-bold text-gray-600">{bookings.length}</p>
+          <div className="bg-white rounded-xl p-6 shadow-lg">
+            <div className="text-3xl mb-2">💰</div>
+            <div className="text-3xl font-bold text-accent">${upcomingCost}</div>
+            <p className="text-gray-600">Upcoming Cost</p>
           </div>
         </div>
 
