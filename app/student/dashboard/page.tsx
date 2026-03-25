@@ -3,11 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import Image from 'next/image'
 import Navbar from '@/components/Navbar'
-import { formatDate, getLessonTypeName, type Booking } from '@/lib/booking-utils'
 
-type StudentBooking = {
+type Booking = {
   id: string
   studentName: string
   email: string
@@ -29,26 +27,16 @@ type Student = {
 }
 
 export default function StudentDashboardPage() {
-  const [bookings, setBookings] = useState<StudentBooking[]>([])
   const [student, setStudent] = useState<Student | null>(null)
+  const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedTab, setSelectedTab] = useState<'upcoming' | 'completed' | 'cancelled'>('upcoming')
-  const [reschedulingBooking, setReschedulingBooking] = useState<StudentBooking | null>(null)
+  const [activeTab, setActiveTab] = useState<'upcoming' | 'completed' | 'cancelled'>('upcoming')
+  const [reschedulingBooking, setReschedulingBooking] = useState<Booking | null>(null)
   const [newDate, setNewDate] = useState('')
   const [newTime, setNewTime] = useState('')
   const [actionLoading, setActionLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const router = useRouter()
-  const [portalImageIndex, setPortalImageIndex] = useState(0)
-  const portalImages = ['/images/student-portal-1.png', '/images/student-portal-2.png']
-
-  // Cycle between portal images every 2 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setPortalImageIndex((prev) => (prev === 0 ? 1 : 0))
-    }, 2000)
-    return () => clearInterval(interval)
-  }, [])
 
   useEffect(() => {
     loadDashboard()
@@ -63,24 +51,19 @@ export default function StudentDashboardPage() {
           router.push('/student/login')
           return
         }
-        const data = await res.json()
-        throw new Error(data.error || data.details || 'Failed to load dashboard')
+        throw new Error('Failed to load dashboard')
       }
 
       const data = await res.json()
       setStudent(data.student)
       setBookings(data.bookings.all)
-    } catch (err: any) {
+    } catch (err) {
       console.error('Dashboard load error:', err)
-      setMessage({ type: 'error', text: err.message || 'Failed to load dashboard' })
+      setMessage({ type: 'error', text: 'Failed to load dashboard' })
     } finally {
       setLoading(false)
     }
   }
-
-  const upcomingBookings = bookings.filter(b => b.status === 'pending' || b.status === 'confirmed')
-  const completedBookings = bookings.filter(b => b.status === 'completed')
-  const cancelledBookings = bookings.filter(b => b.status === 'cancelled')
 
   const handleLogout = async () => {
     try {
@@ -92,6 +75,8 @@ export default function StudentDashboardPage() {
   }
 
   const handleCancel = async (bookingId: string) => {
+    if (!confirm('Are you sure you want to cancel this booking?')) return
+
     setActionLoading(true)
     try {
       const res = await fetch(`/api/student/bookings/${bookingId}/cancel`, {
@@ -106,7 +91,7 @@ export default function StudentDashboardPage() {
       setBookings((prev) =>
         prev.map((b) => (b.id === bookingId ? { ...b, status: 'cancelled' } : b))
       )
-      setMessage({ type: 'success', text: 'Booking cancelled' })
+      setMessage({ type: 'success', text: 'Booking cancelled successfully' })
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message })
     } finally {
@@ -114,7 +99,7 @@ export default function StudentDashboardPage() {
     }
   }
 
-  const handleReschedule = async (booking: StudentBooking) => {
+  const handleReschedule = async (booking: Booking) => {
     if (!newDate || !newTime) {
       setMessage({ type: 'error', text: 'Please select date and time' })
       return
@@ -149,6 +134,23 @@ export default function StudentDashboardPage() {
     }
   }
 
+  const filteredBookings = bookings.filter((b) => {
+    if (activeTab === 'upcoming') return b.status === 'pending' || b.status === 'confirmed'
+    if (activeTab === 'completed') return b.status === 'completed'
+    if (activeTab === 'cancelled') return b.status === 'cancelled'
+    return true
+  })
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr + 'T00:00:00')
+    return date.toLocaleDateString('en-AU', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
+  }
+
   const getLessonName = (type: string) => {
     const names: Record<string, string> = {
       single: 'Single Lesson',
@@ -159,53 +161,41 @@ export default function StudentDashboardPage() {
     return names[type] || type
   }
 
-  const filteredBookings = bookings.filter((b) => {
-    if (selectedTab === 'upcoming') return b.status === 'pending' || b.status === 'confirmed'
-    if (selectedTab === 'completed') return b.status === 'completed'
-    if (selectedTab === 'cancelled') return b.status === 'cancelled'
-    return true
-  })
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-        <Navbar showLocation={false} />
-        <div className="max-w-6xl mx-auto px-4 py-16 text-center">
-          <p className="text-gray-600">Loading...</p>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <div className="max-w-4xl mx-auto px-4 py-16 text-center">
+          <p className="text-gray-500">Loading...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <Navbar showLocation={false} />
+    <div className="min-h-screen bg-gray-50">
+      <Navbar />
 
-      {/* Main Content */}
-      <div className="max-w-6xl mx-auto px-4 py-12">
+      <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Header */}
-        <div className="mb-8 flex flex-col md:flex-row items-start md:items-center gap-6">
-          <div className="flex-1">
-            <h1 className="text-4xl font-bold mb-2">My Dashboard</h1>
-            <p className="text-gray-600">Manage your driving lessons and track your progress</p>
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">My Dashboard</h1>
+            <p className="text-gray-600">{student?.email}</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex gap-3">
             <Link
               href="/book"
-              className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold shadow-md hover:-translate-y-0.5"
+              className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
             >
-              📅 Book a Lesson
+              Book New Lesson
             </Link>
-            {/* Cycling Portal Image */}
-            <div className="relative w-32 h-32 md:w-40 md:h-40 flex-shrink-0">
-              <Image
-                src={portalImages[portalImageIndex]}
-                alt="Student Portal"
-                fill
-                className="object-contain rounded-xl shadow-lg"
-                priority
-              />
-            </div>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition"
+            >
+              Log Out
+            </button>
           </div>
         </div>
 
@@ -222,115 +212,69 @@ export default function StudentDashboardPage() {
           </div>
         )}
 
-        {/* Stats Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-xl p-6 shadow-lg">
-            <div className="text-3xl mb-2">📅</div>
-            <div className="text-3xl font-bold text-primary">{upcomingBookings.length}</div>
-            <p className="text-gray-600">Upcoming Lessons</p>
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          <div className="bg-white rounded-xl p-4 shadow-sm">
+            <p className="text-sm text-gray-500">Upcoming</p>
+            <p className="text-2xl font-bold text-blue-600">
+              {bookings.filter((b) => b.status === 'pending' || b.status === 'confirmed').length}
+            </p>
           </div>
-          <div className="bg-white rounded-xl p-6 shadow-lg">
-            <div className="text-3xl mb-2">✅</div>
-            <div className="text-3xl font-bold text-green-600">{completedBookings.length}</div>
-            <p className="text-gray-600">Completed Bookings</p>
+          <div className="bg-white rounded-xl p-4 shadow-sm">
+            <p className="text-sm text-gray-500">Completed</p>
+            <p className="text-2xl font-bold text-green-600">
+              {bookings.filter((b) => b.status === 'completed').length}
+            </p>
           </div>
-          <div className="bg-white rounded-xl p-6 shadow-lg">
-            <div className="text-3xl mb-2">💰</div>
-            <div className="text-3xl font-bold text-accent">
-              ${upcomingBookings.reduce((sum, b) => sum + b.price, 0)}
-            </div>
-            <p className="text-gray-600">Upcoming Cost</p>
+          <div className="bg-white rounded-xl p-4 shadow-sm">
+            <p className="text-sm text-gray-500">Total</p>
+            <p className="text-2xl font-bold text-gray-600">{bookings.length}</p>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-xl shadow-lg">
-          <div className="border-b">
-            <div className="flex items-center justify-between px-6 py-3 border-b">
-              <div className="flex">
-                <button
-                  className={`px-4 py-2 font-semibold transition ${
-                    selectedTab === 'upcoming'
-                      ? 'border-b-2 border-primary text-primary'
-                      : 'text-gray-600 hover:text-gray-800'
-                  }`}
-                  onClick={() => setSelectedTab('upcoming')}
-                >
-                  Upcoming ({upcomingBookings.length})
-                </button>
-                <button
-                  className={`px-4 py-2 font-semibold transition ${
-                    selectedTab === 'completed'
-                      ? 'border-b-2 border-primary text-primary'
-                      : 'text-gray-600 hover:text-gray-800'
-                  }`}
-                  onClick={() => setSelectedTab('completed')}
-                >
-                  Completed ({completedBookings.length})
-                </button>
-                <button
-                  className={`px-4 py-2 font-semibold transition ${
-                    selectedTab === 'cancelled'
-                      ? 'border-b-2 border-red-500 text-red-500'
-                      : 'text-gray-600 hover:text-gray-800'
-                  }`}
-                  onClick={() => setSelectedTab('cancelled')}
-                >
-                  Cancelled ({cancelledBookings.length})
-                </button>
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Filter by email..."
-                  className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary focus:border-primary outline-none"
-                  disabled
-                />
-              </div>
-            </div>
+        <div className="flex gap-2 mb-6 border-b border-gray-200">
+          {(['upcoming', 'completed', 'cancelled'] as const).map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-4 py-2 font-medium capitalize transition ${
+                activeTab === tab
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+
+        {/* Bookings List */}
+        {filteredBookings.length === 0 ? (
+          <div className="bg-white rounded-xl p-8 shadow-sm text-center">
+            <p className="text-gray-500 mb-4">No {activeTab} bookings</p>
+            {activeTab === 'upcoming' && (
+              <Link
+                href="/book"
+                className="text-blue-600 hover:underline"
+              >
+                Book your first lesson →
+              </Link>
+            )}
           </div>
-
-          {/* Bookings List */}
-          <div className="p-6">
-            {selectedTab === 'upcoming' && upcomingBookings.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">📅</div>
-                <h3 className="text-xl font-semibold mb-2">No Upcoming Lessons</h3>
-                <p className="text-gray-600 mb-6">Book your first lesson to get started</p>
-                <Link
-                  href="/book"
-                  className="inline-block px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition"
-                >
-                  Book Now
-                </Link>
-              </div>
-            )}
-
-            {selectedTab === 'completed' && completedBookings.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">🎯</div>
-                <h3 className="text-xl font-semibold mb-2">No Completed Lessons Yet</h3>
-                <p className="text-gray-600">Your completed lessons will appear here</p>
-              </div>
-            )}
-
-            {selectedTab === 'cancelled' && cancelledBookings.length === 0 && (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">✅</div>
-                <h3 className="text-xl font-semibold mb-2">No Cancelled Bookings</h3>
-                <p className="text-gray-600">Cancelled bookings will appear here</p>
-              </div>
-            )}
-
+        ) : (
+          <div className="space-y-4">
             {filteredBookings.map((booking) => (
               <div
                 key={booking.id}
-                className="border rounded-lg p-6 mb-4 hover:shadow-lg transition bg-white last:mb-0"
+                className="bg-white rounded-xl p-6 shadow-sm"
               >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex-1">
+                <div className="flex items-start justify-between">
+                  <div>
                     <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-lg">{getLessonName(booking.lessonType)}</h3>
+                      <h3 className="font-semibold text-gray-900">
+                        {getLessonName(booking.lessonType)}
+                      </h3>
                       <span
                         className={`px-2 py-0.5 text-xs font-medium rounded-full ${
                           booking.status === 'confirmed'
@@ -342,30 +286,31 @@ export default function StudentDashboardPage() {
                             : 'bg-gray-100 text-gray-700'
                         }`}
                       >
-                        {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                        {booking.status}
                       </span>
                     </div>
                     <p className="text-gray-600">
                       📅 {formatDate(booking.date)} at {booking.time}
                     </p>
+                    {booking.claimCode && (
+                      <p className="text-sm text-gray-400 mt-1">
+                        Booking ref: {booking.claimCode}
+                      </p>
+                    )}
                   </div>
 
-                  {selectedTab === 'upcoming' && booking.status !== 'cancelled' && (
+                  {activeTab === 'upcoming' && booking.status !== 'cancelled' && (
                     <div className="flex gap-2">
                       <button
-                        onClick={() => {
-                          setReschedulingBooking(booking)
-                          setNewDate(booking.date)
-                          setNewTime(booking.time)
-                        }}
-                        className="px-4 py-2 border-2 border-orange-500 text-orange-500 rounded-lg hover:bg-orange-50 transition font-medium"
+                        onClick={() => setReschedulingBooking(booking)}
+                        className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
                       >
                         Reschedule
                       </button>
                       <button
                         onClick={() => handleCancel(booking.id)}
                         disabled={actionLoading}
-                        className="px-4 py-2 border-2 border-red-500 text-red-500 rounded-lg hover:bg-red-50 transition font-medium disabled:opacity-50"
+                        className="px-3 py-1.5 text-sm bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition disabled:opacity-50"
                       >
                         Cancel
                       </button>
@@ -376,37 +321,34 @@ export default function StudentDashboardPage() {
                 {/* Reschedule Modal */}
                 {reschedulingBooking?.id === booking.id && (
                   <div className="mt-4 pt-4 border-t border-gray-100">
-                    <div className="bg-blue-50 rounded-lg p-4 mb-4">
-                      <p className="text-sm font-medium text-gray-700 mb-2">Current booking:</p>
-                      <p className="text-gray-600">{formatDate(booking.date)} at {booking.time}</p>
-                    </div>
+                    <p className="text-sm font-medium text-gray-700 mb-3">Select new date & time:</p>
                     <div className="flex gap-4 items-end">
                       <div>
-                        <label className="block text-xs text-gray-500 mb-1">New Date</label>
+                        <label className="block text-xs text-gray-500 mb-1">Date</label>
                         <input
                           type="date"
                           value={newDate}
                           onChange={(e) => setNewDate(e.target.value)}
                           min={new Date().toISOString().split('T')[0]}
-                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary outline-none"
+                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs text-gray-500 mb-1">New Time</label>
+                        <label className="block text-xs text-gray-500 mb-1">Time</label>
                         <input
                           type="time"
                           value={newTime}
                           onChange={(e) => setNewTime(e.target.value)}
-                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary outline-none"
+                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
                         />
                       </div>
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleReschedule(booking)}
                           disabled={actionLoading || !newDate || !newTime}
-                          className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition disabled:opacity-50"
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
                         >
-                          {actionLoading ? 'Saving...' : 'Save'}
+                          Confirm
                         </button>
                         <button
                           onClick={() => {
@@ -425,7 +367,7 @@ export default function StudentDashboardPage() {
               </div>
             ))}
           </div>
-        </div>
+        )}
       </div>
     </div>
   )
