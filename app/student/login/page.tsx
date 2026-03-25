@@ -18,7 +18,10 @@ export default function StudentLoginPage() {
   useEffect(() => {
     const token = document.cookie.includes('sb-access-token')
     if (token) {
-      router.push('/student/dashboard')
+      // Check for redirect param
+      const params = new URLSearchParams(window.location.search)
+      const redirect = params.get('redirect')
+      router.push(redirect || '/student/dashboard')
     }
   }, [router])
 
@@ -72,8 +75,10 @@ export default function StudentLoginPage() {
         return
       }
 
-      // Redirect to dashboard
-      router.push('/student/dashboard')
+      // Redirect to dashboard or intended page
+      const params = new URLSearchParams(window.location.search)
+      const redirect = params.get('redirect')
+      router.push(redirect || '/student/dashboard')
     } catch (err) {
       setError('Something went wrong. Please try again.')
     } finally {
