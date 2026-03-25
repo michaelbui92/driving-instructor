@@ -584,27 +584,77 @@ export default function DashboardPage() {
 
               <div className="border-t pt-4">
                 <p className="text-sm text-gray-600 mb-2">New Date:</p>
-                <input
-                  type="date"
+                <select
                   id="newDate"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                   defaultValue={reschedulingBooking.date}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary outline-none"
-                />
+                  onChange={(e) => {
+                    const newDate = e.target.value
+                    setSelectedNewDate(newDate)
+                    // Check if date has available slots
+                    if (newDate) {
+                      const availableSlots = getAvailableSlots(newDate, bookings.filter(b => b.id !== reschedulingBooking?.id))
+                      setDateHasNoSlots(availableSlots.length === 0)
+                    } else {
+                      setDateHasNoSlots(false)
+                    }
+                  }}
+                >
+                  <option value="">Select a date</option>
+                  {getDatesWithAvailableSlots().map(({date, formatted, hasSlots}) => (
+                    <option 
+                      key={date} 
+                      value={date}
+                      disabled={!hasSlots}
+                      className={!hasSlots ? 'text-gray-400 bg-gray-100' : ''}
+                    >
+                      {formatted} {!hasSlots ? '(No available slots)' : ''}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">Dates with no available slots are greyed out</p>
+                {dateHasNoSlots && selectedNewDate && (
+                  <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
+                    ⚠️ No available time slots for {formatDate(selectedNewDate)}. Please select a different date.
+                  </div>
+                )}
               </div>
 
               <div>
                 <p className="text-sm text-gray-600 mb-2">New Time:</p>
-                <input
-                  type="time"
-                  id="newTime"
-                  defaultValue={reschedulingBooking.time}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary outline-none"
-                />
+                {(() => {
+                  const availableTimes = getAvailableTimeOptions(selectedNewDate || reschedulingBooking.date)
+                  if (availableTimes.length === 0) {
+                    return (
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
+                        No available time slots for this date. Please select a different date.
+                      </div>
+                    )
+                  }
+                  return (
+                    <select
+                      id="newTime"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      defaultValue={reschedulingBooking.time}
+                    >
+                      {availableTimes.map(time => (
+                        <option key={time} value={time}>
+                          {time === '8:00 PM' ? `${time} (Night Time)` : time}
+                        </option>
+                      ))}
+                    </select>
+                  )
+                })()}
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+                <strong>Select a new date and time</strong>
+                <br />
+                Your booking will be pending until confirmed by the instructor.
               </div>
             </div>
 
-            <div className="flex gap-3 mt-6">
+            <div className="flex space-x-3 mt-6">
               <button
                 onClick={() => setReschedulingBooking(null)}
                 className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
@@ -613,13 +663,45 @@ export default function DashboardPage() {
               </button>
               <button
                 onClick={() => {
-                  const newDateInput = document.getElementById('newDate') as HTMLInputElement
-                  const newTimeInput = document.getElementById('newTime') as HTMLInputElement
-                  saveReschedule(newDateInput.value, newTimeInput.value)
+                  const newDateSelect = document.getElementById('newDate') as HTMLSelectElement
+                  const newTimeSelect = document.getElementById('newTime') as HTMLSelectElement
+                  
+                  const newDate = newDateSelect?.value || ''
+                  const newTime = newTimeSelect?.value || ''
+                  
+                  // Check if date is selected
+                  if (!newDate) {
+                    alert('Please select a date')
+                    return
+                  }
+                  
+                  // Check if time selector exists (it won't if there are no available slots)
+                  if (!newTimeSelect) {
+                    alert('No available time slots for this date. Please select a different date.')
+                    return
+                  }
+                  
+                  // Check if selected date has slots
+                  const selectedDateOption = newDateSelect.options[newDateSelect.selectedIndex]
+                  if (selectedDateOption.disabled) {
+                    alert('This date has no available slots. Please select a different date.')
+                    return
+                  }
+                  
+                  if (newDate && newTime) {
+                    saveReschedule(newDate, newTime)
+                  } else {
+                    alert('Please select new date and time')
+                  }
                 }}
-                className="flex-1 px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition"
+                disabled={dateHasNoSlots || !selectedNewDate}
+                className={`flex-1 px-4 py-2 rounded-lg transition ${
+                  dateHasNoSlots || !selectedNewDate
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                    : 'bg-primary text-white hover:bg-secondary'
+                }`}
               >
-                Save Changes
+                {dateHasNoSlots ? 'No Available Slots' : 'Save Changes'}
               </button>
             </div>
           </div>
