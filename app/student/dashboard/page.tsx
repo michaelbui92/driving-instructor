@@ -66,7 +66,7 @@ export default function StudentDashboardPage() {
       const data = await res.json()
       console.log('✅ Student dashboard received:', {
         bookingsCount: data.bookings?.length,
-        bookings: data.bookings?.map(b => ({ id: b.id, status: b.status, date: b.date }))
+        bookings: data.bookings?.map((b: any) => ({ id: b.id, status: b.status, date: b.date }))
       })
       
       setBookings(data.bookings || [])
