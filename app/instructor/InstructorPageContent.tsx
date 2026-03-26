@@ -108,45 +108,46 @@ export default function InstructorPage() {
     repeatType: RepeatType.REPEATING
   })
 
-  // Load bookings from API
-  useEffect(() => {
-    async function loadBookings() {
-      try {
-        // AGGRESSIVE cache busting
-        const cacheBuster = `t=${Date.now()}&r=${Math.random().toString(36).substring(7)}`
-        const res = await fetch(`/api/bookings?${cacheBuster}`)
-        
-        if (!res.ok) {
-          throw new Error('Failed to load bookings')
-        }
-
-        const data = await res.json()
-        
-        // Convert to app format
-        const formatted: Booking[] = (data.bookings || []).map((b: any) => ({
-          id: b.id,
-          studentName: b.student_name || b.studentName,
-          email: b.email,
-          phone: b.phone,
-          date: b.date,
-          time: b.time,
-          lessonType: b.lesson_type || b.lessonType,
-          status: b.status,
-          price: getLessonPrice(b.lesson_type || b.lessonType),
-          createdAt: b.created_at || b.createdAt,
-        }))
-        setBookings(formatted)
-      } catch (error) {
-        console.error('Error loading bookings:', error)
-        setBookings([])
+  // Load bookings function (can be called from anywhere)
+  const loadBookings = async () => {
+    try {
+      // AGGRESSIVE cache busting
+      const cacheBuster = `t=${Date.now()}&r=${Math.random().toString(36).substring(7)}`
+      const res = await fetch(`/api/bookings?${cacheBuster}`)
+      
+      if (!res.ok) {
+        throw new Error('Failed to load bookings')
       }
+
+      const data = await res.json()
+      
+      // Convert to app format
+      const formatted: Booking[] = (data.bookings || []).map((b: any) => ({
+        id: b.id,
+        studentName: b.student_name || b.studentName,
+        email: b.email,
+        phone: b.phone,
+        date: b.date,
+        time: b.time,
+        lessonType: b.lesson_type || b.lessonType,
+        status: b.status,
+        price: getLessonPrice(b.lesson_type || b.lessonType),
+        createdAt: b.created_at || b.createdAt,
+      }))
+      setBookings(formatted)
+    } catch (error) {
+      console.error('Error loading bookings:', error)
+      setBookings([])
     }
-    
+  }
+
+  // Load bookings on mount and auto-refresh
+  useEffect(() => {
     loadBookings()
     setBlockedSlots(getBlockedSlots())
     setRules(getRules())
     
-    // Auto-refresh every 10 seconds (more frequent)
+    // Auto-refresh every 10 seconds
     const interval = setInterval(() => {
       loadBookings()
     }, 10000)
@@ -208,7 +209,7 @@ export default function InstructorPage() {
 
   const updateBookingStatus = async (bookingId: string, newStatus: Booking['status']) => {
     try {
-      // SIMPLE: Update status
+      // Update status with cache busting
       const res = await fetch(`/api/bookings/${bookingId}/status`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -219,11 +220,9 @@ export default function InstructorPage() {
         throw new Error('Failed to update status')
       }
 
-      // Update local state immediately
-      const updatedBookings = bookings.map(b => b.id === bookingId ? { ...b, status: newStatus } : b)
-      setBookings(updatedBookings)
+      // IMMEDIATE update: Refresh bookings right away
+      await loadBookings()
       
-      // Auto-refresh will get fresh data in 10 seconds
       alert(`Booking status updated to: ${newStatus}`)
     } catch (error) {
       console.error('Error updating booking status:', error)

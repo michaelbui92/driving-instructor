@@ -57,11 +57,18 @@ export default function StudentDashboardPage() {
       const cacheBuster = `t=${Date.now()}&r=${Math.random().toString(36).substring(7)}`
       const res = await fetch(`/api/bookings?${cacheBuster}`)
       
+      console.log('📊 Student dashboard API response status:', res.status)
+      
       if (!res.ok) {
-        throw new Error('Failed to load bookings')
+        throw new Error(`Failed to load bookings: ${res.status}`)
       }
 
       const data = await res.json()
+      console.log('✅ Student dashboard received:', {
+        bookingsCount: data.bookings?.length,
+        bookings: data.bookings?.map(b => ({ id: b.id, status: b.status, date: b.date }))
+      })
+      
       setBookings(data.bookings || [])
     } catch (err) {
       console.error('Dashboard load error:', err)
@@ -349,6 +356,7 @@ export default function StudentDashboardPage() {
             <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
               <p>Debug: {bookings.length} total bookings | Active tab: {activeTab} | Showing: {filteredBookings.length}</p>
               <p>Statuses: {JSON.stringify(bookings.reduce((acc, b) => { acc[b.status] = (acc[b.status] || 0) + 1; return acc }, {} as Record<string, number>))}</p>
+              <p>All IDs: {bookings.map(b => `${b.id.substring(0, 8)}:${b.status}`).join(', ')}</p>
             </div>
 
             {filteredBookings.length === 0 ? (
