@@ -11,10 +11,17 @@ export async function GET(request: NextRequest) {
     )
 
     // Get ALL bookings, newest first
+    console.log('📊 /api/bookings querying database...')
     const { data, error } = await adminClient
       .from('bookings')
       .select('*')
       .order('created_at', { ascending: false })
+    
+    console.log('📈 /api/bookings query result:', {
+      count: data?.length,
+      error: error?.message,
+      sample: data?.slice(0, 2).map(b => ({ id: b.id, status: b.status, date: b.date }))
+    })
 
     if (error) {
       console.error('Bookings fetch error:', error)
