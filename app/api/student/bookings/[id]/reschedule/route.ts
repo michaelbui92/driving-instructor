@@ -68,10 +68,10 @@ export async function POST(
       )
     }
 
-    // Update the booking
+    // Update the booking to pending - instructor needs to confirm
     const { error: updateError } = await supabase
       .from('bookings')
-      .update({ date: newDate, time: newTime, status: 'confirmed' })
+      .update({ date: newDate, time: newTime, status: 'pending' })
       .eq('id', id)
 
     if (updateError) {
