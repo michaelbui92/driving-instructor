@@ -45,19 +45,33 @@ export default function StudentDashboardPage() {
 
   const loadDashboard = async () => {
     try {
+      console.log('🔄 Loading dashboard...')
       // Add cache-buster to prevent browser caching
-      const res = await fetch(`/api/student/dashboard?t=${Date.now()}`)
+      const url = `/api/student/dashboard?t=${Date.now()}`
+      console.log('📞 Calling API:', url)
+      
+      const res = await fetch(url)
+
+      console.log('📊 API Response:', {
+        status: res.status,
+        statusText: res.statusText,
+        ok: res.ok
+      })
 
       if (!res.ok) {
         if (res.status === 401) {
+          console.log('🔐 Unauthorized, redirecting to login')
           router.push('/student/login')
           return
         }
-        throw new Error('Failed to load dashboard')
+        
+        const errorText = await res.text()
+        console.error('❌ API Error:', errorText)
+        throw new Error(`Failed to load dashboard: ${res.status} ${res.statusText}`)
       }
 
       const data = await res.json()
-      console.log('Dashboard loaded:', {
+      console.log('✅ Dashboard loaded:', {
         student: data.student?.email,
         bookingsCount: data.bookings?.all?.length,
         statuses: data.bookings?.all?.reduce((acc: any, b: any) => {
@@ -65,11 +79,17 @@ export default function StudentDashboardPage() {
           return acc
         }, {})
       })
+      
+      // Debug: log what we're setting
+      console.log('📝 Setting bookings:', data.bookings?.all?.length || 0, 'bookings')
+      
       setStudent(data.student)
-      setBookings(data.bookings.all)
+      setBookings(data.bookings?.all || []) // Ensure it's always an array
     } catch (err) {
-      console.error('Dashboard load error:', err)
+      console.error('❌ Dashboard load error:', err)
       setMessage({ type: 'error', text: 'Failed to load dashboard' })
+      // Clear bookings on error
+      setBookings([])
     } finally {
       setLoading(false)
     }
