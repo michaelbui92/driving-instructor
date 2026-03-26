@@ -107,14 +107,19 @@ export async function PUT(request: NextRequest) {
     )
 
     // Check if student exists
-    let { data: student } = await adminClient
+    let { data: student, error: findError } = await adminClient
       .from('students')
-      .select('id')
+      .select('id, email')
       .eq('auth_user_id', user.id)
       .single()
 
+    if (findError) {
+      console.error('Error finding student:', findError)
+    }
+
     if (!student) {
       // Create student record with details
+      console.log('Creating new student record for user:', user.id)
       const { data: newStudent, error: createError } = await adminClient
         .from('students')
         .insert({ 
@@ -130,13 +135,15 @@ export async function PUT(request: NextRequest) {
 
       if (createError) {
         console.error('Error creating student:', createError)
-        return NextResponse.json({ error: 'Failed to create student record' }, { status: 500 })
+        return NextResponse.json({ error: 'Failed to create student record: ' + createError.message }, { status: 500 })
       }
 
+      console.log('Created student record:', newStudent)
       return NextResponse.json({ success: true, hasCompletedDetails: true })
     }
 
     // Update existing student
+    console.log('Updating student:', student.id, 'with:', { fullName, phone, address })
     const { error: updateError } = await adminClient
       .from('students')
       .update({ 
@@ -149,8 +156,16 @@ export async function PUT(request: NextRequest) {
 
     if (updateError) {
       console.error('Error updating student:', updateError)
-      return NextResponse.json({ error: 'Failed to update details' }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to update details: ' + updateError.message }, { status: 500 })
     }
+
+    // Verify the update
+    const { data: verifyData } = await adminClient
+      .from('students')
+      .select('full_name, phone, address')
+      .eq('auth_user_id', user.id)
+      .single()
+    console.log('Verification after update:', verifyData)
 
     return NextResponse.json({ success: true, hasCompletedDetails: true })
   } catch (error: any) {
