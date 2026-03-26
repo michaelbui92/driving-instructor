@@ -291,19 +291,36 @@ export default function StudentDashboardPage() {
         <div className="bg-white rounded-xl shadow-lg">
           <div className="border-b">
             <div className="flex items-center px-6 py-3 border-b">
-              {(['upcoming', 'completed', 'cancelled'] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 font-semibold transition ${
-                    activeTab === tab
-                      ? 'border-b-2 border-primary text-primary'
-                      : 'text-gray-600 hover:text-gray-800'
-                  }`}
-                >
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)} ({filteredBookings.length})
-                </button>
-              ))}
+              <button
+                onClick={() => setActiveTab('upcoming')}
+                className={`px-4 py-2 font-semibold transition ${
+                  activeTab === 'upcoming'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                Upcoming ({bookings.filter((b) => b.status === 'pending' || b.status === 'confirmed').length})
+              </button>
+              <button
+                onClick={() => setActiveTab('completed')}
+                className={`px-4 py-2 font-semibold transition ${
+                  activeTab === 'completed'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                Completed ({bookings.filter((b) => b.status === 'completed').length})
+              </button>
+              <button
+                onClick={() => setActiveTab('cancelled')}
+                className={`px-4 py-2 font-semibold transition ${
+                  activeTab === 'cancelled'
+                    ? 'border-b-2 border-primary text-primary'
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                Cancelled ({bookings.filter((b) => b.status === 'cancelled').length})
+              </button>
             </div>
           </div>
 
