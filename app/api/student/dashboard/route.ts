@@ -85,7 +85,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Get bookings using admin client to bypass RLS
-    console.log('🔍 Student querying bookings for email:', user.email)
+    const userEmail = user.email || ''
+    console.log('🔍 Student querying bookings for email:', userEmail)
     
     // First, let's check what emails actually exist in bookings
     const { data: allBookings } = await adminClient
@@ -106,11 +107,11 @@ export async function GET(request: NextRequest) {
     const { data: bookingsData, error: bookingsError } = await adminClient
       .from('bookings')
       .select('*')
-      .eq('email', user.email)
+      .eq('email', userEmail)
       .order('date', { ascending: false })
 
     console.log('📊 Student bookings query result:', {
-      queryEmail: user.email,
+      queryEmail: userEmail,
       foundCount: bookingsData?.length,
       error: bookingsError?.message,
       bookingsFound: bookingsData?.map(b => ({
@@ -129,16 +130,17 @@ export async function GET(request: NextRequest) {
       .select('*')
       .limit(50)
     
+    const userEmail = user.email || ''
     const caseInsensitiveMatches = allBookingsDetailed?.filter(b => 
-      b.email.toLowerCase() === user.email.toLowerCase()
+      b.email.toLowerCase() === userEmail.toLowerCase()
     )
     
     console.log('🎯 Case-insensitive matches:', {
       count: caseInsensitiveMatches?.length,
       matches: caseInsensitiveMatches?.map(b => ({
         email: b.email,
-        expected: user.email,
-        match: b.email.toLowerCase() === user.email.toLowerCase()
+        expected: userEmail,
+        match: b.email.toLowerCase() === userEmail.toLowerCase()
       }))
     })
 
