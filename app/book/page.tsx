@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { createClient } from '@supabase/supabase-js'
 import Navbar from '@/components/Navbar'
 import { supabase, type Booking as SupabaseBooking } from '@/lib/supabase'
 import {
@@ -197,7 +198,13 @@ export default function BookPage() {
     const claimCode = Math.floor(100000 + Math.random() * 900000).toString()
     const totalPrice = getLessonPrice(booking.lessonType || 'single')
 
-    const { data, error } = await supabase
+    // Use admin client for booking creation to bypass RLS
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { data, error } = await adminClient
       .from('bookings')
       .insert([
         {
@@ -215,7 +222,7 @@ export default function BookPage() {
 
     if (error) {
       console.error('Error creating booking:', error)
-      alert('Failed to create booking. Please try again.')
+      alert('Failed to create booking: ' + error.message)
       return
     }
 
