@@ -31,7 +31,6 @@ export default function BookPage() {
   const [existingBookings, setExistingBookings] = useState<Booking[]>([])
   const [selectedLessonImage, setSelectedLessonImage] = useState<string>('single')
   const [showConfirmation, setShowConfirmation] = useState(false)
-  const [confirmedClaimCode, setConfirmedClaimCode] = useState<string>('')
   const confirmationRef = useRef<HTMLDivElement>(null)
 
   // Load existing bookings from Supabase on mount
@@ -206,9 +205,6 @@ export default function BookPage() {
       return
     }
 
-    // Store claim code and show success state
-    setConfirmedClaimCode(claimCode)
-
     // Send email notification to instructor + student confirmation
     try {
       await fetch('/api/booking-notify', {
@@ -229,6 +225,9 @@ export default function BookPage() {
       // Don't fail the booking if email fails
       console.error('Failed to send notification:', notifyError)
     }
+
+    // Redirect straight to student dashboard
+    window.location.href = '/student/dashboard'
   }
 
   const getSelectedSlots = (): TimeSlot[] => {
@@ -551,7 +550,7 @@ export default function BookPage() {
           </div>
         )}
 
-        {step === 4 && !confirmedClaimCode && (
+        {step === 4 && (
           <div ref={confirmationRef}>
             <h2 className="text-3xl font-bold mb-6">Confirm Your Booking</h2>
             <div className={`confirmation-card bg-white rounded-xl p-6 shadow-lg ${showConfirmation ? 'animate-scale-in' : ''}`}>
@@ -624,67 +623,8 @@ export default function BookPage() {
           </div>
         )}
 
-        {step === 4 && confirmedClaimCode && (
-          <div className="text-center">
-            <div className="bg-white rounded-xl p-8 shadow-lg">
-              {/* Animated SVG Checkmark */}
-              <div className="flex justify-center mb-6">
-                <svg className="w-24 h-24" viewBox="0 0 100 100">
-                  <circle
-                    className="checkmark-circle stroke-primary"
-                    cx="50"
-                    cy="50"
-                    r="45"
-                    fill="none"
-                    strokeWidth="4"
-                    strokeLinecap="round"
-                  />
-                  <path
-                    className="checkmark-check stroke-green-500"
-                    d="M30 50 L45 65 L70 35"
-                    fill="none"
-                    strokeWidth="6"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              </div>
-
-              <h2 className="text-3xl font-bold text-green-600 mb-4">Booking Confirmed!</h2>
-              <p className="text-gray-600 mb-6">
-                Your lesson has been booked. Check your email for confirmation details.
-              </p>
-
-              <p className="text-gray-600 mb-6">
-                Want to manage your bookings?{' '}
-                <a href="/student/dashboard" className="text-blue-600 hover:underline font-medium">
-                  Go to your student dashboard →
-                </a>
-              </p>
-
-              <button
-                onClick={() => window.location.href = '/'}
-                className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition"
-              >
-                Back to Home
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Navigation Buttons */}
-        <div className="flex justify-between mt-8">
-          {step > 1 ? (
-            <button
-              onClick={handleBack}
-              className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
-            >
-              ← Back
-            </button>
-          ) : (
-            <div />
-          )}
-
+        <div className="flex justify-end mt-8">
           {step < 4 ? (
             <button
               onClick={handleNext}
@@ -700,9 +640,9 @@ export default function BookPage() {
           ) : (
             <button
               onClick={handleSubmit}
-              className="shimmer-btn px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition"
+              className="shimmer-btn px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
             >
-              Confirm Booking ✓
+              Confirm & Book ✓
             </button>
           )}
         </div>
