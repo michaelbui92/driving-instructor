@@ -1,0 +1,26 @@
+{
+  "bookings": [
+    {
+      "id": "local-001",
+      "student_name": "Local Test",
+      "email": "local@test.com",
+      "phone": "0411111111",
+      "date": "2026-04-10",
+      "time": "10:00:00",
+      "lesson_type": "single",
+      "status": "pending",
+      "created_at": "2026-03-26T20:46:49.485Z"
+    },
+    {
+      "id": "local-1774558009492",
+      "student_name": "New Student",
+      "email": "new@test.com",
+      "phone": "0422222222",
+      "date": "2026-04-11",
+      "time": "14:00:00",
+      "lesson_type": "casual",
+      "status": "pending",
+      "created_at": "2026-03-26T20:46:49.492Z"
+    }
+  ]
+}

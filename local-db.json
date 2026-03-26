@@ -1,0 +1,48 @@
+{
+  "bookings": [
+    {
+      "id": "test-001",
+      "student_name": "Test Student",
+      "email": "test@example.com",
+      "phone": "0412345678",
+      "date": "2026-04-01",
+      "time": "10:00:00",
+      "lesson_type": "single",
+      "status": "pending",
+      "created_at": "2026-03-26T20:45:35.074Z"
+    },
+    {
+      "id": "test-002",
+      "student_name": "Another Student",
+      "email": "another@example.com",
+      "phone": "0498765432",
+      "date": "2026-04-02",
+      "time": "14:00:00",
+      "lesson_type": "casual",
+      "status": "confirmed",
+      "created_at": "2026-03-26T20:45:35.074Z"
+    },
+    {
+      "id": "test-003",
+      "student_name": "Cancelled Student",
+      "email": "cancelled@example.com",
+      "phone": "0411111111",
+      "date": "2026-04-03",
+      "time": "16:00:00",
+      "lesson_type": "single",
+      "status": "cancelled",
+      "created_at": "2026-03-26T20:45:35.074Z"
+    },
+    {
+      "id": "mock-1774557972021-se1963",
+      "student_name": "Mock Student",
+      "email": "mock@example.com",
+      "phone": "0411222333",
+      "date": "2026-04-05",
+      "time": "11:00:00",
+      "lesson_type": "single",
+      "status": "pending",
+      "created_at": "2026-03-26T20:46:12.021Z"
+    }
+  ]
+}
