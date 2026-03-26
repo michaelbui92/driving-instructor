@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { createClient } from '@supabase/supabase-js'
 import Navbar from '@/components/Navbar'
 import { supabase, type Booking as SupabaseBooking } from '@/lib/supabase'
 import {
@@ -194,41 +193,10 @@ export default function BookPage() {
   }
 
   const handleSubmit = async () => {
-    // Generate claim code for this booking
-    const claimCode = Math.floor(100000 + Math.random() * 900000).toString()
     const totalPrice = getLessonPrice(booking.lessonType || 'single')
 
-    // Use admin client for booking creation to bypass RLS
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
-
-    const { data, error } = await adminClient
-      .from('bookings')
-      .insert([
-        {
-          student_name: booking.studentName || '',
-          email: booking.email || '',
-          phone: booking.phone || '',
-          date: booking.date || '',
-          time: booking.time || '',
-          lesson_type: booking.lessonType || 'single',
-          status: 'pending',
-          claim_code: claimCode,
-        },
-      ])
-      .select()
-
-    if (error) {
-      console.error('Error creating booking:', error)
-      alert('Failed to create booking: ' + error.message)
-      return
-    }
-
-    // Send email notification to instructor + student confirmation
     try {
-      await fetch('/api/booking-notify', {
+      const response = await fetch('/api/bookings/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -238,17 +206,48 @@ export default function BookPage() {
           date: booking.date,
           time: booking.time,
           lessonType: booking.lessonType,
+          lessonName: getLessonTypeName(booking.lessonType || 'single'),
           price: totalPrice,
-          claimCode,
         }),
       })
-    } catch (notifyError) {
-      // Don't fail the booking if email fails
-      console.error('Failed to send notification:', notifyError)
-    }
 
-    // Redirect straight to student dashboard
-    window.location.href = '/student/dashboard'
+      const result = await response.json()
+
+      if (!response.ok) {
+        console.error('Booking creation error:', result.error)
+        alert('Failed to create booking: ' + (result.error || 'Unknown error'))
+        return
+      }
+
+      const { claimCode } = result
+
+      // Send email notification to instructor + student confirmation
+      try {
+        await fetch('/api/booking-notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            studentName: booking.studentName,
+            email: booking.email,
+            phone: booking.phone,
+            date: booking.date,
+            time: booking.time,
+            lessonType: booking.lessonType,
+            price: totalPrice,
+            claimCode,
+          }),
+        })
+      } catch (notifyError) {
+        // Don't fail the booking if email fails
+        console.error('Failed to send notification:', notifyError)
+      }
+
+      // Redirect straight to student dashboard
+      window.location.href = '/student/dashboard'
+    } catch (err) {
+      console.error('Unexpected error:', err)
+      alert('Something went wrong. Please try again.')
+    }
   }
 
   const getSelectedSlots = (): TimeSlot[] => {
