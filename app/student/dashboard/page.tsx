@@ -45,7 +45,8 @@ export default function StudentDashboardPage() {
 
   const loadDashboard = async () => {
     try {
-      const res = await fetch('/api/student/dashboard')
+      // Add cache-buster to prevent browser caching
+      const res = await fetch(`/api/student/dashboard?t=${Date.now()}`)
 
       if (!res.ok) {
         if (res.status === 401) {
@@ -56,6 +57,14 @@ export default function StudentDashboardPage() {
       }
 
       const data = await res.json()
+      console.log('Dashboard loaded:', {
+        student: data.student?.email,
+        bookingsCount: data.bookings?.all?.length,
+        statuses: data.bookings?.all?.reduce((acc: any, b: any) => {
+          acc[b.status] = (acc[b.status] || 0) + 1
+          return acc
+        }, {})
+      })
       setStudent(data.student)
       setBookings(data.bookings.all)
     } catch (err) {
@@ -74,6 +83,8 @@ export default function StudentDashboardPage() {
       console.error('Logout error:', err)
     }
   }
+
+
 
   const handleCancel = async (bookingId: string) => {
     if (!confirm('Are you sure you want to cancel this booking?')) return

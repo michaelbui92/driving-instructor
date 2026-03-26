@@ -21,7 +21,8 @@ export async function POST(
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
-    const supabase = createClient(
+    // Create authenticated client to verify user
+    const authClient = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       {
@@ -30,13 +31,19 @@ export async function POST(
     )
 
     // Get current user
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user } } = await authClient.auth.getUser()
     if (!user) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
     }
 
-    // Get student's email
-    const { data: student } = await supabase
+    // Use admin client for database operations (bypass RLS)
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    // Get student's email using admin client
+    const { data: student } = await adminClient
       .from('students')
       .select('email')
       .eq('auth_user_id', user.id)
@@ -47,7 +54,7 @@ export async function POST(
     }
 
     // Fetch the booking to verify ownership
-    const { data: booking } = await supabase
+    const { data: booking } = await adminClient
       .from('bookings')
       .select('*')
       .eq('id', id)
@@ -69,7 +76,7 @@ export async function POST(
     }
 
     // Update the booking to pending - instructor needs to confirm
-    const { error: updateError } = await supabase
+    const { error: updateError } = await adminClient
       .from('bookings')
       .update({ date: newDate, time: newTime, status: 'pending' })
       .eq('id', id)

@@ -108,34 +108,32 @@ export default function InstructorPage() {
     repeatType: RepeatType.REPEATING
   })
 
-  // Load bookings from Supabase
+  // Load bookings from API
   useEffect(() => {
     async function loadBookings() {
       try {
-        const { data, error } = await supabase
-          .from('bookings')
-          .select('*')
-          .order('date', { ascending: false })
-
-        if (error) {
-          console.error('Error loading bookings:', error)
-          setBookings([])
-        } else {
-          // Convert Supabase format to app format
-          const formatted: Booking[] = (data || []).map((b: SupabaseBooking) => ({
-            id: b.id,
-            studentName: b.student_name,
-            email: b.email,
-            phone: b.phone,
-            date: b.date,
-            time: b.time,
-            lessonType: b.lesson_type,
-            status: b.status,
-            price: getLessonPrice(b.lesson_type),
-            createdAt: b.created_at,
-          }))
-          setBookings(formatted)
+        const res = await fetch('/api/instructor/bookings')
+        
+        if (!res.ok) {
+          throw new Error('Failed to load bookings')
         }
+
+        const data = await res.json()
+        
+        // Convert Supabase format to app format
+        const formatted: Booking[] = (data.bookings || []).map((b: any) => ({
+          id: b.id,
+          studentName: b.student_name,
+          email: b.email,
+          phone: b.phone,
+          date: b.date,
+          time: b.time,
+          lessonType: b.lesson_type,
+          status: b.status,
+          price: getLessonPrice(b.lesson_type),
+          createdAt: b.created_at,
+        }))
+        setBookings(formatted)
       } catch (error) {
         console.error('Error loading bookings:', error)
         setBookings([])
@@ -200,13 +198,15 @@ export default function InstructorPage() {
 
   const updateBookingStatus = async (bookingId: string, newStatus: Booking['status']) => {
     try {
-      const { error } = await supabase
-        .from('bookings')
-        .update({ status: newStatus })
-        .eq('id', bookingId)
+      const res = await fetch(`/api/instructor/bookings/${bookingId}/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      })
 
-      if (error) {
-        throw error
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to update status')
       }
 
       const updatedBookings = bookings.map(b => b.id === bookingId ? { ...b, status: newStatus } : b)
@@ -215,6 +215,32 @@ export default function InstructorPage() {
     } catch (error) {
       console.error('Error updating booking status:', error)
       alert('Error updating booking status. Please try again.')
+    }
+  }
+
+  const deleteBooking = async (bookingId: string) => {
+    if (!confirm('⚠️ WARNING: This will permanently delete the booking. This action cannot be undone.\n\nAre you sure you want to delete this booking?')) {
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/instructor/bookings/${bookingId}`, {
+        method: 'DELETE',
+      })
+
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to delete booking')
+      }
+
+      // Remove booking from local state
+      const updatedBookings = bookings.filter(b => b.id !== bookingId)
+      setBookings(updatedBookings)
+      setSelectedBooking(null)
+      alert('Booking deleted successfully')
+    } catch (error) {
+      console.error('Error deleting booking:', error)
+      alert('Error deleting booking. Please try again.')
     }
   }
 
@@ -1460,6 +1486,18 @@ export default function InstructorPage() {
                   Confirm
                 </button>
               )}
+              <button
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  if (confirm(`Delete booking for ${booking.studentName} on ${formatDate(booking.date)}?`)) {
+                    deleteBooking(booking.id);
+                  }
+                }}
+                className="block mt-2 text-red-600 hover:text-red-800 text-xs font-semibold"
+                title="Delete booking permanently"
+              >
+                🗑️ Delete
+              </button>
             </div>
           </div>
           {/* Reschedule info */}
@@ -1573,6 +1611,17 @@ export default function InstructorPage() {
                         className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
                       >
                         Cancel
+                      </button>
+                      <button
+                        onClick={() => { 
+                          if (confirm(`Delete pending booking for ${booking.studentName}?`)) {
+                            deleteBooking(booking.id);
+                          }
+                        }}
+                        className="px-4 py-2 bg-red-800 text-white rounded-lg hover:bg-red-900 transition font-semibold"
+                        title="Delete permanently"
+                      >
+                        🗑️ Delete
                       </button>
                     </div>
                   </div>
@@ -1717,6 +1766,16 @@ export default function InstructorPage() {
                                 >
                                   Unarchive
                                 </button>
+                                <button
+                                  onClick={() => { 
+                                    if (confirm(`Permanently delete archived booking for ${booking.studentName}?`)) {
+                                      deleteBooking(booking.id);
+                                    }
+                                  }}
+                                  className="mt-2 px-4 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition font-semibold text-sm"
+                                >
+                                  🗑️ Delete
+                                </button>
                               </div>
                             </div>
                           </div>
@@ -1808,6 +1867,22 @@ export default function InstructorPage() {
                     {selectedBooking.status !== 'cancelled' && selectedBooking.status !== 'completed' && (
                       <button onClick={() => { updateBookingStatus(selectedBooking.id, 'cancelled'); setSelectedBooking(null) }} className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition">Cancel Booking</button>
                     )}
+                  </div>
+                </div>
+
+                <div className="border-t pt-6 mt-6">
+                  <p className="text-sm text-gray-600 mb-4">Danger Zone</p>
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                    <p className="text-sm text-red-700 mb-3">
+                      <strong>⚠️ Permanent Deletion</strong><br/>
+                      This will completely remove the booking from the database. Use only for test bookings or errors.
+                    </p>
+                    <button 
+                      onClick={() => { deleteBooking(selectedBooking.id) }}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
+                    >
+                      🗑️ Delete Booking Permanently
+                    </button>
                   </div>
                 </div>
               </div>

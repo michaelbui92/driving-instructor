@@ -45,10 +45,13 @@ export async function GET(request: NextRequest) {
 
     // Create student record if doesn't exist
     if (!student) {
-      console.log('Creating student for email:', user.email)
+      console.log('Creating student for email:', user.email, 'auth_user_id:', user.id)
       const { data: newStudent, error: createError } = await adminClient
         .from('students')
-        .insert({ email: user.email } as any)
+        .insert({ 
+          email: user.email,
+          auth_user_id: user.id 
+        } as any)
         .select()
         .single()
 
@@ -58,6 +61,19 @@ export async function GET(request: NextRequest) {
       }
 
       student = newStudent
+    } else if (!student.auth_user_id) {
+      // Update existing student with auth_user_id if missing
+      console.log('Updating student with auth_user_id:', user.id)
+      const { data: updatedStudent, error: updateError } = await adminClient
+        .from('students')
+        .update({ auth_user_id: user.id })
+        .eq('id', student.id)
+        .select()
+        .single()
+      
+      if (!updateError && updatedStudent) {
+        student = updatedStudent
+      }
     }
 
     // Get bookings using admin client to bypass RLS
@@ -94,7 +110,7 @@ export async function GET(request: NextRequest) {
     const completed = bookings.filter((b: any) => b.status === 'completed')
     const cancelled = bookings.filter((b: any) => b.status === 'cancelled')
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       student: {
         id: student.id,
         email: student.email,
@@ -113,6 +129,12 @@ export async function GET(request: NextRequest) {
         },
       },
     })
+    
+    // Prevent caching
+    response.headers.set('Cache-Control', 'no-store, max-age=0')
+    response.headers.set('Pragma', 'no-cache')
+    
+    return response
   } catch (error: any) {
     console.error('Dashboard error:', error)
     return NextResponse.json(
