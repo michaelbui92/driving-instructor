@@ -31,6 +31,7 @@ export default function BookPage() {
   const [existingBookings, setExistingBookings] = useState<Booking[]>([])
   const [selectedLessonImage, setSelectedLessonImage] = useState<string>('single')
   const [showConfirmation, setShowConfirmation] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const confirmationRef = useRef<HTMLDivElement>(null)
 
   // Load existing bookings from Supabase on mount
@@ -74,6 +75,21 @@ export default function BookPage() {
               }))
             }
           }
+        }
+        
+        // Also fetch logged-in user's email to auto-fill
+        try {
+          const meRes = await fetch('/api/student/me')
+          const meData = await meRes.json()
+          if (meData.authenticated && meData.email) {
+            setIsLoggedIn(true)
+            setBooking(prev => ({
+              ...prev,
+              email: meData.email,
+            }))
+          }
+        } catch (e) {
+          console.error('Error fetching user email:', e)
         }
       } catch (error) {
         console.error('Error loading bookings:', error)
@@ -498,11 +514,14 @@ export default function BookPage() {
                     id="email"
                     value={booking.email || ''}
                     onChange={handlePersonalInfoChange}
-                    className="floating-label-input"
+                    className={`floating-label-input ${isLoggedIn ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                     placeholder="Email Address"
                     required
+                    readOnly={isLoggedIn}
                   />
-                  <label htmlFor="email" className="floating-label">Email Address *</label>
+                  <label htmlFor="email" className="floating-label">
+                    Email Address * {isLoggedIn && '(logged in)'}
+                  </label>
                 </div>
 
                 <div className="floating-label-group">
