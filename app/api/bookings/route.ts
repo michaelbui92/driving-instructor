@@ -37,8 +37,14 @@ export async function GET(request: NextRequest) {
 
     const response = NextResponse.json({ bookings })
     
-    // NO CACHING - fresh data every time
-    response.headers.set('Cache-Control', 'no-store, max-age=0')
+    // AGGRESSIVE NO-CACHE for Vercel Edge Network
+    // https://vercel.com/docs/edge-network/caching
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0')
+    response.headers.set('Pragma', 'no-cache')
+    response.headers.set('Expires', '0')
+    response.headers.set('Surrogate-Control', 'no-store')
+    response.headers.set('CDN-Cache-Control', 'no-store')
+    response.headers.set('Vercel-CDN-Cache-Control', 'no-store')
     
     return response
   } catch (error: any) {
