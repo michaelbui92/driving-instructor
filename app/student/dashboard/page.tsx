@@ -53,8 +53,9 @@ export default function StudentDashboardPage() {
 
   const loadDashboard = async () => {
     try {
-      // SIMPLE: Get ALL bookings
-      const res = await fetch(`/api/bookings?t=${Date.now()}`)
+      // AGGRESSIVE cache busting - random string every time
+      const cacheBuster = `t=${Date.now()}&r=${Math.random().toString(36).substring(7)}`
+      const res = await fetch(`/api/bookings?${cacheBuster}`)
       
       if (!res.ok) {
         throw new Error('Failed to load bookings')
