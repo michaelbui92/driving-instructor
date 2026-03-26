@@ -113,7 +113,7 @@ export default function InstructorPage() {
     async function loadBookings() {
       try {
         console.log('🔄 Instructor loading bookings...')
-        const res = await fetch('/api/instructor/bookings')
+        const res = await fetch(`/api/instructor/bookings?t=${Date.now()}`) // Cache bust
         
         console.log('📊 Instructor API response:', {
           status: res.status,
@@ -158,9 +158,18 @@ export default function InstructorPage() {
         setBookings([])
       }
     }
+    
     loadBookings()
     setBlockedSlots(getBlockedSlots())
     setRules(getRules())
+    
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(() => {
+      console.log('⏰ Auto-refreshing instructor bookings...')
+      loadBookings()
+    }, 30000)
+    
+    return () => clearInterval(interval)
   }, [])
 
   // Load instructor profile from Supabase

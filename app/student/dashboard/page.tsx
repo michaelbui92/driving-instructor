@@ -41,6 +41,14 @@ export default function StudentDashboardPage() {
 
   useEffect(() => {
     loadDashboard()
+    
+    // Auto-refresh every 30 seconds to catch new bookings
+    const interval = setInterval(() => {
+      console.log('⏰ Auto-refreshing dashboard...')
+      loadDashboard()
+    }, 30000)
+    
+    return () => clearInterval(interval)
   }, [])
 
   // Debug: log when bookings state changes
