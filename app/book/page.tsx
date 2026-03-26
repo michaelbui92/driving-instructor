@@ -61,35 +61,24 @@ export default function BookPage() {
             createdAt: b.created_at,
           }))
           setExistingBookings(formatted)
-
-          // Auto-fill from most recent booking if logged in and no details set
-          const accessToken = document.cookie.includes('sb-access-token')
-          if (accessToken && formatted.length > 0) {
-            const mostRecent = formatted[0]
-            if (mostRecent.studentName || mostRecent.email || mostRecent.phone) {
-              setBooking(prev => ({
-                ...prev,
-                studentName: mostRecent.studentName || prev.studentName,
-                email: mostRecent.email || prev.email,
-                phone: mostRecent.phone || prev.phone,
-              }))
-            }
-          }
         }
         
-        // Also fetch logged-in user's email to auto-fill
+        // Fetch logged-in student's details to auto-fill booking
         try {
-          const meRes = await fetch('/api/student/me')
-          const meData = await meRes.json()
-          if (meData.authenticated && meData.email) {
+          const detailsRes = await fetch('/api/student/details')
+          const detailsData = await detailsRes.json()
+          if (detailsRes.ok && detailsData.email) {
             setIsLoggedIn(true)
             setBooking(prev => ({
               ...prev,
-              email: meData.email,
+              studentName: detailsData.fullName || prev.studentName,
+              email: detailsData.email,
+              phone: detailsData.phone || prev.phone,
+              address: detailsData.address || prev.address,
             }))
           }
         } catch (e) {
-          console.error('Error fetching user email:', e)
+          console.error('Error fetching student details:', e)
         }
       } catch (error) {
         console.error('Error loading bookings:', error)
@@ -99,9 +88,9 @@ export default function BookPage() {
     loadBookings()
   }, [])
 
-  // Trigger confirmation animation when step 4 is reached
+  // Trigger confirmation animation when step 3 (review) is reached
   useEffect(() => {
-    if (step === 4) {
+    if (step === 3) {
       setShowConfirmation(true)
       // Scroll to confirmation card
       setTimeout(() => {
@@ -174,14 +163,7 @@ export default function BookPage() {
     } else if (step === 2) {
       const validation = validateStep2(booking, selectedSlotIds)
       if (validation.valid) {
-        setStep(3)
-      } else {
-        alert(validation.errors.join('\n'))
-      }
-    } else if (step === 3) {
-      const validation = validateStep3(booking)
-      if (validation.valid) {
-        setStep(4)
+        setStep(3) // Go directly to review (skip details step since we use saved details)
       } else {
         alert(validation.errors.join('\n'))
       }
@@ -263,15 +245,15 @@ export default function BookPage() {
       <div className="bg-white shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
-            {[1, 2, 3, 4].map((s) => (
+            {[1, 2, 3].map((s) => (
               <div key={s} className="flex items-center">
                 <div className={`progress-step flex items-center justify-center w-10 h-10 rounded-full ${
                   step >= s ? 'bg-primary text-white' : 'bg-gray-200 text-gray-600'
                 }`}>
-                  {s < 4 ? s : '✓'}
+                  {s < 3 ? s : '✓'}
                 </div>
-                {s < 4 && (
-                  <div className={`progress-bar-segment w-24 h-1 mx-2 ${step > s ? 'bg-primary' : 'bg-gray-200'}`} />
+                {s < 3 && (
+                  <div className={`progress-bar-segment w-32 h-1 mx-2 ${step > s ? 'bg-primary' : 'bg-gray-200'}`} />
                 )}
               </div>
             ))}
@@ -279,8 +261,7 @@ export default function BookPage() {
           <div className="flex justify-between mt-2 text-sm text-gray-600">
             <span>Lesson Type</span>
             <span>Date & Time</span>
-            <span>Your Details</span>
-            <span>Confirmation</span>
+            <span>Review & Confirm</span>
           </div>
         </div>
       </div>
@@ -488,90 +469,8 @@ export default function BookPage() {
         )}
 
         {step === 3 && (
-          <div>
-            <h2 className="text-3xl font-bold mb-6">Your Details</h2>
-            <div className="bg-white rounded-xl p-6 shadow-lg">
-              <div className="space-y-6">
-                {/* Floating Label Inputs */}
-                <div className="floating-label-group">
-                  <input
-                    type="text"
-                    name="studentName"
-                    id="studentName"
-                    value={booking.studentName || ''}
-                    onChange={handlePersonalInfoChange}
-                    className="floating-label-input"
-                    placeholder="Full Name"
-                    required
-                  />
-                  <label htmlFor="studentName" className="floating-label">Full Name *</label>
-                </div>
-
-                <div className="floating-label-group">
-                  <input
-                    type="email"
-                    name="email"
-                    id="email"
-                    value={booking.email || ''}
-                    onChange={handlePersonalInfoChange}
-                    className={`floating-label-input ${isLoggedIn ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                    placeholder="Email Address"
-                    required
-                    readOnly={isLoggedIn}
-                  />
-                  <label htmlFor="email" className="floating-label">
-                    Email Address * {isLoggedIn && '(logged in)'}
-                  </label>
-                </div>
-
-                <div className="floating-label-group">
-                  <input
-                    type="tel"
-                    name="phone"
-                    id="phone"
-                    value={booking.phone || ''}
-                    onChange={handlePersonalInfoChange}
-                    className="floating-label-input"
-                    placeholder="Phone Number"
-                    required
-                  />
-                  <label htmlFor="phone" className="floating-label">Phone Number *</label>
-                </div>
-
-                <div className="floating-label-group">
-                  <input
-                    type="text"
-                    name="address"
-                    id="address"
-                    value={booking.address || ''}
-                    onChange={handlePersonalInfoChange}
-                    className="floating-label-input"
-                    placeholder="Pickup/Drop-off Address"
-                    required
-                  />
-                  <label htmlFor="address" className="floating-label">Pickup/Drop-off Address *</label>
-                </div>
-
-                <div className="floating-label-group">
-                  <textarea
-                    name="notes"
-                    id="notes"
-                    rows={3}
-                    value={booking.notes || ''}
-                    onChange={handlePersonalInfoChange}
-                    className="floating-label-input resize-none"
-                    placeholder="Notes (Optional)"
-                  />
-                  <label htmlFor="notes" className="floating-label">Notes (Optional)</label>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {step === 4 && (
           <div ref={confirmationRef}>
-            <h2 className="text-3xl font-bold mb-6">Confirm Your Booking</h2>
+            <h2 className="text-3xl font-bold mb-6">Review Your Booking</h2>
             <div className={`confirmation-card bg-white rounded-xl p-6 shadow-lg ${showConfirmation ? 'animate-scale-in' : ''}`}>
               {/* Animated SVG Checkmark */}
               <div className="flex justify-center mb-6">
@@ -655,17 +554,16 @@ export default function BookPage() {
             <div />
           )}
 
-          {step < 4 ? (
+          {step < 3 ? (
             <button
               onClick={handleNext}
               disabled={
                 (step === 1 && !booking.lessonType) ||
-                (step === 2 && (!booking.date || !booking.time)) ||
-                (step === 3 && !validateStep3(booking).valid)
+                (step === 2 && (!booking.date || !booking.time))
               }
               className="shimmer-btn px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
-              {step === 3 ? 'Review Booking' : 'Next →'}
+              Next →
             </button>
           ) : (
             <button

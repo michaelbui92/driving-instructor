@@ -75,10 +75,22 @@ export default function StudentLoginPage() {
         return
       }
 
-      // Redirect to dashboard or intended page
+      // Check if student has completed details
       const params = new URLSearchParams(window.location.search)
-      const redirect = params.get('redirect')
-      router.push(redirect || '/student/dashboard')
+      try {
+        const detailsRes = await fetch('/api/student/details')
+        const detailsData = await detailsRes.json()
+        
+        // Redirect to details if not completed, otherwise to dashboard
+        const redirectTo = !detailsData.hasCompletedDetails 
+          ? '/student/details' 
+          : (params.get('redirect') || '/student/dashboard')
+        
+        router.push(redirectTo)
+      } catch (err) {
+        // If details check fails, go to dashboard
+        router.push(params.get('redirect') || '/student/dashboard')
+      }
     } catch (err) {
       setError('Something went wrong. Please try again.')
     } finally {
