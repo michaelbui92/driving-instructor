@@ -41,6 +41,13 @@ export default function StudentDashboardPage() {
 
   useEffect(() => {
     loadDashboard()
+    
+    // Auto-refresh every 30 seconds to keep data in sync
+    const interval = setInterval(() => {
+      loadDashboard()
+    }, 30000)
+    
+    return () => clearInterval(interval)
   }, [])
 
   const loadDashboard = async () => {
@@ -242,6 +249,13 @@ export default function StudentDashboardPage() {
             <p className="text-gray-600">{student?.email}</p>
           </div>
           <div className="flex items-center gap-4">
+            <button
+              onClick={loadDashboard}
+              className="px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-semibold shadow-md hover:-translate-y-0.5"
+              title="Refresh dashboard"
+            >
+              🔄 Refresh
+            </button>
             <Link
               href="/book"
               className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold shadow-md hover:-translate-y-0.5"
