@@ -41,6 +41,10 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('✅ Booking created:', { id: data[0]?.id, claimCode })
+    
+    // Small delay to help with replication consistency
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
     return NextResponse.json({ success: true, booking: data, claimCode })
   } catch (error: any) {
     console.error('Booking creation error:', error)
