@@ -273,6 +273,17 @@ export default function StudentDashboardPage() {
             <p className="text-gray-600">{student?.email}</p>
           </div>
           <div className="flex items-center gap-4">
+            <button
+              onClick={() => {
+                console.log('🔄 Manual refresh triggered')
+                setBookings([]) // Clear state first
+                loadDashboard()
+              }}
+              disabled={loading}
+              className="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-semibold shadow-md hover:-translate-y-0.5 disabled:opacity-50 flex items-center gap-2"
+            >
+              🔄 Force Refresh
+            </button>
             <Link
               href="/book"
               className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold shadow-md hover:-translate-y-0.5"
