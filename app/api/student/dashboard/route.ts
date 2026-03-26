@@ -85,18 +85,31 @@ export async function GET(request: NextRequest) {
     }
 
     // Get bookings using admin client to bypass RLS
-    console.log('🔍 Querying bookings for email:', user.email)
+    console.log('🔍 Student querying bookings for email:', user.email)
+    
+    // First, let's check what emails actually exist in bookings
+    const { data: allBookings } = await adminClient
+      .from('bookings')
+      .select('email')
+      .limit(100)
+    
+    console.log('📧 All unique emails in bookings table:', {
+      uniqueEmails: [...new Set(allBookings?.map(b => b.email))],
+      totalBookings: allBookings?.length
+    })
+    
+    // Now query for this specific user's email
     const { data: bookingsData, error: bookingsError } = await adminClient
       .from('bookings')
       .select('*')
       .eq('email', user.email)
       .order('date', { ascending: false })
 
-    console.log('📊 Bookings query result:', {
-      email: user.email,
-      count: bookingsData?.length,
+    console.log('📊 Student bookings query result:', {
+      queryEmail: user.email,
+      foundCount: bookingsData?.length,
       error: bookingsError?.message,
-      bookings: bookingsData?.map(b => ({
+      bookingsFound: bookingsData?.map(b => ({
         id: b.id,
         student_name: b.student_name,
         email: b.email,
@@ -105,20 +118,23 @@ export async function GET(request: NextRequest) {
       }))
     })
     
-    // DEBUG: Also check ALL bookings in database
-    const { data: allBookings } = await adminClient
+    // Also try case-insensitive search
+    console.log('🔎 Trying case-insensitive search...')
+    const { data: allBookingsDetailed } = await adminClient
       .from('bookings')
       .select('*')
       .limit(50)
     
-    console.log('🗃️ ALL bookings in database:', {
-      total: allBookings?.length,
-      bookings: allBookings?.map(b => ({
-        id: b.id,
-        student_name: b.student_name,
+    const caseInsensitiveMatches = allBookingsDetailed?.filter(b => 
+      b.email.toLowerCase() === user.email.toLowerCase()
+    )
+    
+    console.log('🎯 Case-insensitive matches:', {
+      count: caseInsensitiveMatches?.length,
+      matches: caseInsensitiveMatches?.map(b => ({
         email: b.email,
-        date: b.date,
-        status: b.status
+        expected: user.email,
+        match: b.email.toLowerCase() === user.email.toLowerCase()
       }))
     })
 
