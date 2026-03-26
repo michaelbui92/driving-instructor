@@ -248,12 +248,6 @@ export default function StudentDashboardPage() {
             >
               📅 Book a Lesson
             </Link>
-            <button
-              onClick={handleLogout}
-              className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-semibold shadow-md hover:-translate-y-0.5"
-            >
-              Log Out
-            </button>
           </div>
         </div>
 
