@@ -3,9 +3,19 @@ import { createClient } from '@supabase/supabase-js'
 
 export async function POST(request: NextRequest) {
   try {
-    const { studentName, email, phone, date, time, lessonType, lessonName, price } = await request.json()
+    const body = await request.json()
+    const { studentName, email, phone, date, time, lessonType, lessonName, price } = body
 
+    console.log('📦 Booking creation request body:', body)
+    
     if (!email || !date || !time || !lessonType) {
+      console.error('❌ Missing required fields:', {
+        email: !!email,
+        date: !!date,
+        time: !!time,
+        lessonType: !!lessonType,
+        allFields: body
+      })
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
