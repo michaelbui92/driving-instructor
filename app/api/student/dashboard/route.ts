@@ -26,24 +26,29 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
     }
 
-    // Get student's own record (create if doesn't exist)
+    // Use admin client for all database operations
     const adminClient = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
+    console.log('Dashboard - user id:', user.id, 'email:', user.email)
+
+    // Look up student by email (more reliable than auth_user_id)
     let { data: student } = await adminClient
       .from('students')
       .select('*')
-      .eq('auth_user_id', user.id)
+      .eq('email', user.email)
       .single()
+
+    console.log('Found student:', student)
 
     // Create student record if doesn't exist
     if (!student) {
-      console.log('Creating student for user:', user.id, user.email)
+      console.log('Creating student for email:', user.email)
       const { data: newStudent, error: createError } = await adminClient
         .from('students')
-        .insert({ auth_user_id: user.id, email: user.email } as any)
+        .insert({ email: user.email } as any)
         .select()
         .single()
 
@@ -59,8 +64,10 @@ export async function GET(request: NextRequest) {
     const { data: bookingsData, error: bookingsError } = await adminClient
       .from('bookings')
       .select('*')
-      .eq('email', student.email)
+      .eq('email', user.email)
       .order('date', { ascending: false })
+
+    console.log('Bookings for', user.email, ':', bookingsData?.length, 'error:', bookingsError)
 
     if (bookingsError) {
       console.error('Error fetching bookings:', bookingsError)
