@@ -93,8 +93,12 @@ export async function GET(request: NextRequest) {
       .select('email')
       .limit(100)
     
+    // Get unique emails (compatible with older TypeScript target)
+    const emails = allBookings?.map(b => b.email) || []
+    const uniqueEmails = emails.filter((email, index) => emails.indexOf(email) === index)
+    
     console.log('📧 All unique emails in bookings table:', {
-      uniqueEmails: [...new Set(allBookings?.map(b => b.email))],
+      uniqueEmails: uniqueEmails,
       totalBookings: allBookings?.length
     })
     
