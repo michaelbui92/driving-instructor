@@ -112,13 +112,32 @@ export default function InstructorPage() {
   useEffect(() => {
     async function loadBookings() {
       try {
+        console.log('🔄 Instructor loading bookings...')
         const res = await fetch('/api/instructor/bookings')
         
+        console.log('📊 Instructor API response:', {
+          status: res.status,
+          ok: res.ok,
+          statusText: res.statusText
+        })
+        
         if (!res.ok) {
+          const errorText = await res.text()
+          console.error('❌ Instructor API error:', errorText)
           throw new Error('Failed to load bookings')
         }
 
         const data = await res.json()
+        console.log('✅ Instructor bookings loaded:', {
+          count: data.bookings?.length,
+          bookings: data.bookings?.map((b: any) => ({
+            id: b.id,
+            student_name: b.student_name,
+            email: b.email,
+            date: b.date,
+            status: b.status
+          }))
+        })
         
         // Convert Supabase format to app format
         const formatted: Booking[] = (data.bookings || []).map((b: any) => ({
@@ -135,7 +154,7 @@ export default function InstructorPage() {
         }))
         setBookings(formatted)
       } catch (error) {
-        console.error('Error loading bookings:', error)
+        console.error('❌ Error loading bookings:', error)
         setBookings([])
       }
     }
