@@ -34,11 +34,12 @@ export async function POST(request: NextRequest) {
 
     // Send confirmation email to student
     if (booking.email && booking.claimCode) {
-      const studentSubject = `✅ Booking Confirmed - ${formattedDate} at ${booking.time}`
+      const studentSubject = `📋 Booking Received - ${formattedDate} at ${booking.time}`
+      const studentName = booking.studentName || booking.email.split('@')[0] || 'there'
       const studentBody = `
-Hi ${booking.studentName},
+Hi ${studentName},
 
-Your driving lesson has been booked successfully!
+Your driving lesson booking has been received and is pending instructor confirmation!
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 📅 Date: ${formattedDate}
@@ -48,7 +49,9 @@ Your driving lesson has been booked successfully!
 🔖 Booking Ref: ${booking.claimCode}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-📍 I'll pick you up at your provided address.
+⏳ Status: Pending Confirmation
+
+You will receive another email once the instructor confirms your booking.
 
 Need to reschedule or cancel? Log in to your student portal:
 ${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/student/login

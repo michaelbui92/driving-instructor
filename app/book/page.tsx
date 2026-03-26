@@ -96,6 +96,22 @@ export default function BookPage() {
       setTimeout(() => {
         confirmationRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
       }, 100)
+      
+      // Refresh student details before showing review
+      fetch('/api/student/details')
+        .then(res => res.json())
+        .then(data => {
+          if (data.email) {
+            setBooking(prev => ({
+              ...prev,
+              studentName: data.fullName || prev.studentName,
+              email: data.email,
+              phone: data.phone || prev.phone,
+              address: data.address || prev.address,
+            }))
+          }
+        })
+        .catch(e => console.error('Error fetching details for review:', e))
     } else {
       setShowConfirmation(false)
     }
