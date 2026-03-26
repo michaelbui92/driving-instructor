@@ -17,6 +17,8 @@ export async function POST(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
+    console.log('📝 Creating booking:', { email, date, time, lessonType })
+    
     const { data, error } = await adminClient
       .from('bookings')
       .insert([
@@ -34,10 +36,11 @@ export async function POST(request: NextRequest) {
       .select()
 
     if (error) {
-      console.error('Error creating booking:', error)
+      console.error('❌ Error creating booking:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    console.log('✅ Booking created:', { id: data[0]?.id, claimCode })
     return NextResponse.json({ success: true, booking: data, claimCode })
   } catch (error: any) {
     console.error('Booking creation error:', error)
