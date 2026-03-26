@@ -28,7 +28,6 @@ type Student = {
 }
 
 export default function StudentDashboardPage() {
-  const [student, setStudent] = useState<Student | null>(null)
   const [bookings, setBookings] = useState<BookingType[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'upcoming' | 'completed' | 'cancelled'>('upcoming')
@@ -42,81 +41,30 @@ export default function StudentDashboardPage() {
   useEffect(() => {
     loadDashboard()
     
-    // Auto-refresh every 30 seconds to catch new bookings
+    // Auto-refresh every 10 seconds
     const interval = setInterval(() => {
-      console.log('⏰ Auto-refreshing dashboard...')
       loadDashboard()
-    }, 30000)
+    }, 10000)
     
     return () => clearInterval(interval)
   }, [])
 
-  // Debug: log when bookings state changes
-  useEffect(() => {
-    console.log('🔄 Bookings state updated:', {
-      count: bookings.length,
-      bookings: bookings.map(b => ({
-        id: b.id,
-        studentName: b.studentName,
-        date: b.date,
-        status: b.status
-      }))
-    })
-  }, [bookings])
+
 
   const loadDashboard = async () => {
     try {
-      console.log('🔄 Loading dashboard...')
-      // Add cache-buster to prevent browser caching
-      const url = `/api/student/dashboard?t=${Date.now()}`
-      console.log('📞 Calling API:', url)
+      // SIMPLE: Get ALL bookings
+      const res = await fetch(`/api/bookings?t=${Date.now()}`)
       
-      const res = await fetch(url)
-
-      console.log('📊 API Response:', {
-        status: res.status,
-        statusText: res.statusText,
-        ok: res.ok
-      })
-
       if (!res.ok) {
-        if (res.status === 401) {
-          console.log('🔐 Unauthorized, redirecting to login')
-          router.push('/student/login')
-          return
-        }
-        
-        const errorText = await res.text()
-        console.error('❌ API Error:', errorText)
-        throw new Error(`Failed to load dashboard: ${res.status} ${res.statusText}`)
+        throw new Error('Failed to load bookings')
       }
 
       const data = await res.json()
-      console.log('✅ Dashboard loaded:', {
-        student: data.student?.email,
-        bookingsCount: data.bookings?.all?.length,
-        statuses: data.bookings?.all?.reduce((acc: any, b: any) => {
-          acc[b.status] = (acc[b.status] || 0) + 1
-          return acc
-        }, {})
-      })
-      
-      // Debug: log what we're setting
-      console.log('📝 Setting bookings:', data.bookings?.all?.length || 0, 'bookings')
-      console.log('📋 Booking data sample:', data.bookings?.all?.[0])
-      
-      setStudent(data.student)
-      const bookingsToSet = data.bookings?.all || []
-      console.log('🎯 Final bookings array to set:', {
-        length: bookingsToSet.length,
-        firstBooking: bookingsToSet[0],
-        allBookings: bookingsToSet
-      })
-      setBookings(bookingsToSet) // Ensure it's always an array
+      setBookings(data.bookings || [])
     } catch (err) {
-      console.error('❌ Dashboard load error:', err)
-      setMessage({ type: 'error', text: 'Failed to load dashboard' })
-      // Clear bookings on error
+      console.error('Dashboard load error:', err)
+      setMessage({ type: 'error', text: 'Failed to load bookings' })
       setBookings([])
     } finally {
       setLoading(false)
@@ -298,7 +246,7 @@ export default function StudentDashboardPage() {
         <div className="mb-8 flex flex-col md:flex-row items-start md:items-center gap-6">
           <div className="flex-1">
             <h1 className="text-4xl font-bold mb-2">My Dashboard</h1>
-            <p className="text-gray-600">{student?.email}</p>
+            <p className="text-gray-600">All your bookings</p>
           </div>
           <div className="flex items-center gap-4">
             <button

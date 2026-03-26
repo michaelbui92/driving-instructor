@@ -112,49 +112,31 @@ export default function InstructorPage() {
   useEffect(() => {
     async function loadBookings() {
       try {
-        console.log('🔄 Instructor loading bookings...')
-        const res = await fetch(`/api/instructor/bookings?t=${Date.now()}`) // Cache bust
-        
-        console.log('📊 Instructor API response:', {
-          status: res.status,
-          ok: res.ok,
-          statusText: res.statusText
-        })
+        // SIMPLE: Get ALL bookings
+        const res = await fetch(`/api/bookings?t=${Date.now()}`)
         
         if (!res.ok) {
-          const errorText = await res.text()
-          console.error('❌ Instructor API error:', errorText)
           throw new Error('Failed to load bookings')
         }
 
         const data = await res.json()
-        console.log('✅ Instructor bookings loaded:', {
-          count: data.bookings?.length,
-          bookings: data.bookings?.map((b: any) => ({
-            id: b.id,
-            student_name: b.student_name,
-            email: b.email,
-            date: b.date,
-            status: b.status
-          }))
-        })
         
-        // Convert Supabase format to app format
+        // Convert to app format
         const formatted: Booking[] = (data.bookings || []).map((b: any) => ({
           id: b.id,
-          studentName: b.student_name,
+          studentName: b.student_name || b.studentName,
           email: b.email,
           phone: b.phone,
           date: b.date,
           time: b.time,
-          lessonType: b.lesson_type,
+          lessonType: b.lesson_type || b.lessonType,
           status: b.status,
-          price: getLessonPrice(b.lesson_type),
-          createdAt: b.created_at,
+          price: getLessonPrice(b.lesson_type || b.lessonType),
+          createdAt: b.created_at || b.createdAt,
         }))
         setBookings(formatted)
       } catch (error) {
-        console.error('❌ Error loading bookings:', error)
+        console.error('Error loading bookings:', error)
         setBookings([])
       }
     }
@@ -163,11 +145,10 @@ export default function InstructorPage() {
     setBlockedSlots(getBlockedSlots())
     setRules(getRules())
     
-    // Auto-refresh every 30 seconds
+    // Auto-refresh every 10 seconds (more frequent)
     const interval = setInterval(() => {
-      console.log('⏰ Auto-refreshing instructor bookings...')
       loadBookings()
-    }, 30000)
+    }, 10000)
     
     return () => clearInterval(interval)
   }, [])
@@ -226,19 +207,22 @@ export default function InstructorPage() {
 
   const updateBookingStatus = async (bookingId: string, newStatus: Booking['status']) => {
     try {
-      const res = await fetch(`/api/instructor/bookings/${bookingId}/status`, {
+      // SIMPLE: Update status
+      const res = await fetch(`/api/bookings/${bookingId}/status`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus }),
       })
 
       if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error || 'Failed to update status')
+        throw new Error('Failed to update status')
       }
 
+      // Update local state immediately
       const updatedBookings = bookings.map(b => b.id === bookingId ? { ...b, status: newStatus } : b)
       setBookings(updatedBookings)
+      
+      // Auto-refresh will get fresh data in 10 seconds
       alert(`Booking status updated to: ${newStatus}`)
     } catch (error) {
       console.error('Error updating booking status:', error)
