@@ -77,13 +77,42 @@ export async function GET(request: NextRequest) {
     }
 
     // Get bookings using admin client to bypass RLS
+    console.log('🔍 Querying bookings for email:', user.email)
     const { data: bookingsData, error: bookingsError } = await adminClient
       .from('bookings')
       .select('*')
       .eq('email', user.email)
       .order('date', { ascending: false })
 
-    console.log('Bookings for', user.email, ':', bookingsData?.length, 'error:', bookingsError)
+    console.log('📊 Bookings query result:', {
+      email: user.email,
+      count: bookingsData?.length,
+      error: bookingsError?.message,
+      bookings: bookingsData?.map(b => ({
+        id: b.id,
+        student_name: b.student_name,
+        email: b.email,
+        date: b.date,
+        status: b.status
+      }))
+    })
+    
+    // DEBUG: Also check ALL bookings in database
+    const { data: allBookings } = await adminClient
+      .from('bookings')
+      .select('*')
+      .limit(50)
+    
+    console.log('🗃️ ALL bookings in database:', {
+      total: allBookings?.length,
+      bookings: allBookings?.map(b => ({
+        id: b.id,
+        student_name: b.student_name,
+        email: b.email,
+        date: b.date,
+        status: b.status
+      }))
+    })
 
     if (bookingsError) {
       console.error('Error fetching bookings:', bookingsError)
