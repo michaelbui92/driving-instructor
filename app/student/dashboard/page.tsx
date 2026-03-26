@@ -43,6 +43,19 @@ export default function StudentDashboardPage() {
     loadDashboard()
   }, [])
 
+  // Debug: log when bookings state changes
+  useEffect(() => {
+    console.log('🔄 Bookings state updated:', {
+      count: bookings.length,
+      bookings: bookings.map(b => ({
+        id: b.id,
+        studentName: b.studentName,
+        date: b.date,
+        status: b.status
+      }))
+    })
+  }, [bookings])
+
   const loadDashboard = async () => {
     try {
       console.log('🔄 Loading dashboard...')
@@ -82,9 +95,16 @@ export default function StudentDashboardPage() {
       
       // Debug: log what we're setting
       console.log('📝 Setting bookings:', data.bookings?.all?.length || 0, 'bookings')
+      console.log('📋 Booking data sample:', data.bookings?.all?.[0])
       
       setStudent(data.student)
-      setBookings(data.bookings?.all || []) // Ensure it's always an array
+      const bookingsToSet = data.bookings?.all || []
+      console.log('🎯 Final bookings array to set:', {
+        length: bookingsToSet.length,
+        firstBooking: bookingsToSet[0],
+        allBookings: bookingsToSet
+      })
+      setBookings(bookingsToSet) // Ensure it's always an array
     } catch (err) {
       console.error('❌ Dashboard load error:', err)
       setMessage({ type: 'error', text: 'Failed to load dashboard' })
