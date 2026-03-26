@@ -130,7 +130,6 @@ export async function GET(request: NextRequest) {
       .select('*')
       .limit(50)
     
-    const userEmail = user.email || ''
     const caseInsensitiveMatches = allBookingsDetailed?.filter(b => 
       b.email.toLowerCase() === userEmail.toLowerCase()
     )
