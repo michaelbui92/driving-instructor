@@ -112,6 +112,28 @@ export default function DashboardPage() {
     }
   }
 
+  const confirmBooking = async (bookingId: string) => {
+    try {
+      const { error } = await supabase
+        .from('bookings')
+        .update({ status: 'confirmed' })
+        .eq('id', bookingId)
+
+      if (error) {
+        throw error
+      }
+
+      const updatedBookings = bookings.map(b =>
+        b.id === bookingId ? { ...b, status: 'confirmed' as const } : b
+      )
+      setBookings(updatedBookings)
+      alert('Booking confirmed successfully')
+    } catch (error) {
+      console.error('Error confirming booking:', error)
+      alert('Error confirming booking. Please try again.')
+    }
+  }
+
   const deleteBooking = async (bookingId: string) => {
     if (!confirm('Permanently delete this booking? This cannot be undone.')) return
     
@@ -459,6 +481,14 @@ export default function DashboardPage() {
                           <div className="flex flex-col space-y-3">
                             {selectedTab === 'upcoming' && (
                               <>
+                                {booking.status === 'pending' && (
+                                  <button
+                                    onClick={() => confirmBooking(booking.id)}
+                                    className="w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
+                                  >
+                                    ✓ Confirm Reschedule
+                                  </button>
+                                )}
                                 <button
                                   onClick={() => handleReschedule(booking)}
                                   className="w-full px-4 py-3 border-2 border-orange-500 text-orange-500 rounded-lg hover:bg-orange-50 transition font-medium"
