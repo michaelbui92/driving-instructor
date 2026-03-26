@@ -41,13 +41,6 @@ export default function StudentDashboardPage() {
 
   useEffect(() => {
     loadDashboard()
-    
-    // Auto-refresh every 30 seconds to keep data in sync
-    const interval = setInterval(() => {
-      loadDashboard()
-    }, 30000)
-    
-    return () => clearInterval(interval)
   }, [])
 
   const loadDashboard = async () => {
@@ -249,13 +242,6 @@ export default function StudentDashboardPage() {
             <p className="text-gray-600">{student?.email}</p>
           </div>
           <div className="flex items-center gap-4">
-            <button
-              onClick={loadDashboard}
-              className="px-4 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-semibold shadow-md hover:-translate-y-0.5"
-              title="Refresh dashboard"
-            >
-              🔄 Refresh
-            </button>
             <Link
               href="/book"
               className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold shadow-md hover:-translate-y-0.5"
@@ -323,6 +309,12 @@ export default function StudentDashboardPage() {
 
           {/* Bookings List */}
           <div className="p-6">
+            {/* Debug info */}
+            <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
+              <p>Debug: {bookings.length} total bookings | Active tab: {activeTab} | Showing: {filteredBookings.length}</p>
+              <p>Statuses: {JSON.stringify(bookings.reduce((acc, b) => { acc[b.status] = (acc[b.status] || 0) + 1; return acc }, {} as Record<string, number>))}</p>
+            </div>
+
             {filteredBookings.length === 0 ? (
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">

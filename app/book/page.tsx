@@ -624,7 +624,18 @@ export default function BookPage() {
         )}
 
         {/* Navigation Buttons */}
-        <div className="flex justify-end mt-8">
+        <div className="flex justify-between mt-8">
+          {step > 1 ? (
+            <button
+              onClick={handleBack}
+              className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+            >
+              ← Back
+            </button>
+          ) : (
+            <div />
+          )}
+
           {step < 4 ? (
             <button
               onClick={handleNext}
