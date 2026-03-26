@@ -5,26 +5,23 @@ import { createClient } from '@supabase/supabase-js'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    console.log('📦 Booking creation request:', body)
+    console.log('📦 Simple booking creation:', body)
     
-    // Extract with defaults - ONLY date and time are required
+    // Extract with defaults
     const {
       studentName = '',
-      email = 'guest@example.com', // Default if not provided
+      email = 'guest@example.com',
       phone = '',
       date,
       time,
-      lessonType = 'single', // Default
-      lessonName,
-      price,
+      lessonType = 'single',
     } = body
     
-    // ONLY require date and time - everything else has defaults
+    // ONLY require date and time
     if (!date || !time) {
-      console.error('❌ Missing date or time:', { date: !!date, time: !!time })
       return NextResponse.json({ 
         error: 'Date and time are required',
-        details: { hasDate: !!date, hasTime: !!time }
+        received: { date: !!date, time: !!time }
       }, { status: 400 })
     }
     
@@ -36,14 +33,6 @@ export async function POST(request: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
-    
-    console.log('📝 Creating booking with:', {
-      student_name: studentName || '(no name)',
-      email: email || '(no email)',
-      date,
-      time,
-      lesson_type: lessonType
-    })
     
     // Create booking
     const { data, error } = await adminClient
@@ -67,12 +56,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
     
-    console.log('✅ Booking created successfully:', { id: data[0]?.id })
+    console.log('✅ Booking created:', { id: data[0]?.id })
     
     return NextResponse.json({ 
       success: true, 
       booking: data[0],
-      claimCode,
       message: 'Booking created successfully'
     })
   } catch (error: any) {
