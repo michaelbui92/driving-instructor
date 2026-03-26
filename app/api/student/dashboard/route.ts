@@ -10,6 +10,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })
     }
 
+    // DEBUG: Log environment info
+    console.log('🚀 Dashboard API called')
+    console.log('📦 Environment:', {
+      supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      timestamp: new Date().toISOString()
+    })
+
     // Create authenticated client
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -160,10 +168,13 @@ export async function GET(request: NextRequest) {
     })
     
     // Prevent ALL caching - aggressive headers
-    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+    // Vercel-specific: https://vercel.com/docs/edge-network/caching
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0')
     response.headers.set('Pragma', 'no-cache')
     response.headers.set('Expires', '0')
     response.headers.set('Surrogate-Control', 'no-store')
+    response.headers.set('CDN-Cache-Control', 'no-store')
+    response.headers.set('Vercel-CDN-Cache-Control', 'no-store')
     
     return response
   } catch (error: any) {
