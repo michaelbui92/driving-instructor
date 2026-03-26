@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
+import { formatDate, getAvailableSlots, type Booking } from '@/lib/booking-utils'
 
-type Booking = {
+type BookingType = {
   id: string
   studentName: string
   email: string
@@ -28,12 +29,12 @@ type Student = {
 
 export default function StudentDashboardPage() {
   const [student, setStudent] = useState<Student | null>(null)
-  const [bookings, setBookings] = useState<Booking[]>([])
+  const [bookings, setBookings] = useState<BookingType[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'upcoming' | 'completed' | 'cancelled'>('upcoming')
-  const [reschedulingBooking, setReschedulingBooking] = useState<Booking | null>(null)
-  const [newDate, setNewDate] = useState('')
-  const [newTime, setNewTime] = useState('')
+  const [reschedulingBooking, setReschedulingBooking] = useState<BookingType | null>(null)
+  const [selectedNewDate, setSelectedNewDate] = useState<string>('')
+  const [dateHasNoSlots, setDateHasNoSlots] = useState<boolean>(false)
   const [actionLoading, setActionLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const router = useRouter()
@@ -89,7 +90,7 @@ export default function StudentDashboardPage() {
       }
 
       setBookings((prev) =>
-        prev.map((b) => (b.id === bookingId ? { ...b, status: 'cancelled' } : b))
+        prev.map((b) => (b.id === bookingId ? { ...b, status: 'cancelled' as const } : b))
       )
       setMessage({ type: 'success', text: 'Booking cancelled successfully' })
     } catch (err: any) {
@@ -99,15 +100,42 @@ export default function StudentDashboardPage() {
     }
   }
 
-  const handleReschedule = async (booking: Booking) => {
+  const handleReschedule = (booking: BookingType) => {
+    setReschedulingBooking(booking)
+    setSelectedNewDate(booking.date)
+    // Check if current date has available slots (excluding current booking)
+    const availableSlots = getAvailableSlots(booking.date, bookings.filter(b => b.id !== booking.id))
+    setDateHasNoSlots(availableSlots.length === 0)
+  }
+
+  const saveReschedule = async () => {
+    const newDateSelect = document.getElementById('newDate') as HTMLSelectElement
+    const newTimeSelect = document.getElementById('newTime') as HTMLSelectElement
+    
+    const newDate = newDateSelect?.value || ''
+    const newTime = newTimeSelect?.value || ''
+    
     if (!newDate || !newTime) {
-      setMessage({ type: 'error', text: 'Please select date and time' })
+      alert('Please select date and time')
+      return
+    }
+
+    // Check if selected date has slots
+    const selectedDateOption = newDateSelect.options[newDateSelect.selectedIndex]
+    if (selectedDateOption?.disabled) {
+      alert('This date has no available slots. Please select a different date.')
+      return
+    }
+
+    // Check if time selector exists (it won't if there are no available slots)
+    if (!newTimeSelect) {
+      alert('No available time slots for this date. Please select a different date.')
       return
     }
 
     setActionLoading(true)
     try {
-      const res = await fetch(`/api/student/bookings/${booking.id}/reschedule`, {
+      const res = await fetch(`/api/student/bookings/${reschedulingBooking?.id}/reschedule`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ newDate, newTime }),
@@ -120,13 +148,12 @@ export default function StudentDashboardPage() {
 
       setBookings((prev) =>
         prev.map((b) =>
-          b.id === booking.id ? { ...b, date: newDate, time: newTime, status: 'confirmed' } : b
+          b.id === reschedulingBooking?.id ? { ...b, date: newDate, time: newTime, status: 'pending' as const } : b
         )
       )
       setReschedulingBooking(null)
-      setNewDate('')
-      setNewTime('')
-      setMessage({ type: 'success', text: 'Booking rescheduled!' })
+      setSelectedNewDate('')
+      setMessage({ type: 'success', text: 'Booking rescheduled! Awaiting instructor confirmation.' })
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message })
     } finally {
@@ -141,16 +168,6 @@ export default function StudentDashboardPage() {
     return true
   })
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr + 'T00:00:00')
-    return date.toLocaleDateString('en-AU', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    })
-  }
-
   const getLessonName = (type: string) => {
     const names: Record<string, string> = {
       single: 'Single Lesson',
@@ -161,11 +178,51 @@ export default function StudentDashboardPage() {
     return names[type] || type
   }
 
+  const getAvailableTimeOptions = (date: string) => {
+    if (!date) return []
+    
+    // Use getAvailableSlots to get only actually available slots
+    // Exclude the current booking being rescheduled from the existing bookings check
+    const existingBookingsExcludingCurrent = bookings.filter(b => b.id !== reschedulingBooking?.id)
+    const availableSlots = getAvailableSlots(date, existingBookingsExcludingCurrent)
+    
+    // Return just the time strings from available slots
+    return availableSlots.map(slot => slot.time)
+  }
+
+  // Get dates with available slots for the next 28 days
+  const getDatesWithAvailableSlots = () => {
+    const dates: {date: string, formatted: string, hasSlots: boolean}[] = []
+    const today = new Date()
+    
+    for (let i = 1; i <= 28; i++) {
+      const date = new Date(today)
+      date.setDate(today.getDate() + i)
+      const dateString = date.toISOString().split('T')[0]
+      
+      // Check if this date has any available slots
+      // Exclude the current booking being rescheduled (if any)
+      const existingBookingsExcludingCurrent = reschedulingBooking 
+        ? bookings.filter(b => b.id !== reschedulingBooking.id)
+        : bookings
+      const availableSlots = getAvailableSlots(dateString, existingBookingsExcludingCurrent)
+      const hasSlots = availableSlots.length > 0
+      
+      dates.push({
+        date: dateString,
+        formatted: formatDate(dateString),
+        hasSlots
+      })
+    }
+    
+    return dates
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
         <Navbar />
-        <div className="max-w-4xl mx-auto px-4 py-16 text-center">
+        <div className="max-w-6xl mx-auto px-4 py-16 text-center">
           <p className="text-gray-500">Loading...</p>
         </div>
       </div>
@@ -173,26 +230,27 @@ export default function StudentDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <Navbar showLocation={false} />
 
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">My Dashboard</h1>
+        <div className="mb-8 flex flex-col md:flex-row items-start md:items-center gap-6">
+          <div className="flex-1">
+            <h1 className="text-4xl font-bold mb-2">My Dashboard</h1>
             <p className="text-gray-600">{student?.email}</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex items-center gap-4">
             <Link
               href="/book"
-              className="px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
+              className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold shadow-md hover:-translate-y-0.5"
             >
-              Book New Lesson
+              📅 Book a Lesson
             </Link>
             <button
               onClick={handleLogout}
-              className="px-4 py-2 bg-gray-200 text-gray-700 font-medium rounded-lg hover:bg-gray-300 transition"
+              className="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-semibold shadow-md hover:-translate-y-0.5"
             >
               Log Out
             </button>
@@ -204,171 +262,257 @@ export default function StudentDashboardPage() {
           <div
             className={`mb-6 p-4 rounded-lg ${
               message.type === 'success'
-                ? 'bg-green-50 text-green-700'
-                : 'bg-red-50 text-red-700'
+                ? 'bg-green-50 text-green-700 border border-green-200'
+                : 'bg-red-50 text-red-700 border border-red-200'
             }`}
           >
             {message.text}
           </div>
         )}
 
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <p className="text-sm text-gray-500">Upcoming</p>
-            <p className="text-2xl font-bold text-blue-600">
+        {/* Stats Cards */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white rounded-xl p-6 shadow-lg">
+            <div className="text-3xl mb-2">📅</div>
+            <div className="text-3xl font-bold text-primary">
               {bookings.filter((b) => b.status === 'pending' || b.status === 'confirmed').length}
-            </p>
+            </div>
+            <p className="text-gray-600">Upcoming Lessons</p>
           </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <p className="text-sm text-gray-500">Completed</p>
-            <p className="text-2xl font-bold text-green-600">
+          <div className="bg-white rounded-xl p-6 shadow-lg">
+            <div className="text-3xl mb-2">✅</div>
+            <div className="text-3xl font-bold text-green-600">
               {bookings.filter((b) => b.status === 'completed').length}
-            </p>
+            </div>
+            <p className="text-gray-600">Completed</p>
           </div>
-          <div className="bg-white rounded-xl p-4 shadow-sm">
-            <p className="text-sm text-gray-500">Total</p>
-            <p className="text-2xl font-bold text-gray-600">{bookings.length}</p>
+          <div className="bg-white rounded-xl p-6 shadow-lg">
+            <div className="text-3xl mb-2">📚</div>
+            <div className="text-3xl font-bold text-gray-600">{bookings.length}</div>
+            <p className="text-gray-600">Total Bookings</p>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6 border-b border-gray-200">
-          {(['upcoming', 'completed', 'cancelled'] as const).map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-4 py-2 font-medium capitalize transition ${
-                activeTab === tab
-                  ? 'text-blue-600 border-b-2 border-blue-600'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
+        <div className="bg-white rounded-xl shadow-lg">
+          <div className="border-b">
+            <div className="flex items-center px-6 py-3 border-b">
+              {(['upcoming', 'completed', 'cancelled'] as const).map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-2 font-semibold transition ${
+                    activeTab === tab
+                      ? 'border-b-2 border-primary text-primary'
+                      : 'text-gray-600 hover:text-gray-800'
+                  }`}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)} ({filteredBookings.length})
+                </button>
+              ))}
+            </div>
+          </div>
 
-        {/* Bookings List */}
-        {filteredBookings.length === 0 ? (
-          <div className="bg-white rounded-xl p-8 shadow-sm text-center">
-            <p className="text-gray-500 mb-4">No {activeTab} bookings</p>
-            {activeTab === 'upcoming' && (
-              <Link
-                href="/book"
-                className="text-blue-600 hover:underline"
-              >
-                Book your first lesson →
-              </Link>
+          {/* Bookings List */}
+          <div className="p-6">
+            {filteredBookings.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">
+                  {activeTab === 'upcoming' ? '📅' : activeTab === 'completed' ? '🎯' : '✅'}
+                </div>
+                <h3 className="text-xl font-semibold mb-2">
+                  No {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Bookings
+                </h3>
+                {activeTab === 'upcoming' && (
+                  <>
+                    <p className="text-gray-600 mb-6">Book your first lesson to get started</p>
+                    <Link
+                      href="/book"
+                      className="inline-block px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition"
+                    >
+                      Book Now
+                    </Link>
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {filteredBookings.map((booking) => (
+                  <div
+                    key={booking.id}
+                    className="border rounded-lg p-6 hover:shadow-lg transition bg-white"
+                  >
+                    <div className="flex items-start justify-between flex-wrap gap-4">
+                      <div>
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="font-semibold text-lg text-gray-900">
+                            {getLessonName(booking.lessonType)}
+                          </h3>
+                          <span
+                            className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                              booking.status === 'confirmed'
+                                ? 'bg-green-100 text-green-700'
+                                : booking.status === 'pending'
+                                ? 'bg-yellow-100 text-yellow-700'
+                                : booking.status === 'cancelled'
+                                ? 'bg-red-100 text-red-700'
+                                : 'bg-blue-100 text-blue-700'
+                            }`}
+                          >
+                            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                          </span>
+                        </div>
+                        <p className="text-gray-600">
+                          📅 {formatDate(booking.date)} at {booking.time}
+                        </p>
+                        {booking.claimCode && (
+                          <p className="text-sm text-gray-400 mt-1">
+                            Booking ref: {booking.claimCode}
+                          </p>
+                        )}
+                      </div>
+
+                      {activeTab === 'upcoming' && booking.status !== 'cancelled' && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleReschedule(booking)}
+                            className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-medium"
+                          >
+                            Reschedule
+                          </button>
+                          <button
+                            onClick={() => handleCancel(booking.id)}
+                            disabled={actionLoading}
+                            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-medium disabled:opacity-50"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredBookings.map((booking) => (
-              <div
-                key={booking.id}
-                className="bg-white rounded-xl p-6 shadow-sm"
+        </div>
+      </div>
+
+      {/* Reschedule Modal */}
+      {reschedulingBooking && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Reschedule Booking</h2>
+              <button
+                onClick={() => setReschedulingBooking(null)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
               >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <div className="flex items-center gap-3 mb-2">
-                      <h3 className="font-semibold text-gray-900">
-                        {getLessonName(booking.lessonType)}
-                      </h3>
-                      <span
-                        className={`px-2 py-0.5 text-xs font-medium rounded-full ${
-                          booking.status === 'confirmed'
-                            ? 'bg-green-100 text-green-700'
-                            : booking.status === 'pending'
-                            ? 'bg-yellow-100 text-yellow-700'
-                            : booking.status === 'cancelled'
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-gray-100 text-gray-700'
-                        }`}
-                      >
-                        {booking.status}
-                      </span>
-                    </div>
-                    <p className="text-gray-600">
-                      📅 {formatDate(booking.date)} at {booking.time}
-                    </p>
-                    {booking.claimCode && (
-                      <p className="text-sm text-gray-400 mt-1">
-                        Booking ref: {booking.claimCode}
-                      </p>
-                    )}
-                  </div>
+                ×
+              </button>
+            </div>
 
-                  {activeTab === 'upcoming' && booking.status !== 'cancelled' && (
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => setReschedulingBooking(booking)}
-                        className="px-3 py-1.5 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
-                      >
-                        Reschedule
-                      </button>
-                      <button
-                        onClick={() => handleCancel(booking.id)}
-                        disabled={actionLoading}
-                        className="px-3 py-1.5 text-sm bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition disabled:opacity-50"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  )}
-                </div>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-gray-600 mb-2">Current Date & Time:</p>
+                <p className="font-semibold">{formatDate(reschedulingBooking.date)}</p>
+                <p className="text-gray-600">{reschedulingBooking.time}</p>
+              </div>
 
-                {/* Reschedule Modal */}
-                {reschedulingBooking?.id === booking.id && (
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <p className="text-sm font-medium text-gray-700 mb-3">Select new date & time:</p>
-                    <div className="flex gap-4 items-end">
-                      <div>
-                        <label className="block text-xs text-gray-500 mb-1">Date</label>
-                        <input
-                          type="date"
-                          value={newDate}
-                          onChange={(e) => setNewDate(e.target.value)}
-                          min={new Date().toISOString().split('T')[0]}
-                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-xs text-gray-500 mb-1">Time</label>
-                        <input
-                          type="time"
-                          value={newTime}
-                          onChange={(e) => setNewTime(e.target.value)}
-                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => handleReschedule(booking)}
-                          disabled={actionLoading || !newDate || !newTime}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
-                        >
-                          Confirm
-                        </button>
-                        <button
-                          onClick={() => {
-                            setReschedulingBooking(null)
-                            setNewDate('')
-                            setNewTime('')
-                          }}
-                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
-                        >
-                          Cancel
-                        </button>
-                      </div>
-                    </div>
+              <div className="border-t pt-4">
+                <p className="text-sm text-gray-600 mb-2">New Date:</p>
+                <select
+                  id="newDate"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  defaultValue={reschedulingBooking.date}
+                  onChange={(e) => {
+                    const newDate = e.target.value
+                    setSelectedNewDate(newDate)
+                    // Check if date has available slots
+                    if (newDate) {
+                      const availableSlots = getAvailableSlots(newDate, bookings.filter(b => b.id !== reschedulingBooking?.id))
+                      setDateHasNoSlots(availableSlots.length === 0)
+                    } else {
+                      setDateHasNoSlots(false)
+                    }
+                  }}
+                >
+                  <option value="">Select a date</option>
+                  {getDatesWithAvailableSlots().map(({date, formatted, hasSlots}) => (
+                    <option 
+                      key={date} 
+                      value={date}
+                      disabled={!hasSlots}
+                      className={!hasSlots ? 'text-gray-400 bg-gray-100' : ''}
+                    >
+                      {formatted} {!hasSlots ? '(No available slots)' : ''}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">Dates with no available slots are greyed out</p>
+                {dateHasNoSlots && selectedNewDate && (
+                  <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
+                    ⚠️ No available time slots for {formatDate(selectedNewDate)}. Please select a different date.
                   </div>
                 )}
               </div>
-            ))}
+
+              <div>
+                <p className="text-sm text-gray-600 mb-2">New Time:</p>
+                {(() => {
+                  const availableTimes = getAvailableTimeOptions(selectedNewDate || reschedulingBooking.date)
+                  if (availableTimes.length === 0) {
+                    return (
+                      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
+                        No available time slots for this date. Please select a different date.
+                      </div>
+                    )
+                  }
+                  return (
+                    <select
+                      id="newTime"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                      defaultValue={reschedulingBooking.time}
+                    >
+                      {availableTimes.map(time => (
+                        <option key={time} value={time}>
+                          {time}
+                        </option>
+                      ))}
+                    </select>
+                  )
+                })()}
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+                <strong>Select a new date and time</strong>
+                <br />
+                Your booking will be pending until confirmed by the instructor.
+              </div>
+            </div>
+
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => setReschedulingBooking(null)}
+                className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={saveReschedule}
+                disabled={dateHasNoSlots || !selectedNewDate}
+                className={`flex-1 px-4 py-2 rounded-lg transition ${
+                  dateHasNoSlots || !selectedNewDate
+                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                    : 'bg-primary text-white hover:bg-secondary'
+                }`}
+              >
+                {dateHasNoSlots ? 'No Available Slots' : 'Save Changes'}
+              </button>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   )
 }
