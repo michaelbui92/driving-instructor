@@ -195,6 +195,44 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Dashboard Links Section */}
+      <section className="py-12 bg-gray-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold text-center mb-8" data-aos="fade-up">Portal Access</h2>
+          <div className="grid md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+            {/* Instructor Dashboard */}
+            <a
+              href="/dashboard"
+              className="block bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition hover:-translate-y-1 border-2 border-gray-200 hover:border-primary"
+              data-aos="fade-up" data-aos-delay="0"
+            >
+              <div className="flex items-center gap-4 mb-3">
+                <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center text-2xl">
+                  🔧
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">Instructor Dashboard</h3>
+              </div>
+              <p className="text-gray-600 text-sm">Manage bookings, availability, and student progress</p>
+            </a>
+
+            {/* Student Dashboard */}
+            <a
+              href="/student/dashboard"
+              className="block bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition hover:-translate-y-1 border-2 border-gray-200 hover:border-primary"
+              data-aos="fade-up" data-aos-delay="100"
+            >
+              <div className="flex items-center gap-4 mb-3">
+                <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center text-2xl">
+                  📚
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">Student Dashboard</h3>
+              </div>
+              <p className="text-gray-600 text-sm">View and manage your bookings, reschedule lessons</p>
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-16 bg-primary">
         <div className="max-w-4xl mx-auto px-4 text-center" data-aos="fade-up">
