@@ -23,24 +23,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid session' }, { status: 401 })
     }
 
-    // Use admin client to get student details
+    // Use admin client to get student details - use email as primary key since auth_user_id can be unreliable
     const adminClient = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    let { data: student } = await adminClient
+    let { data: student, error: findError } = await adminClient
       .from('students')
       .select('*')
-      .eq('auth_user_id', user.id)
+      .eq('email', user.email)
       .single()
+
+    console.log('GET /api/student/details - user email:', user.email, 'found student:', student, 'error:', findError)
 
     // If no student record, create one
     if (!student) {
       const { data: newStudent, error: createError } = await adminClient
         .from('students')
         .insert({ 
-          auth_user_id: user.id, 
           email: user.email,
           has_completed_details: false,
         } as any)
@@ -100,17 +101,19 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'All fields are required' }, { status: 400 })
     }
 
-    // Use admin client to update student details
+    // Use admin client to update student details - use email as primary key
     const adminClient = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    // Check if student exists
+    console.log('PUT /api/student/details - user email:', user.email)
+
+    // Check if student exists by email
     let { data: student, error: findError } = await adminClient
       .from('students')
       .select('id, email')
-      .eq('auth_user_id', user.id)
+      .eq('email', user.email)
       .single()
 
     if (findError) {
@@ -119,11 +122,10 @@ export async function PUT(request: NextRequest) {
 
     if (!student) {
       // Create student record with details
-      console.log('Creating new student record for user:', user.id)
+      console.log('Creating new student record for email:', user.email)
       const { data: newStudent, error: createError } = await adminClient
         .from('students')
         .insert({ 
-          auth_user_id: user.id, 
           email: user.email,
           full_name: fullName,
           phone: phone,
@@ -142,8 +144,8 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: true, hasCompletedDetails: true })
     }
 
-    // Update existing student
-    console.log('Updating student:', student.id, 'with:', { fullName, phone, address })
+    // Update existing student by email
+    console.log('Updating student by email:', user.email, 'with:', { fullName, phone, address })
     const { error: updateError } = await adminClient
       .from('students')
       .update({ 
@@ -152,7 +154,7 @@ export async function PUT(request: NextRequest) {
         address: address,
         has_completed_details: true,
       })
-      .eq('auth_user_id', user.id)
+      .eq('email', user.email)
 
     if (updateError) {
       console.error('Error updating student:', updateError)
@@ -162,8 +164,8 @@ export async function PUT(request: NextRequest) {
     // Verify the update
     const { data: verifyData } = await adminClient
       .from('students')
-      .select('full_name, phone, address')
-      .eq('auth_user_id', user.id)
+      .select('full_name, phone, address, email')
+      .eq('email', user.email)
       .single()
     console.log('Verification after update:', verifyData)
 
