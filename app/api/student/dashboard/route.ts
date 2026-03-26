@@ -104,10 +104,12 @@ export async function GET(request: NextRequest) {
     })
     
     // Now query for this specific user's email
+    // EXCLUDE cancelled bookings from student dashboard
     const { data: bookingsData, error: bookingsError } = await adminClient
       .from('bookings')
       .select('*')
       .eq('email', userEmail)
+      .neq('status', 'cancelled')  // <-- EXCLUDE CANCELLED
       .order('date', { ascending: false })
 
     console.log('📊 Student bookings query result:', {
