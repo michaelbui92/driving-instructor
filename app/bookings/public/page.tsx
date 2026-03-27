@@ -24,7 +24,13 @@ export default function PublicBookingsPage() {
 
   const loadBookings = async () => {
     try {
-      const res = await fetch(`/api/bookings?t=${Date.now()}`)
+      const res = await fetch(`/api/bookings?t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      })
       const data = await res.json()
       setBookings(data.bookings || [])
     } catch (err) {
