@@ -14,16 +14,18 @@ export async function GET(request: NextRequest) {
     )
 
     // Get ALL bookings, newest first
-    // Simple retry for replication lag (max 3 attempts, 500ms between)
+    // Aggressive retry for replication lag - Supabase can have 2-5 second lag
     console.log('📊 /api/bookings query...')
     
     let data: any = null
     let error: any = null
     let attempts = 0
-    const maxAttempts = 3
+    const maxAttempts = 5  // Increased from 3
+    const retryDelay = 1000 // Increased from 500ms
     
     while (attempts < maxAttempts) {
       attempts++
+      console.log(`🔄 Attempt ${attempts}/${maxAttempts}...`)
       
       const result = await adminClient
         .from('bookings')
@@ -33,16 +35,31 @@ export async function GET(request: NextRequest) {
       data = result.data
       error = result.error
       
-      // If we got data without error, break
+      // If we got data without error, check if it looks reasonable
       if (data && !error) {
-        console.log(`✅ Got ${data.length} bookings on attempt ${attempts}`)
-        break
+        console.log(`✅ Got ${data.length} bookings`)
+        
+        // Basic sanity check: should have at least 1 booking if we know there are bookings
+        // (This is a weak check, but better than nothing)
+        if (data.length > 0) {
+          // Log what we got for debugging
+          const statusCounts = data.reduce((acc: any, b: any) => {
+            acc[b.status] = (acc[b.status] || 0) + 1
+            return acc
+          }, {})
+          console.log(`📊 Status breakdown:`, statusCounts)
+          break
+        } else {
+          console.log(`⚠️ Got 0 bookings, will retry...`)
+        }
+      } else if (error) {
+        console.log(`❌ Error: ${error.message}`)
       }
       
-      // If error or no data, wait and retry
+      // Wait and retry
       if (attempts < maxAttempts) {
-        console.log(`⏳ Attempt ${attempts} ${error ? 'failed' : 'got no data'}, waiting 500ms...`)
-        await new Promise(resolve => setTimeout(resolve, 500))
+        console.log(`⏳ Waiting ${retryDelay}ms before retry ${attempts + 1}...`)
+        await new Promise(resolve => setTimeout(resolve, retryDelay))
       }
     }
     
@@ -50,9 +67,20 @@ export async function GET(request: NextRequest) {
       count: data?.length,
       error: error?.message,
       attempts,
-      // Log ALL booking IDs and statuses
-      allBookings: data?.map((b: any) => ({ id: b.id, status: b.status, date: b.date, time: b.time }))
+      // Log ALL booking IDs and statuses for debugging
+      allBookings: data?.map((b: any) => ({ 
+        id: b.id?.substring(0, 8), 
+        status: b.status, 
+        student_name: b.student_name,
+        date: b.date 
+      }))
     })
+    
+    // EXTREME DEBUG: Log raw data if debug param is present
+    const url = new URL(request.url)
+    if (url.searchParams.has('debug')) {
+      console.log('🔍 DEBUG MODE - Raw data:', data)
+    }
 
     if (error) {
       console.error('Bookings fetch error:', error)
