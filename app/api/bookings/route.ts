@@ -132,7 +132,36 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    const response = NextResponse.json({ bookings })
+    // DEBUG: Also return raw data
+    const debugInfo = url.searchParams.has('debug') ? {
+      rawData: data?.map((b: any) => ({
+        id: b.id,
+        status: b.status,
+        hasStatus: 'status' in b,
+        allKeys: Object.keys(b),
+        rawObject: b
+      })),
+      mappingDebug: bookings.map((b, i) => ({
+        original: data?.[i] ? {
+          id: data[i].id,
+          status: data[i].status,
+          statusType: typeof data[i].status,
+          hasStatus: 'status' in data[i],
+          keys: Object.keys(data[i])
+        } : null,
+        mapped: {
+          id: b.id,
+          status: b.status
+        }
+      }))
+    } : null
+    
+    const responseData: any = { bookings }
+    if (debugInfo) {
+      responseData.debug = debugInfo
+    }
+    
+    const response = NextResponse.json(responseData)
     
     // AGGRESSIVE NO-CACHE for Vercel Edge Network
     // https://vercel.com/docs/edge-network/caching
