@@ -32,7 +32,7 @@ export default function PublicBookingsPage() {
         }
       })
       const data = await res.json()
-      console.log('📥 loadBookings received:', data.bookings?.length, 'bookings', data.bookings?.map(b => b.status))
+      console.log('📥 loadBookings received:', data.bookings?.length, 'bookings', data.bookings?.map((b: Booking) => b.status))
       setBookings(data.bookings || [])
     } catch (err) {
       console.error('Error loading bookings:', err)
