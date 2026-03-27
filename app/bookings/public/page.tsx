@@ -2,6 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import Navbar from '@/components/Navbar'
+import { supabase } from '@/lib/supabase'
+
+// Force dynamic rendering to prevent Vercel edge caching
+export const dynamic = 'force-dynamic'
 
 interface Booking {
   id: string
@@ -77,12 +81,33 @@ export default function PublicBookingsPage() {
   useEffect(() => {
     loadBookings()
     
-    // Auto-refresh every 10 seconds
+    // Set up real-time subscription for bookings changes
+    const channel = supabase
+      .channel('public-bookings-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'bookings'
+        },
+        (payload) => {
+          console.log('Real-time booking change in public view:', payload)
+          // Refresh bookings when any change occurs
+          loadBookings()
+        }
+      )
+      .subscribe()
+
+    // Auto-refresh every 30 seconds as backup
     const interval = setInterval(() => {
       loadBookings()
-    }, 10000)
+    }, 30000)
     
-    return () => clearInterval(interval)
+    return () => {
+      supabase.removeChannel(channel)
+      clearInterval(interval)
+    }
   }, [])
 
   const today = new Date().toISOString().split('T')[0]
@@ -110,8 +135,18 @@ export default function PublicBookingsPage() {
 
       <div className="max-w-6xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold mb-2">Public Bookings</h1>
-          <p className="text-gray-600">View all driving lesson bookings (no login required)</p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">Public Bookings</h1>
+              <p className="text-gray-600">View all driving lesson bookings (no login required)</p>
+            </div>
+            <button
+              onClick={loadBookings}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium shadow hover:-translate-y-0.5 flex items-center gap-2"
+            >
+              🔄 Refresh
+            </button>
+          </div>
           
           <div className="mt-4 flex gap-4">
             <button

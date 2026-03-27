@@ -14,21 +14,42 @@ export async function GET(request: NextRequest) {
     )
 
     // Get ALL bookings, newest first
-    // Simple approach: just fetch once, Supabase replication lag is usually minimal
-    // If there are issues, we'll see them in logs and can add retry logic back
+    // Simple retry for replication lag (max 3 attempts, 500ms between)
     console.log('📊 /api/bookings query...')
     
-    const result = await adminClient
-      .from('bookings')
-      .select('*', { count: 'exact', head: false })
-      .order('created_at', { ascending: false, nullsFirst: false })
+    let data: any = null
+    let error: any = null
+    let attempts = 0
+    const maxAttempts = 3
     
-    const data = result.data
-    const error = result.error
+    while (attempts < maxAttempts) {
+      attempts++
+      
+      const result = await adminClient
+        .from('bookings')
+        .select('*', { count: 'exact', head: false })
+        .order('created_at', { ascending: false, nullsFirst: false })
+      
+      data = result.data
+      error = result.error
+      
+      // If we got data without error, break
+      if (data && !error) {
+        console.log(`✅ Got ${data.length} bookings on attempt ${attempts}`)
+        break
+      }
+      
+      // If error or no data, wait and retry
+      if (attempts < maxAttempts) {
+        console.log(`⏳ Attempt ${attempts} ${error ? 'failed' : 'got no data'}, waiting 500ms...`)
+        await new Promise(resolve => setTimeout(resolve, 500))
+      }
+    }
     
     console.log('📈 /api/bookings query result:', {
       count: data?.length,
       error: error?.message,
+      attempts,
       // Log ALL booking IDs and statuses
       allBookings: data?.map((b: any) => ({ id: b.id, status: b.status, date: b.date, time: b.time }))
     })
