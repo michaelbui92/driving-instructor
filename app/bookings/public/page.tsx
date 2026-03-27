@@ -94,10 +94,13 @@ export default function PublicBookingsPage() {
             Showing {displayedBookings.length} of {bookings.length} total bookings
           </p>
           <p className="text-sm text-gray-600 mt-1">
-            Statuses: {bookings.reduce((acc: Record<string, number>, b) => {
-              acc[b.status] = (acc[b.status] || 0) + 1
-              return acc
-            }, {})}
+            Statuses: {(() => {
+              const counts = bookings.reduce((acc: Record<string, number>, b) => {
+                acc[b.status] = (acc[b.status] || 0) + 1
+                return acc
+              }, {})
+              return Object.entries(counts).map(([status, count]) => `${status}: ${count}`).join(', ')
+            })()}
           </p>
         </div>
 
