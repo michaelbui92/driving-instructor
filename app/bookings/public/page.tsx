@@ -20,6 +20,7 @@ export default function PublicBookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'upcoming' | 'all'>('upcoming')
+  const [updatingId, setUpdatingId] = useState<string | null>(null)
 
   const loadBookings = async () => {
     try {
@@ -30,6 +31,38 @@ export default function PublicBookingsPage() {
       console.error('Error loading bookings:', err)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const updateStatus = async (bookingId: string, newStatus: string) => {
+    if (!confirm(`Are you sure you want to ${newStatus} this booking?`)) return
+    
+    setUpdatingId(bookingId)
+    console.log(`🔄 Updating booking ${bookingId} to ${newStatus}...`)
+    
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      })
+      
+      const data = await res.json()
+      console.log('📦 Update response:', { status: res.status, data })
+      
+      if (res.ok) {
+        console.log('✅ Update successful!')
+        // Refresh bookings list
+        await loadBookings()
+      } else {
+        console.error('❌ Update failed:', data.error)
+        alert(`Failed to update: ${data.error || 'Unknown error'}`)
+      }
+    } catch (err) {
+      console.error('❌ Network error:', err)
+      alert('Network error - please try again')
+    } finally {
+      setUpdatingId(null)
     }
   }
 
@@ -148,8 +181,39 @@ export default function PublicBookingsPage() {
                     </p>
                   </div>
                 </div>
-                <div className="mt-4 text-sm text-gray-500">
-                  Booking ID: {booking.id.substring(0, 8)}...
+                {/* Action buttons */}
+                <div className="mt-4 pt-4 border-t flex gap-3">
+                  <div className="text-sm text-gray-500">
+                    Booking ID: {booking.id.substring(0, 8)}...
+                  </div>
+                  <div className="flex-1" />
+                  {booking.status === 'pending' && (
+                    <>
+                      <button
+                        onClick={() => updateStatus(booking.id, 'confirmed')}
+                        disabled={updatingId === booking.id}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm font-medium"
+                      >
+                        {updatingId === booking.id ? 'Updating...' : '✓ Confirm'}
+                      </button>
+                      <button
+                        onClick={() => updateStatus(booking.id, 'cancelled')}
+                        disabled={updatingId === booking.id}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 text-sm font-medium"
+                      >
+                        {updatingId === booking.id ? 'Updating...' : '✗ Cancel'}
+                      </button>
+                    </>
+                  )}
+                  {booking.status === 'confirmed' && (
+                    <button
+                      onClick={() => updateStatus(booking.id, 'cancelled')}
+                      disabled={updatingId === booking.id}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 text-sm font-medium"
+                    >
+                      {updatingId === booking.id ? 'Updating...' : '✗ Cancel'}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
