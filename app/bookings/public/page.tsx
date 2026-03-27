@@ -26,7 +26,6 @@ export default function PublicBookingsPage() {
     try {
       const res = await fetch(`/api/bookings?t=${Date.now()}&r=${Math.random()}`, {
         cache: 'no-store',
-        revalidate: 0,
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache'
