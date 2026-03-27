@@ -112,7 +112,7 @@ export default function InstructorPage() {
   const loadBookings = async () => {
     try {
       // Cache busting via query param to avoid stale data
-      const cacheBuster = `t=${Date.now()}&r=${Math.random().toString(36).substring(7)}`
+      const cacheBuster = `t=${Date.now()}`
       const res = await fetch(`/api/bookings?${cacheBuster}`)
       
       if (!res.ok) {
