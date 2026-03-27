@@ -30,6 +30,7 @@ export async function GET(request: NextRequest) {
       const result = await adminClient
         .from('bookings')
         .select('*', { count: 'exact', head: false })
+        .order('updated_at', { ascending: false, nullsFirst: false })
         .order('created_at', { ascending: false, nullsFirst: false })
       
       data = result.data

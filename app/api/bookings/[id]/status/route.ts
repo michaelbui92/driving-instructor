@@ -28,7 +28,7 @@ export async function POST(
     
     const { data, error } = await adminClient
       .from('bookings')
-      .update({ status })
+      .update({ status, updated_at: new Date().toISOString() })
       .eq('id', bookingId)
       .select()
 
