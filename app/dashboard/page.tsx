@@ -7,6 +7,9 @@ import Navbar from '@/components/Navbar'
 import { supabase, type Booking as SupabaseBooking } from '@/lib/supabase'
 import { formatDate, getLessonTypeName, getRequiredLessons, getAvailableSlots, generateTimeSlots, type Booking } from '@/lib/booking-utils'
 
+// Force dynamic rendering to prevent Vercel edge caching
+export const dynamic = 'force-dynamic'
+
 export default function DashboardPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [selectedTab, setSelectedTab] = useState<'upcoming' | 'completed' | 'cancelled'>('upcoming')
@@ -25,39 +28,63 @@ export default function DashboardPage() {
     return () => clearInterval(interval)
   }, [])
 
-  useEffect(() => {
-    async function loadBookings() {
-      try {
-        const { data, error } = await supabase
-          .from('bookings')
-          .select('*')
-          .order('date', { ascending: false })
+  const loadBookings = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('bookings')
+        .select('*')
+        .order('date', { ascending: false })
 
-        if (error) {
-          console.error('Error loading bookings:', error)
-          setBookings([])
-        } else {
-          // Convert Supabase format to app format
-          const formatted: Booking[] = (data || []).map((b: SupabaseBooking) => ({
-            id: b.id,
-            studentName: b.student_name,
-            email: b.email,
-            phone: b.phone,
-            date: b.date,
-            time: b.time,
-            lessonType: b.lesson_type,
-            status: b.status,
-            price: 0,
-            createdAt: b.created_at,
-          }))
-          setBookings(formatted)
-        }
-      } catch (error) {
+      if (error) {
         console.error('Error loading bookings:', error)
         setBookings([])
+      } else {
+        // Convert Supabase format to app format
+        const formatted: Booking[] = (data || []).map((b: SupabaseBooking) => ({
+          id: b.id,
+          studentName: b.student_name,
+          email: b.email,
+          phone: b.phone,
+          date: b.date,
+          time: b.time,
+          lessonType: b.lesson_type,
+          status: b.status,
+          price: 0,
+          createdAt: b.created_at,
+        }))
+        setBookings(formatted)
       }
+    } catch (error) {
+      console.error('Error loading bookings:', error)
+      setBookings([])
     }
+  }
+
+  useEffect(() => {
     loadBookings()
+    
+    // Set up real-time subscription for bookings changes
+    const channel = supabase
+      .channel('bookings-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'bookings'
+        },
+        (payload) => {
+          console.log('Real-time booking change:', payload)
+          // Refresh bookings when any change occurs
+          loadBookings()
+        }
+      )
+      .subscribe()
+
+    // Cleanup subscription on unmount
+    return () => {
+      supabase.removeChannel(channel)
+    }
   }, [])
 
   const upcomingBookings = bookings.filter(b => 
@@ -101,10 +128,8 @@ export default function DashboardPage() {
         throw error
       }
 
-      const updatedBookings = bookings.map(b =>
-        b.id === bookingId ? { ...b, status: 'cancelled' as const } : b
-      )
-      setBookings(updatedBookings)
+      // Re-fetch to get latest data from Supabase
+      await loadBookings()
       alert('Booking cancelled successfully')
     } catch (error) {
       console.error('Error cancelling booking:', error)
@@ -123,10 +148,8 @@ export default function DashboardPage() {
         throw error
       }
 
-      const updatedBookings = bookings.map(b =>
-        b.id === bookingId ? { ...b, status: 'confirmed' as const } : b
-      )
-      setBookings(updatedBookings)
+      // Re-fetch to get latest data from Supabase
+      await loadBookings()
       alert('Booking confirmed successfully')
     } catch (error) {
       console.error('Error confirming booking:', error)
@@ -147,7 +170,8 @@ export default function DashboardPage() {
         throw error
       }
 
-      setBookings(bookings.filter(b => b.id !== bookingId))
+      // Re-fetch to get latest data from Supabase
+      await loadBookings()
       alert('Booking deleted successfully')
     } catch (error) {
       console.error('Error deleting booking:', error)
@@ -200,30 +224,6 @@ export default function DashboardPage() {
       }
 
       // All validation passed, proceed with rescheduling
-      const updatedBookings = bookings.map(b => {
-        if (b.id === reschedulingBooking?.id) {
-          // Track reschedule history
-          const rescheduleHistory = b.rescheduleHistory || []
-          rescheduleHistory.push({
-            date: b.date,
-            time: b.time,
-            changedAt: new Date().toISOString()
-          })
-          
-          return { 
-            ...b, 
-            date: newDate, 
-            time: newTime, 
-            status: 'pending' as const,
-            originalDate: b.originalDate || b.date, // Store original date if not already set
-            previousDate: b.date, // Store previous date
-            rescheduleHistory
-          }
-        }
-        return b
-      })
-      setBookings(updatedBookings)
-      
       // Update in Supabase
       if (reschedulingBooking?.id) {
         await supabase
@@ -236,6 +236,8 @@ export default function DashboardPage() {
           .eq('id', reschedulingBooking.id)
       }
       
+      // Re-fetch to get latest data from Supabase
+      await loadBookings()
       alert('Booking rescheduled successfully. Instructor confirmation required.')
       setReschedulingBooking(null)
     } catch (error) {
@@ -303,6 +305,12 @@ export default function DashboardPage() {
             <p className="text-gray-600">Manage your driving lessons and track your progress</p>
           </div>
           <div className="flex items-center gap-4">
+            <button
+              onClick={loadBookings}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium shadow hover:-translate-y-0.5 flex items-center gap-2"
+            >
+              🔄 Refresh
+            </button>
             <Link
               href="/book"
               className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold shadow-md hover:-translate-y-0.5"
