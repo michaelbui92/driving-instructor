@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
       error: error?.message,
       attempts,
       // Log ALL booking IDs and statuses
-      allBookings: data?.map(b => ({ id: b.id, status: b.status, date: b.date, time: b.time }))
+      allBookings: data?.map((b: any) => ({ id: b.id, status: b.status, date: b.date, time: b.time }))
     })
 
     if (error) {
