@@ -108,18 +108,29 @@ export async function GET(request: NextRequest) {
     }
 
     // Format for frontend - use EXACT database field names
-    const bookings = (data || []).map((b: any) => ({
-      id: b.id,
-      studentName: b.student_name || '',  // database field is student_name
-      email: b.email || '',
-      phone: b.phone || '',
-      date: b.date || '',
-      time: b.time || '',
-      lessonType: b.lesson_type || 'casual',  // database field is lesson_type
-      status: b.status || 'pending',
-      price: b.lesson_type === 'single' ? 55 : 45,
-      createdAt: b.created_at || new Date().toISOString(),
-    }))
+    const bookings = (data || []).map((b: any) => {
+      // DEBUG: Log what we're getting
+      console.log('🔍 Booking mapping:', {
+        id: b.id,
+        rawStatus: b.status,
+        rawStatusType: typeof b.status,
+        hasStatus: 'status' in b,
+        allKeys: Object.keys(b)
+      })
+      
+      return {
+        id: b.id,
+        studentName: b.student_name || '',  // database field is student_name
+        email: b.email || '',
+        phone: b.phone || '',
+        date: b.date || '',
+        time: b.time || '',
+        lessonType: b.lesson_type || 'casual',  // database field is lesson_type
+        status: b.status || 'pending',
+        price: b.lesson_type === 'single' ? 55 : 45,
+        createdAt: b.created_at || new Date().toISOString(),
+      }
+    })
 
     const response = NextResponse.json({ bookings })
     
