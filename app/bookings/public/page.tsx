@@ -24,14 +24,16 @@ export default function PublicBookingsPage() {
 
   const loadBookings = async () => {
     try {
-      const res = await fetch(`/api/bookings?t=${Date.now()}`, {
+      const res = await fetch(`/api/bookings?t=${Date.now()}&r=${Math.random()}`, {
         cache: 'no-store',
+        revalidate: 0,
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
           'Pragma': 'no-cache'
         }
       })
       const data = await res.json()
+      console.log('📥 loadBookings received:', data.bookings?.length, 'bookings', data.bookings?.map(b => b.status))
       setBookings(data.bookings || [])
     } catch (err) {
       console.error('Error loading bookings:', err)
@@ -60,6 +62,7 @@ export default function PublicBookingsPage() {
         console.log('✅ Update successful!')
         // Refresh bookings list
         await loadBookings()
+        console.log('📋 Bookings refreshed, current state:', bookings.length, 'bookings')
       } else {
         console.error('❌ Update failed:', data.error)
         alert(`Failed to update: ${data.error || 'Unknown error'}`)
