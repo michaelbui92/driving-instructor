@@ -53,8 +53,8 @@ export default function StudentDashboardPage() {
 
   const loadDashboard = async () => {
     try {
-      // AGGRESSIVE cache busting - random string every time
-      const cacheBuster = `t=${Date.now()}&r=${Math.random().toString(36).substring(7)}`
+      // Cache busting via query param
+      const cacheBuster = `t=${Date.now()}`
       const res = await fetch(`/api/bookings?${cacheBuster}`)
       
       console.log('📊 Student dashboard API response status:', res.status)

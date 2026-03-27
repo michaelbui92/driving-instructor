@@ -118,6 +118,11 @@ export default function DashboardPage() {
   }, {} as Record<string, Booking[]>)
 
   const cancelBooking = async (bookingId: string) => {
+    // OPTIMISTIC UPDATE: Update UI immediately
+    setBookings(prev => prev.map(b => 
+      b.id === bookingId ? { ...b, status: 'cancelled' as const } : b
+    ))
+    
     try {
       const { error } = await supabase
         .from('bookings')
@@ -128,16 +133,23 @@ export default function DashboardPage() {
         throw error
       }
 
-      // Re-fetch to get latest data from Supabase
+      // Sync with server
       await loadBookings()
       alert('Booking cancelled successfully')
     } catch (error) {
       console.error('Error cancelling booking:', error)
+      // ROLLBACK on error
+      await loadBookings()
       alert('Error cancelling booking. Please try again.')
     }
   }
 
   const confirmBooking = async (bookingId: string) => {
+    // OPTIMISTIC UPDATE: Update UI immediately
+    setBookings(prev => prev.map(b => 
+      b.id === bookingId ? { ...b, status: 'confirmed' as const } : b
+    ))
+    
     try {
       const { error } = await supabase
         .from('bookings')
@@ -148,17 +160,23 @@ export default function DashboardPage() {
         throw error
       }
 
-      // Re-fetch to get latest data from Supabase
+      // Sync with server
       await loadBookings()
       alert('Booking confirmed successfully')
     } catch (error) {
       console.error('Error confirming booking:', error)
+      // ROLLBACK on error
+      await loadBookings()
       alert('Error confirming booking. Please try again.')
     }
   }
 
   const deleteBooking = async (bookingId: string) => {
     if (!confirm('Permanently delete this booking? This cannot be undone.')) return
+    
+    // OPTIMISTIC UPDATE: Remove from UI immediately
+    const previousBookings = [...bookings]
+    setBookings(prev => prev.filter(b => b.id !== bookingId))
     
     try {
       const { error } = await supabase
@@ -170,11 +188,11 @@ export default function DashboardPage() {
         throw error
       }
 
-      // Re-fetch to get latest data from Supabase
-      await loadBookings()
       alert('Booking deleted successfully')
     } catch (error) {
       console.error('Error deleting booking:', error)
+      // ROLLBACK on error
+      setBookings(previousBookings)
       alert('Error deleting booking. Please try again.')
     }
   }
@@ -223,6 +241,11 @@ export default function DashboardPage() {
         return
       }
 
+      // OPTIMISTIC UPDATE: Update UI immediately
+      setBookings(prev => prev.map(b => 
+        b.id === reschedulingBooking?.id ? { ...b, date: newDate, time: newTime, status: 'pending' as const } : b
+      ))
+
       // All validation passed, proceed with rescheduling
       // Update in Supabase
       if (reschedulingBooking?.id) {
@@ -236,12 +259,14 @@ export default function DashboardPage() {
           .eq('id', reschedulingBooking.id)
       }
       
-      // Re-fetch to get latest data from Supabase
+      // Sync with server
       await loadBookings()
       alert('Booking rescheduled successfully. Instructor confirmation required.')
       setReschedulingBooking(null)
     } catch (error) {
       console.error('Error rescheduling booking:', error)
+      // ROLLBACK on error
+      await loadBookings()
       alert('Error rescheduling booking. Please try again.')
     }
   }

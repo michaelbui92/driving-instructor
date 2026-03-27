@@ -26,20 +26,13 @@ export default function PublicBookingsPage() {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'all'>('upcoming')
   const [updatingId, setUpdatingId] = useState<string | null>(null)
 
-  const loadBookings = async (forceFresh = false) => {
+  const loadBookings = async () => {
     try {
-      const url = `/api/bookings?t=${Date.now()}&r=${Math.random()}${forceFresh ? '&force=1' : ''}`
-      console.log(`📥 Loading bookings${forceFresh ? ' (FORCE FRESH)' : ''}:`, url)
+      const url = `/api/bookings?t=${Date.now()}`
+      console.log(`📥 Loading bookings:`, url)
       
-      const res = await fetch(url, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache'
-        }
-      })
+      const res = await fetch(url)
       const data = await res.json()
-      console.log('📥 loadBookings received:', data.bookings?.length, 'bookings', data.bookings?.map((b: Booking) => b.status))
       setBookings(data.bookings || [])
     } catch (err) {
       console.error('Error loading bookings:', err)
@@ -51,7 +44,12 @@ export default function PublicBookingsPage() {
   const updateStatus = async (bookingId: string, newStatus: string) => {
     if (!confirm(`Are you sure you want to ${newStatus} this booking?`)) return
     
-    setUpdatingId(bookingId)
+    // OPTIMISTIC UPDATE: Update UI immediately
+    setBookings(prev => prev.map(b => 
+      b.id === bookingId ? { ...b, status: newStatus as Booking['status'] } : b
+    ))
+    setUpdatingId(null)
+    
     console.log(`🔄 Updating booking ${bookingId} to ${newStatus}...`)
     
     try {
@@ -62,35 +60,22 @@ export default function PublicBookingsPage() {
       })
       
       const data = await res.json()
-      console.log('📦 Update response:', { status: res.status, data })
       
       if (res.ok) {
         console.log('✅ Update successful!')
-        
-        // IMPORTANT: Supabase has replication lag of 2-5 seconds
-        // Wait 5 seconds to ensure changes propagate before refreshing
-        console.log('⏳ Waiting 5 seconds for Supabase replication...')
-        setUpdatingId('waiting') // Show different state
-        
-        // Show user feedback
-        alert(`Booking ${newStatus}! Changes may take a few seconds to appear.`)
-        
-        // Wait for replication
-        await new Promise(resolve => setTimeout(resolve, 5000))
-        
-        console.log('🔄 Now refreshing bookings list (FORCE FRESH)...')
-        // Refresh bookings list with FORCE FRESH parameter
-        await loadBookings(true)
-        console.log('📋 Bookings refreshed after replication wait')
+        // Sync with server to confirm
+        await loadBookings()
       } else {
+        // ROLLBACK on error
         console.error('❌ Update failed:', data.error)
+        await loadBookings() // Reload to get correct state
         alert(`Failed to update: ${data.error || 'Unknown error'}`)
       }
     } catch (err) {
       console.error('❌ Network error:', err)
+      // ROLLBACK on network error
+      await loadBookings()
       alert('Network error - please try again')
-    } finally {
-      setUpdatingId(null)
     }
   }
 
@@ -157,7 +142,7 @@ export default function PublicBookingsPage() {
               <p className="text-gray-600">View all driving lesson bookings (no login required)</p>
             </div>
             <button
-              onClick={() => loadBookings(true)}
+              onClick={() => loadBookings()}
               className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium shadow hover:-translate-y-0.5 flex items-center gap-2"
             >
               🔄 Force Refresh
@@ -250,29 +235,27 @@ export default function PublicBookingsPage() {
                     <>
                       <button
                         onClick={() => updateStatus(booking.id, 'confirmed')}
-                        disabled={updatingId === booking.id || updatingId === 'waiting'}
+                        disabled={!!updatingId}
                         className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm font-medium"
                       >
-                        {updatingId === booking.id ? 'Updating...' : 
-                         updatingId === 'waiting' ? 'Waiting...' : '✓ Confirm'}
+                        {updatingId ? 'Updating...' : '✓ Confirm'}
                       </button>
                       <button
                         onClick={() => updateStatus(booking.id, 'cancelled')}
-                        disabled={updatingId === booking.id || updatingId === 'waiting'}
+                        disabled={!!updatingId}
                         className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 text-sm font-medium"
                       >
-                        {updatingId === booking.id ? 'Updating...' : 
-                         updatingId === 'waiting' ? 'Waiting...' : '✗ Cancel'}
+                        {updatingId ? 'Updating...' : '✗ Cancel'}
                       </button>
                     </>
                   )}
                   {booking.status === 'confirmed' && (
                     <button
                       onClick={() => updateStatus(booking.id, 'cancelled')}
-                      disabled={updatingId === booking.id}
+                      disabled={!!updatingId}
                       className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 text-sm font-medium"
                     >
-                      {updatingId === booking.id ? 'Updating...' : '✗ Cancel'}
+                      {updatingId ? 'Updating...' : '✗ Cancel'}
                     </button>
                   )}
                 </div>
