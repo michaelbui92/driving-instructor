@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
 // SIMPLE API: Returns ALL bookings for everyone
+// Force dynamic rendering - never cache
+export const dynamic = 'force-dynamic'
+
 export async function GET(request: NextRequest) {
   try {
     // Use admin client to bypass RLS - show everything
