@@ -17,13 +17,14 @@ export async function GET(request: NextRequest) {
     console.log('📊 /api/bookings querying database...')
     const { data, error } = await adminClient
       .from('bookings')
-      .select('*')
-      .order('created_at', { ascending: false })
+      .select('*', { count: 'exact', head: false })
+      .order('created_at', { ascending: false, nullsFirst: false })
     
     console.log('📈 /api/bookings query result:', {
       count: data?.length,
       error: error?.message,
-      sample: data?.slice(0, 2).map(b => ({ id: b.id, status: b.status, date: b.date }))
+      // Log ALL booking IDs and statuses
+      allBookings: data?.map(b => ({ id: b.id, status: b.status, date: b.date, time: b.time }))
     })
 
     if (error) {

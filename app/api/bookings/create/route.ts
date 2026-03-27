@@ -67,7 +67,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
     
-    console.log('✅ Booking created successfully:', { id: data[0]?.id })
+    console.log('✅ Booking created successfully:', { 
+      id: data[0]?.id,
+      fullRecord: data[0]
+    })
     
     return NextResponse.json({ 
       success: true, 
