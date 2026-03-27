@@ -14,15 +14,39 @@ export async function GET(request: NextRequest) {
     )
 
     // Get ALL bookings, newest first
-    console.log('📊 /api/bookings querying database...')
-    const { data, error } = await adminClient
-      .from('bookings')
-      .select('*', { count: 'exact', head: false })
-      .order('created_at', { ascending: false, nullsFirst: false })
+    // Retry up to 3 times if we get fewer bookings than expected (handles replication lag)
+    let data: any = null
+    let error: any = null
+    let attempts = 0
+    const maxAttempts = 3
+    
+    while (attempts < maxAttempts && (data === null || data.length < 5)) {
+      attempts++
+      console.log(`📊 /api/bookings query attempt ${attempts}...`)
+      
+      const result = await adminClient
+        .from('bookings')
+        .select('*', { count: 'exact', head: false })
+        .order('created_at', { ascending: false, nullsFirst: false })
+      
+      data = result.data
+      error = result.error
+      
+      if (data && data.length >= 5) {
+        console.log(`✅ Got ${data.length} bookings on attempt ${attempts}`)
+        break
+      }
+      
+      if (attempts < maxAttempts) {
+        console.log(`⏳ Only got ${data?.length || 0} bookings, waiting 500ms before retry...`)
+        await new Promise(resolve => setTimeout(resolve, 500))
+      }
+    }
     
     console.log('📈 /api/bookings query result:', {
       count: data?.length,
       error: error?.message,
+      attempts,
       // Log ALL booking IDs and statuses
       allBookings: data?.map(b => ({ id: b.id, status: b.status, date: b.date, time: b.time }))
     })
