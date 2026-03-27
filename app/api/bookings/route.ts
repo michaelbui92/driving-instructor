@@ -14,14 +14,27 @@ export async function GET(request: NextRequest) {
     )
 
     // Get ALL bookings, newest first
-    // Aggressive retry for replication lag - Supabase can have 2-5 second lag
-    console.log('📊 /api/bookings query...')
+    // EXTREME retry for Supabase replication lag - can be 10+ seconds!
+    const url = new URL(request.url)
+    const forceFresh = url.searchParams.has('force')
+    
+    console.log('📊 /api/bookings query (with extreme retry)...', {
+      forceFresh,
+      query: url.searchParams.toString()
+    })
     
     let data: any = null
     let error: any = null
     let attempts = 0
-    const maxAttempts = 5  // Increased from 3
-    const retryDelay = 1000 // Increased from 500ms
+    const maxAttempts = 10  // EXTREME: 10 attempts
+    const retryDelay = 2000 // EXTREME: 2 seconds between
+    
+    // Get booking count first (for comparison)
+    const { count: expectedCount } = await adminClient
+      .from('bookings')
+      .select('*', { count: 'exact', head: true })
+    
+    console.log(`🎯 Expected booking count: ${expectedCount}`)
     
     while (attempts < maxAttempts) {
       attempts++
@@ -35,22 +48,23 @@ export async function GET(request: NextRequest) {
       data = result.data
       error = result.error
       
-      // If we got data without error, check if it looks reasonable
+      // If we got data without error
       if (data && !error) {
-        console.log(`✅ Got ${data.length} bookings`)
+        console.log(`📊 Got ${data.length} bookings`)
         
-        // Basic sanity check: should have at least 1 booking if we know there are bookings
-        // (This is a weak check, but better than nothing)
-        if (data.length > 0) {
-          // Log what we got for debugging
+        // Check if we got ALL expected bookings
+        if (expectedCount !== null && data.length === expectedCount) {
+          console.log(`✅ Got ALL ${data.length} bookings (matches expected count)`)
+          
+          // Log status breakdown
           const statusCounts = data.reduce((acc: any, b: any) => {
             acc[b.status] = (acc[b.status] || 0) + 1
             return acc
           }, {})
-          console.log(`📊 Status breakdown:`, statusCounts)
+          console.log(`📈 Status breakdown:`, statusCounts)
           break
         } else {
-          console.log(`⚠️ Got 0 bookings, will retry...`)
+          console.log(`⚠️ Got ${data.length}/${expectedCount} bookings, will retry...`)
         }
       } else if (error) {
         console.log(`❌ Error: ${error.message}`)
@@ -61,6 +75,12 @@ export async function GET(request: NextRequest) {
         console.log(`⏳ Waiting ${retryDelay}ms before retry ${attempts + 1}...`)
         await new Promise(resolve => setTimeout(resolve, retryDelay))
       }
+    }
+    
+    // If still missing data after all retries, log warning but return what we have
+    if (expectedCount !== null && data && data.length < expectedCount) {
+      console.warn(`🚨 WARNING: After ${attempts} attempts, only got ${data.length}/${expectedCount} bookings`)
+      console.warn(`🚨 Supabase replication lag is too high (${attempts * retryDelay / 1000} seconds)`)
     }
     
     console.log('📈 /api/bookings query result:', {

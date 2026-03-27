@@ -26,9 +26,12 @@ export default function PublicBookingsPage() {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'all'>('upcoming')
   const [updatingId, setUpdatingId] = useState<string | null>(null)
 
-  const loadBookings = async () => {
+  const loadBookings = async (forceFresh = false) => {
     try {
-      const res = await fetch(`/api/bookings?t=${Date.now()}&r=${Math.random()}`, {
+      const url = `/api/bookings?t=${Date.now()}&r=${Math.random()}${forceFresh ? '&force=1' : ''}`
+      console.log(`📥 Loading bookings${forceFresh ? ' (FORCE FRESH)' : ''}:`, url)
+      
+      const res = await fetch(url, {
         cache: 'no-store',
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -75,9 +78,9 @@ export default function PublicBookingsPage() {
         // Wait for replication
         await new Promise(resolve => setTimeout(resolve, 5000))
         
-        console.log('🔄 Now refreshing bookings list...')
-        // Refresh bookings list
-        await loadBookings()
+        console.log('🔄 Now refreshing bookings list (FORCE FRESH)...')
+        // Refresh bookings list with FORCE FRESH parameter
+        await loadBookings(true)
         console.log('📋 Bookings refreshed after replication wait')
       } else {
         console.error('❌ Update failed:', data.error)
@@ -154,10 +157,10 @@ export default function PublicBookingsPage() {
               <p className="text-gray-600">View all driving lesson bookings (no login required)</p>
             </div>
             <button
-              onClick={loadBookings}
+              onClick={() => loadBookings(true)}
               className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-medium shadow hover:-translate-y-0.5 flex items-center gap-2"
             >
-              🔄 Refresh
+              🔄 Force Refresh
             </button>
           </div>
           
