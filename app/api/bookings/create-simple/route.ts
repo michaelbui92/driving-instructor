@@ -25,9 +25,6 @@ export async function POST(request: NextRequest) {
       }, { status: 400 })
     }
     
-    // Generate claim code
-    const claimCode = Math.floor(100000 + Math.random() * 900000).toString()
-    
     // Use admin client
     const adminClient = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -46,7 +43,6 @@ export async function POST(request: NextRequest) {
           time: time,
           lesson_type: lessonType,
           status: 'pending',
-          claim_code: claimCode,
         },
       ])
       .select()
@@ -58,9 +54,13 @@ export async function POST(request: NextRequest) {
     
     console.log('✅ Booking created:', { id: data[0]?.id })
     
+    // Generate claim code for email notification (not stored in DB)
+    const claimCode = Math.floor(100000 + Math.random() * 900000).toString()
+    
     return NextResponse.json({ 
       success: true, 
       booking: data[0],
+      claimCode, // For email notification only
       message: 'Booking created successfully'
     })
   } catch (error: any) {
