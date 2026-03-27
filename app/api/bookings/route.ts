@@ -141,7 +141,7 @@ export async function GET(request: NextRequest) {
         allKeys: Object.keys(b),
         rawObject: b
       })),
-      mappingDebug: bookings.map((b, i) => ({
+      mappingDebug: bookings.map((b: any, i: number) => ({
         original: data?.[i] ? {
           id: data[i].id,
           status: data[i].status,
