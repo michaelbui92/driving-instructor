@@ -8,9 +8,13 @@ export async function POST(
 ) {
   try {
     const bookingId = params.id
-    const { status } = await request.json()
+    const body = await request.json()
+    const { status } = body
+    
+    console.log('🔄 Status update request:', { bookingId, status, body })
 
     if (!status || !['pending', 'confirmed', 'cancelled', 'completed'].includes(status)) {
+      console.error('❌ Invalid status:', status)
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
     }
 
@@ -20,6 +24,8 @@ export async function POST(
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
+    console.log('📝 Updating booking status:', { bookingId, status })
+    
     const { data, error } = await adminClient
       .from('bookings')
       .update({ status })
@@ -27,13 +33,14 @@ export async function POST(
       .select()
 
     if (error) {
-      console.error('Error updating booking status:', error)
+      console.error('❌ Error updating booking status:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    console.log('✅ Status updated successfully:', { bookingId, newStatus: status })
     return NextResponse.json({ success: true, booking: data[0] })
   } catch (error: any) {
-    console.error('Booking status update error:', error)
+    console.error('❌ Booking status update error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
