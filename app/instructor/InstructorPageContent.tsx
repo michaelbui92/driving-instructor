@@ -111,9 +111,15 @@ export default function InstructorPage() {
   // Load bookings function (can be called from anywhere)
   const loadBookings = async () => {
     try {
-      // AGGRESSIVE cache busting
+      // AGGRESSIVE cache busting with no-store to bypass ALL caches
       const cacheBuster = `t=${Date.now()}&r=${Math.random().toString(36).substring(7)}`
-      const res = await fetch(`/api/bookings?${cacheBuster}`)
+      const res = await fetch(`/api/bookings?${cacheBuster}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      })
       
       if (!res.ok) {
         throw new Error('Failed to load bookings')
@@ -220,8 +226,14 @@ export default function InstructorPage() {
         throw new Error('Failed to update status')
       }
 
-      // IMMEDIATE update: Refresh bookings right away
+      // Wait for Supabase replication lag before refreshing (typically 1-3s)
+      await new Promise(r => setTimeout(r, 1000))
       await loadBookings()
+      
+      // If still showing pending, retry once after additional delay
+      setTimeout(async () => {
+        await loadBookings()
+      }, 2000)
       
       alert(`Booking status updated to: ${newStatus}`)
     } catch (error) {
