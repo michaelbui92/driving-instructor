@@ -64,6 +64,7 @@ export default function InstructorPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [selectedTab, setSelectedTab] = useState<TabType>('upcoming')
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
+  const [actionLoading, setActionLoading] = useState(false) // Prevents rapid actions
   const [blockedSlots, setBlockedSlots] = useState<BlockedSlot[]>([])
   const [selectedBlockDate, setSelectedBlockDate] = useState<string>('')
   const [selectedBlockTimes, setSelectedBlockTimes] = useState<string[]>([])
@@ -208,6 +209,9 @@ export default function InstructorPage() {
   }
 
   const updateBookingStatus = async (bookingId: string, newStatus: Booking['status']) => {
+    if (actionLoading) return // Prevent rapid actions
+    setActionLoading(true)
+    
     try {
       // OPTIMISTIC UPDATE: Update local state immediately for instant feedback
       setBookings(prev => prev.map(b => 
@@ -234,14 +238,26 @@ export default function InstructorPage() {
     } catch (error) {
       console.error('Error updating booking status:', error)
       alert('Error updating booking status. Please try again.')
+    } finally {
+      setActionLoading(false)
     }
   }
 
   const deleteBooking = async (bookingId: string) => {
+    if (actionLoading) return // Prevent rapid actions
     if (!confirm('⚠️ WARNING: This will permanently delete the booking. This action cannot be undone.\n\nAre you sure you want to delete this booking?')) {
       return
     }
 
+    // Store previous state for rollback
+    const previousBookings = [...bookings]
+    
+    // OPTIMISTIC UPDATE: Remove from UI immediately
+    const updatedBookings = bookings.filter(b => b.id !== bookingId)
+    setBookings(updatedBookings)
+    setSelectedBooking(null)
+    setActionLoading(true)
+    
     try {
       const res = await fetch(`/api/instructor/bookings/${bookingId}`, {
         method: 'DELETE',
@@ -252,14 +268,14 @@ export default function InstructorPage() {
         throw new Error(data.error || 'Failed to delete booking')
       }
 
-      // Remove booking from local state
-      const updatedBookings = bookings.filter(b => b.id !== bookingId)
-      setBookings(updatedBookings)
-      setSelectedBooking(null)
       alert('Booking deleted successfully')
     } catch (error) {
       console.error('Error deleting booking:', error)
+      // ROLLBACK on error - restore previous state
+      setBookings(previousBookings)
       alert('Error deleting booking. Please try again.')
+    } finally {
+      setActionLoading(false)
     }
   }
 

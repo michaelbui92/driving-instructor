@@ -44,6 +44,9 @@ export default function PublicBookingsPage() {
   const updateStatus = async (bookingId: string, newStatus: string) => {
     if (!confirm(`Are you sure you want to ${newStatus} this booking?`)) return
     
+    // Store previous state for rollback
+    const previousBookings = [...bookings]
+    
     // OPTIMISTIC UPDATE: Update UI immediately
     setBookings(prev => prev.map(b => 
       b.id === bookingId ? { ...b, status: newStatus as Booking['status'] } : b
@@ -66,15 +69,15 @@ export default function PublicBookingsPage() {
         // Sync with server to confirm
         await loadBookings()
       } else {
-        // ROLLBACK on error
+        // ROLLBACK on error - restore previous state
         console.error('❌ Update failed:', data.error)
-        await loadBookings() // Reload to get correct state
+        setBookings(previousBookings)
         alert(`Failed to update: ${data.error || 'Unknown error'}`)
       }
     } catch (err) {
       console.error('❌ Network error:', err)
-      // ROLLBACK on network error
-      await loadBookings()
+      // ROLLBACK on network error - restore previous state
+      setBookings(previousBookings)
       alert('Network error - please try again')
     }
   }
