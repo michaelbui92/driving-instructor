@@ -63,9 +63,22 @@ export default function PublicBookingsPage() {
       
       if (res.ok) {
         console.log('✅ Update successful!')
+        
+        // IMPORTANT: Supabase has replication lag of 2-5 seconds
+        // Wait 5 seconds to ensure changes propagate before refreshing
+        console.log('⏳ Waiting 5 seconds for Supabase replication...')
+        setUpdatingId('waiting') // Show different state
+        
+        // Show user feedback
+        alert(`Booking ${newStatus}! Changes may take a few seconds to appear.`)
+        
+        // Wait for replication
+        await new Promise(resolve => setTimeout(resolve, 5000))
+        
+        console.log('🔄 Now refreshing bookings list...')
         // Refresh bookings list
         await loadBookings()
-        console.log('📋 Bookings refreshed, current state:', bookings.length, 'bookings')
+        console.log('📋 Bookings refreshed after replication wait')
       } else {
         console.error('❌ Update failed:', data.error)
         alert(`Failed to update: ${data.error || 'Unknown error'}`)
@@ -234,17 +247,19 @@ export default function PublicBookingsPage() {
                     <>
                       <button
                         onClick={() => updateStatus(booking.id, 'confirmed')}
-                        disabled={updatingId === booking.id}
+                        disabled={updatingId === booking.id || updatingId === 'waiting'}
                         className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 text-sm font-medium"
                       >
-                        {updatingId === booking.id ? 'Updating...' : '✓ Confirm'}
+                        {updatingId === booking.id ? 'Updating...' : 
+                         updatingId === 'waiting' ? 'Waiting...' : '✓ Confirm'}
                       </button>
                       <button
                         onClick={() => updateStatus(booking.id, 'cancelled')}
-                        disabled={updatingId === booking.id}
+                        disabled={updatingId === booking.id || updatingId === 'waiting'}
                         className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 text-sm font-medium"
                       >
-                        {updatingId === booking.id ? 'Updating...' : '✗ Cancel'}
+                        {updatingId === booking.id ? 'Updating...' : 
+                         updatingId === 'waiting' ? 'Waiting...' : '✗ Cancel'}
                       </button>
                     </>
                   )}
