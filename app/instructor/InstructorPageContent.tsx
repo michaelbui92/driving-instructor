@@ -111,15 +111,9 @@ export default function InstructorPage() {
   // Load bookings function (can be called from anywhere)
   const loadBookings = async () => {
     try {
-      // AGGRESSIVE cache busting with no-store to bypass ALL caches
+      // Cache busting via query param to avoid stale data
       const cacheBuster = `t=${Date.now()}&r=${Math.random().toString(36).substring(7)}`
-      const res = await fetch(`/api/bookings?${cacheBuster}`, {
-        cache: 'no-store',
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache'
-        }
-      })
+      const res = await fetch(`/api/bookings?${cacheBuster}`)
       
       if (!res.ok) {
         throw new Error('Failed to load bookings')
@@ -215,7 +209,12 @@ export default function InstructorPage() {
 
   const updateBookingStatus = async (bookingId: string, newStatus: Booking['status']) => {
     try {
-      // Update status with cache busting
+      // OPTIMISTIC UPDATE: Update local state immediately for instant feedback
+      setBookings(prev => prev.map(b => 
+        b.id === bookingId ? { ...b, status: newStatus } : b
+      ))
+      
+      // Now update server
       const res = await fetch(`/api/bookings/${bookingId}/status`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -223,17 +222,13 @@ export default function InstructorPage() {
       })
 
       if (!res.ok) {
+        // Rollback on error
+        await loadBookings()
         throw new Error('Failed to update status')
       }
 
-      // Wait for Supabase replication lag before refreshing (typically 1-3s)
-      await new Promise(r => setTimeout(r, 1000))
+      // Refresh to ensure sync (lightweight, just to confirm)
       await loadBookings()
-      
-      // If still showing pending, retry once after additional delay
-      setTimeout(async () => {
-        await loadBookings()
-      }, 2000)
       
       alert(`Booking status updated to: ${newStatus}`)
     } catch (error) {

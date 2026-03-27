@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// SIMPLE API: Returns ALL bookings for everyone
 // Force dynamic rendering - never cache
 export const dynamic = 'force-dynamic'
 
+// SIMPLE API: Returns ALL bookings for everyone
 export async function GET(request: NextRequest) {
   try {
     // Use admin client to bypass RLS - show everything
@@ -13,93 +13,36 @@ export async function GET(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    // Get ALL bookings, newest first
-    // EXTREME retry for Supabase replication lag - can be 10+ seconds!
-    const url = new URL(request.url)
-    const forceFresh = url.searchParams.has('force')
-    
-    console.log('📊 /api/bookings query (with extreme retry)...', {
-      forceFresh,
-      query: url.searchParams.toString()
-    })
-    
-    let data: any = null
-    let error: any = null
-    let attempts = 0
-    const maxAttempts = 10  // EXTREME: 10 attempts
-    const retryDelay = 2000 // EXTREME: 2 seconds between
-    
-    // Get booking count first (for comparison)
+    // Get booking count first
     const { count: expectedCount } = await adminClient
       .from('bookings')
       .select('*', { count: 'exact', head: true })
     
-    console.log(`🎯 Expected booking count: ${expectedCount}`)
+    // Fetch bookings with retry for Supabase replication lag
+    let data: any = null
+    let error: any = null
+    let attempts = 0
+    const maxAttempts = 5
+    const retryDelay = 1000
     
     while (attempts < maxAttempts) {
       attempts++
-      console.log(`🔄 Attempt ${attempts}/${maxAttempts}...`)
       
       const result = await adminClient
         .from('bookings')
         .select('*', { count: 'exact', head: false })
-        .order('created_at', { ascending: false, nullsFirst: false })
+        .order('created_at', { ascending: false })
       
       data = result.data
       error = result.error
       
-      // If we got data without error
-      if (data && !error) {
-        console.log(`📊 Got ${data.length} bookings`)
-        
-        // Check if we got ALL expected bookings
-        if (expectedCount !== null && data.length === expectedCount) {
-          console.log(`✅ Got ALL ${data.length} bookings (matches expected count)`)
-          
-          // Log status breakdown
-          const statusCounts = data.reduce((acc: any, b: any) => {
-            acc[b.status] = (acc[b.status] || 0) + 1
-            return acc
-          }, {})
-          console.log(`📈 Status breakdown:`, statusCounts)
-          break
-        } else {
-          console.log(`⚠️ Got ${data.length}/${expectedCount} bookings, will retry...`)
-        }
-      } else if (error) {
-        console.log(`❌ Error: ${error.message}`)
+      if (data && !error && (expectedCount === null || data.length === expectedCount)) {
+        break
       }
       
-      // Wait and retry
       if (attempts < maxAttempts) {
-        console.log(`⏳ Waiting ${retryDelay}ms before retry ${attempts + 1}...`)
         await new Promise(resolve => setTimeout(resolve, retryDelay))
       }
-    }
-    
-    // If still missing data after all retries, log warning but return what we have
-    if (expectedCount !== null && data && data.length < expectedCount) {
-      console.warn(`🚨 WARNING: After ${attempts} attempts, only got ${data.length}/${expectedCount} bookings`)
-      console.warn(`🚨 Supabase replication lag is too high (${attempts * retryDelay / 1000} seconds)`)
-    }
-    
-    console.log('📈 /api/bookings query result:', {
-      count: data?.length,
-      error: error?.message,
-      attempts,
-      // Log ALL booking IDs and statuses for debugging
-      allBookings: data?.map((b: any) => ({ 
-        id: b.id?.substring(0, 8), 
-        status: b.status, 
-        student_name: b.student_name,
-        date: b.date 
-      }))
-    })
-    
-    // EXTREME DEBUG: Log raw data if debug param is present
-    // url is already defined at line 18
-    if (url.searchParams.has('debug')) {
-      console.log('🔍 DEBUG MODE - Raw data:', data)
     }
 
     if (error) {
@@ -107,70 +50,26 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Format for frontend - use EXACT database field names
-    const bookings = (data || []).map((b: any) => {
-      // DEBUG: Log what we're getting
-      console.log('🔍 Booking mapping:', {
-        id: b.id,
-        rawStatus: b.status,
-        rawStatusType: typeof b.status,
-        hasStatus: 'status' in b,
-        allKeys: Object.keys(b)
-      })
-      
-      return {
-        id: b.id,
-        studentName: b.student_name || '',  // database field is student_name
-        email: b.email || '',
-        phone: b.phone || '',
-        date: b.date || '',
-        time: b.time || '',
-        lessonType: b.lesson_type || 'casual',  // database field is lesson_type
-        status: b.status || 'pending', // Keep default but log if missing
-        price: b.lesson_type === 'single' ? 55 : 45,
-        createdAt: b.created_at || new Date().toISOString(),
-      }
-    })
+    // Format for frontend
+    const bookings = (data || []).map((b: any) => ({
+      id: b.id,
+      studentName: b.student_name || '',
+      email: b.email || '',
+      phone: b.phone || '',
+      date: b.date || '',
+      time: b.time || '',
+      lessonType: b.lesson_type || 'casual',
+      status: b.status || 'pending',
+      price: b.lesson_type === 'single' ? 55 : 45,
+      createdAt: b.created_at || new Date().toISOString(),
+    }))
 
-    // DEBUG: Also return raw data
-    const debugInfo = url.searchParams.has('debug') ? {
-      rawData: data?.map((b: any) => ({
-        id: b.id,
-        status: b.status,
-        hasStatus: 'status' in b,
-        allKeys: Object.keys(b),
-        rawObject: b
-      })),
-      mappingDebug: bookings.map((b: any, i: number) => ({
-        original: data?.[i] ? {
-          id: data[i].id,
-          status: data[i].status,
-          statusType: typeof data[i].status,
-          hasStatus: 'status' in data[i],
-          keys: Object.keys(data[i])
-        } : null,
-        mapped: {
-          id: b.id,
-          status: b.status
-        }
-      }))
-    } : null
+    const response = NextResponse.json({ bookings })
     
-    const responseData: any = { bookings }
-    if (debugInfo) {
-      responseData.debug = debugInfo
-    }
-    
-    const response = NextResponse.json(responseData)
-    
-    // AGGRESSIVE NO-CACHE for Vercel Edge Network
-    // https://vercel.com/docs/edge-network/caching
-    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0')
+    // No-cache headers for Vercel Edge
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0')
     response.headers.set('Pragma', 'no-cache')
     response.headers.set('Expires', '0')
-    response.headers.set('Surrogate-Control', 'no-store')
-    response.headers.set('CDN-Cache-Control', 'no-store')
-    response.headers.set('Vercel-CDN-Cache-Control', 'no-store')
     
     return response
   } catch (error: any) {

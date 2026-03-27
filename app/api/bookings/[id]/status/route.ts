@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { revalidateTag } from 'next/cache'
 
 // SIMPLE: Update booking status
 export async function POST(
@@ -36,6 +37,9 @@ export async function POST(
       console.error('❌ Error updating booking status:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
+
+    // Revalidate the bookings cache so Next.js fetches fresh data
+    revalidateTag('bookings')
 
     console.log('✅ Status updated successfully:', { bookingId, newStatus: status })
     return NextResponse.json({ success: true, booking: data[0] })
