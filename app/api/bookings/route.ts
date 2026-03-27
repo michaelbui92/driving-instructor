@@ -97,7 +97,7 @@ export async function GET(request: NextRequest) {
     })
     
     // EXTREME DEBUG: Log raw data if debug param is present
-    const url = new URL(request.url)
+    // url is already defined at line 18
     if (url.searchParams.has('debug')) {
       console.log('🔍 DEBUG MODE - Raw data:', data)
     }
