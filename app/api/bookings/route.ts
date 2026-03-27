@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
         date: b.date || '',
         time: b.time || '',
         lessonType: b.lesson_type || 'casual',  // database field is lesson_type
-        status: b.status || 'pending',
+        status: b.status || 'pending', // Keep default but log if missing
         price: b.lesson_type === 'single' ? 55 : 45,
         createdAt: b.created_at || new Date().toISOString(),
       }
