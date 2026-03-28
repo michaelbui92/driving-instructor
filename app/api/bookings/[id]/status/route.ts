@@ -33,15 +33,22 @@ export async function POST(
       .eq('id', bookingId)
       .select()
 
+    console.log('📝 Supabase update result:', { data, error, count: data?.length })
+
     if (error) {
       console.error('❌ Error updating booking status:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      return NextResponse.json({ error: error.message, details: error.details, hint: error.hint }, { status: 500 })
+    }
+
+    if (!data || data.length === 0) {
+      console.error('❌ No booking found with ID:', bookingId)
+      return NextResponse.json({ error: `No booking found with ID: ${bookingId}` }, { status: 404 })
     }
 
     // Revalidate the bookings cache so Next.js fetches fresh data
     revalidateTag('bookings')
 
-    console.log('✅ Status updated successfully:', { bookingId, newStatus: status })
+    console.log('✅ Status updated successfully:', { bookingId, newStatus: status, updatedBooking: data[0] })
     return NextResponse.json({ success: true, booking: data[0] })
   } catch (error: any) {
     console.error('❌ Booking status update error:', error)
