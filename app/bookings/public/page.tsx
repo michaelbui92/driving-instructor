@@ -66,8 +66,8 @@ export default function PublicBookingsPage() {
       
       if (res.ok) {
         console.log('✅ Update successful!')
-        // Sync with server to confirm
-        await loadBookings()
+        // Don't reload - optimistic update is already applied
+        // The revalidateTag in the API ensures other pages get fresh data
       } else {
         // ROLLBACK on error - restore previous state
         console.error('❌ Update failed:', data.error)
