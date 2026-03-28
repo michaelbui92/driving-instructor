@@ -3,16 +3,17 @@ import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
-// CLEAN, SIMPLE API - REPLACEMENT FOR BUGGY VERSION
+// USE ANON KEY FOR READS - SERVICE ROLE HAS STALE DATA
 export async function GET(request: NextRequest) {
   try {
-    const adminClient = createClient(
+    // Use ANON key for reads (fresh data) instead of service role (stale)
+    const anonClient = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
     
     // Simple query with exact count
-    const { data, error, count } = await adminClient
+    const { data, error, count } = await anonClient
       .from('bookings')
       .select('*', { count: 'exact' })
       .order('created_at', { ascending: false })
@@ -22,9 +23,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
     
-    console.log(`📊 /api/bookings: Got ${data?.length || 0} bookings (total in DB: ${count})`)
+    console.log(`📊 /api/bookings (anon key): Got ${data?.length || 0} bookings (total in DB: ${count})`)
     
-    // Minimal transformation - just like /test page
+    // Log first booking status to verify freshness
+    if (data && data.length > 0) {
+      console.log('First booking status:', data[0].status)
+    }
+    
+    // Minimal transformation
     const bookings = (data || []).map((b: any) => ({
       id: b.id,
       studentName: b.student_name || '',
@@ -33,7 +39,7 @@ export async function GET(request: NextRequest) {
       date: b.date || '',
       time: b.time || '',
       lessonType: b.lesson_type || 'single',
-      status: b.status, // Direct copy - NO DEFAULT
+      status: b.status, // Direct copy
       price: b.lesson_type === 'single' ? 55 : 45,
       createdAt: b.created_at,
       archived: b.archived || false,
