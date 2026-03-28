@@ -6,10 +6,29 @@ export const dynamic = 'force-dynamic'
 // GET ALL BOOKINGS
 export async function GET(request: NextRequest) {
   try {
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+    
+    console.log('🔍 GET /api/bookings debug:', {
+      supabaseUrl: supabaseUrl?.substring(0, 50) + '...',
+      serviceKeyLength: serviceKey?.length,
+      hasUrl: !!supabaseUrl,
+      hasKey: !!serviceKey
+    })
+
+    const adminClient = createClient(supabaseUrl, serviceKey)
+
+    // First, let's check what tables exist
+    const { data: tables, error: tablesError } = await adminClient
+      .from('bookings')
+      .select('*', { count: 'exact', head: true })
+      .limit(1)
+
+    console.log('📊 Table check:', { 
+      tableExists: !tablesError, 
+      error: tablesError?.message,
+      count: tables?.length
+    })
 
     const { data, error } = await adminClient
       .from('bookings')
@@ -22,8 +41,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    const statuses = (data || []).map((b: any) => `${b.id.substring(0, 8)}:${b.status}`)
-    console.log(`📤 GET /api/bookings → ${(data || []).length} bookings:`, statuses)
+    // Log EVERY booking with full details
+    console.log(`📤 GET /api/bookings → ${(data || []).length} bookings:`)
+    ;(data || []).forEach((b: any, i: number) => {
+      console.log(`  ${i+1}. ${b.id.substring(0, 8)}: status=${b.status}, date=${b.date}, email=${b.email}`)
+    })
 
     const bookings = (data || []).map((b: any) => {
       let price = 45
