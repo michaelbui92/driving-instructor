@@ -19,56 +19,61 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
     }
 
-    // Use admin client — bypasses RLS
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
+    // Step 1: Do the update via REST API
+    console.log('📝 Performing update via Supabase REST API...')
+    const updateRes = await fetch(
+      `${supabaseUrl}/rest/v1/bookings?id=eq.${bookingId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'apikey': serviceKey,
+          'Authorization': `Bearer ${serviceKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation',
+          'Content-Range': 'items 0-0/*',
+        },
+        body: JSON.stringify({ status }),
+      }
     )
 
-    // Step 1: Do the update
-    console.log('📝 Performing update in Supabase...')
-    const { data: updated, error: updateError } = await adminClient
-      .from('bookings')
-      .update({ status })
-      .eq('id', bookingId)
-      .select()
-      .single()
-
-    if (updateError) {
-      console.error('❌ Supabase update error:', updateError)
-      return NextResponse.json({ 
-        error: updateError.message,
-        hint: updateError.hint || 'Check RLS policies on the bookings table'
-      }, { status: 500 })
+    if (!updateRes.ok) {
+      const errText = await updateRes.text()
+      console.error('❌ Supabase update failed:', updateRes.status, errText)
+      return NextResponse.json({ error: `Update failed: ${errText}` }, { status: 500 })
     }
 
-    if (!updated) {
-      console.error('❌ No booking returned from update')
+    const updated: any[] = await updateRes.json()
+    console.log('✅ Supabase update result:', updated)
+
+    if (!updated || updated.length === 0) {
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
     }
 
-    console.log('✅ Update returned by Supabase:', updated)
-
-    // Step 2: Wait 2 seconds then do a COMPLETELY FRESH read to confirm persistence
-    await new Promise(r => setTimeout(r, 2000))
+    // Step 2: Fresh read after short delay (let replication propagate)
+    await new Promise(r => setTimeout(r, 1500))
     
-    const { data: fresh, error: freshError } = await adminClient
-      .from('bookings')
-      .select('*')
-      .eq('id', bookingId)
-      .single()
+    const freshRes = await fetch(
+      `${supabaseUrl}/rest/v1/bookings?id=eq.${bookingId}&select=*`,
+      {
+        headers: {
+          'apikey': serviceKey,
+          'Authorization': `Bearer ${serviceKey}`,
+        },
+        cache: 'no-store',
+      }
+    )
+    
+    const fresh: any[] = await freshRes.json()
+    const freshBooking = fresh?.[0]
+    console.log('🔍 Fresh read:', { freshStatus: freshBooking?.status, freshError: freshRes.status !== 200 })
 
-    console.log('🔍 Fresh read after 2s:', { freshStatus: fresh?.status, freshError })
-
-    if (freshError) {
-      console.error('⚠️ Fresh read error (update may still have worked):', freshError)
-    }
-
-    // Return the FRESH read result so frontend knows what the actual DB state is
     return NextResponse.json({
       success: true,
-      booking: fresh || updated,
-      freshConfirmed: fresh?.status === status // true if update persisted
+      booking: freshBooking || updated[0],
+      freshConfirmed: freshBooking?.status === status,
     })
 
   } catch (error: any) {

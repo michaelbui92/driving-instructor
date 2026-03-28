@@ -4,59 +4,41 @@ import { createClient } from '@supabase/supabase-js'
 // Force dynamic rendering - never cache
 export const dynamic = 'force-dynamic'
 
-// SIMPLE API: Returns ALL bookings for everyone
+// GET ALL BOOKINGS — reads directly from Supabase REST API
 export async function GET(request: NextRequest) {
   try {
-    // Use admin client to bypass RLS - show everything
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
-    // Get booking count first
-    const { count: expectedCount } = await adminClient
-      .from('bookings')
-      .select('*', { count: 'exact', head: true })
+    // Use direct REST API call — bypasses Supabase JS client connection pooling
+    // This avoids any stale reads from connection pools on serverless
+    const url = `${supabaseUrl}/rest/v1/bookings?select=*&order=created_at.desc`
     
-    // Fetch bookings with retry for Supabase replication lag
-    let data: any = null
-    let error: any = null
-    let attempts = 0
-    const maxAttempts = 5
-    const retryDelay = 1000
-    
-    while (attempts < maxAttempts) {
-      attempts++
-      
-      const result = await adminClient
-        .from('bookings')
-        .select('*', { count: 'exact', head: false })
-        .order('created_at', { ascending: false })
-      
-      data = result.data
-      error = result.error
-      
-      if (data && !error && (expectedCount === null || data.length === expectedCount)) {
-        break
-      }
-      
-      if (attempts < maxAttempts) {
-        await new Promise(resolve => setTimeout(resolve, retryDelay))
-      }
+    const response = await fetch(url, {
+      headers: {
+        'apikey': serviceKey,
+        'Authorization': `Bearer ${serviceKey}`,
+        'Content-Type': 'application/json',
+        ' Prefer': 'return=representation',
+      },
+      // Ensure fresh fetch on every call
+      cache: 'no-store',
+    })
+
+    if (!response.ok) {
+      const errText = await response.text()
+      console.error('❌ Supabase REST API error:', response.status, errText)
+      return NextResponse.json({ error: 'Database read failed' }, { status: 500 })
     }
 
-    if (error) {
-      console.error('Bookings fetch error:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
+    const data: any[] = await response.json()
 
     // Debug: log raw data statuses
-    const statuses = (data || []).map((b: any) => ({ id: b.id.substring(0, 8), status: b.status }))
-    console.log(`📤 GET /api/bookings → ${(data || []).length} bookings, statuses:`, JSON.stringify(statuses))
+    const statuses = data.map((b: any) => ({ id: b.id.substring(0, 8), status: b.status }))
+    console.log(`📤 GET /api/bookings → ${data.length} bookings:`, JSON.stringify(statuses))
 
     // Format for frontend — include ALL fields both portals need
-    const bookings = (data || []).map((b: any) => {
-      // Derive price from lesson_type
+    const bookings = data.map((b: any) => {
       let price = 45
       if (b.lesson_type === 'single') price = 55
       else if (b.lesson_type === 'package10') price = 45 * 10
@@ -83,15 +65,13 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    const response = NextResponse.json({ bookings })
+    const nextResponse = NextResponse.json({ bookings })
     
-    // Aggressive no-cache headers for Vercel CDN + browser
-    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0')
-    response.headers.set('Pragma', 'no-cache')
-    response.headers.set('Expires', '0')
-    response.headers.set('Vary', '*')
+    // No cache
+    nextResponse.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
+    nextResponse.headers.set('Pragma', 'no-cache')
     
-    return response
+    return nextResponse
   } catch (error: any) {
     console.error('Bookings API error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
