@@ -196,6 +196,33 @@ export default function PublicBookingsPage() {
               return Object.entries(counts).map(([status, count]) => `${status}: ${count}`).join(', ')
             })()}
           </p>
+          <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded">
+            <p className="text-sm font-semibold text-yellow-800">Debug: Direct Supabase Query</p>
+            <button
+              onClick={async () => {
+                try {
+                  const { data, error } = await supabase
+                    .from('bookings')
+                    .select('id, status')
+                    .order('created_at', { ascending: false })
+                    .limit(5)
+                  
+                  if (error) {
+                    console.error('Direct query error:', error)
+                    alert(`Error: ${error.message}`)
+                  } else {
+                    console.log('Direct Supabase query result:', data)
+                    alert(`Direct query: ${data.length} bookings\n${data.map(b => `${b.id.substring(0, 8)}: ${b.status}`).join('\n')}`)
+                  }
+                } catch (err) {
+                  console.error('Error:', err)
+                }
+              }}
+              className="mt-1 px-3 py-1 bg-yellow-600 text-white text-sm rounded hover:bg-yellow-700"
+            >
+              Query Supabase Directly
+            </button>
+          </div>
         </div>
 
         {displayedBookings.length === 0 ? (
