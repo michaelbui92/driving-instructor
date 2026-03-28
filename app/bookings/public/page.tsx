@@ -28,10 +28,17 @@ export default function PublicBookingsPage() {
 
   const loadBookings = async () => {
     try {
-      const url = `/api/bookings?t=${Date.now()}&r=${Math.random().toString(36).slice(2)}`
+      // AGGRESSIVE cache busting
+      const cacheBuster = `t=${Date.now()}&r=${Math.random().toString(36).slice(2)}&v=2`
+      const url = `/api/bookings?${cacheBuster}`
       console.log(`📥 Loading bookings:`, url)
       
-      const res = await fetch(url)
+      const res = await fetch(url, {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      })
       const data = await res.json()
       console.log(`📥 loadBookings received:`, data.bookings?.length, 'bookings', data.bookings?.map((b: any) => `${b.id.substring(0, 8)}:${b.status}`))
       setBookings(data.bookings || [])
