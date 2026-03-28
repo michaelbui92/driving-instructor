@@ -50,6 +50,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    // Debug: log raw data statuses
+    const statuses = (data || []).map((b: any) => ({ id: b.id.substring(0, 8), status: b.status }))
+    console.log(`📤 GET /api/bookings → ${(data || []).length} bookings, statuses:`, JSON.stringify(statuses))
+
     // Format for frontend — include ALL fields both portals need
     const bookings = (data || []).map((b: any) => {
       // Derive price from lesson_type
@@ -81,10 +85,11 @@ export async function GET(request: NextRequest) {
 
     const response = NextResponse.json({ bookings })
     
-    // No-cache headers for Vercel Edge
-    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0')
+    // Aggressive no-cache headers for Vercel CDN + browser
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0, s-maxage=0')
     response.headers.set('Pragma', 'no-cache')
     response.headers.set('Expires', '0')
+    response.headers.set('Vary', '*')
     
     return response
   } catch (error: any) {

@@ -28,11 +28,12 @@ export default function PublicBookingsPage() {
 
   const loadBookings = async () => {
     try {
-      const url = `/api/bookings?t=${Date.now()}`
+      const url = `/api/bookings?t=${Date.now()}&r=${Math.random().toString(36).slice(2)}`
       console.log(`📥 Loading bookings:`, url)
       
       const res = await fetch(url)
       const data = await res.json()
+      console.log(`📥 loadBookings received:`, data.bookings?.length, 'bookings', data.bookings?.map((b: any) => `${b.id.substring(0, 8)}:${b.status}`))
       setBookings(data.bookings || [])
     } catch (err) {
       console.error('Error loading bookings:', err)
