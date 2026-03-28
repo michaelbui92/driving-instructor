@@ -66,8 +66,14 @@ export default function PublicBookingsPage() {
       const result = await res.json()
       
       if (res.ok && result.success) {
-        console.log('✅ Update confirmed by Supabase:', result.booking)
-        // Use server response data directly — avoids Supabase replication lag
+        console.log('✅ Update confirmed by Supabase:', result.booking, 'freshConfirmed:', result.freshConfirmed)
+        
+        if (!result.freshConfirmed) {
+          // Update returned success but DB doesn't reflect it — RLS or policy issue
+          alert(`⚠️ Update may not have saved. Database shows: ${result.booking?.status}\n\nCheck Supabase RLS policies on the bookings table.`)
+        }
+        
+        // Use server's fresh read result — this is the authoritative DB state
         if (result.booking) {
           setBookings(prev => prev.map(b =>
             b.id === result.booking.id
