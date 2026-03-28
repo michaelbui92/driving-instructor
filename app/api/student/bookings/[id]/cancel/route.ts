@@ -58,7 +58,7 @@ export async function POST(
 
     // Fetch the booking to verify ownership
     const { data: booking, error: fetchError } = await adminClient
-      .from('bookings')
+      .from('bookings_new')
       .select('*')
       .eq('id', id)
       .single()
@@ -83,7 +83,7 @@ export async function POST(
 
     // Cancel the booking using admin client
     const { error: cancelError } = await adminClient
-      .from('bookings')
+      .from('bookings_new')
       .update({ status: 'cancelled' })
       .eq('id', id)
 

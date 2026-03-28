@@ -25,7 +25,7 @@ export async function POST(
 
     // Update and get the returned row in one shot
     const { data, error } = await adminClient
-      .from('bookings')
+      .from('bookings_new')
       .update({ status })
       .eq('id', bookingId)
       .select()
