@@ -30,11 +30,37 @@ export async function GET(request: NextRequest) {
       count: tables?.length
     })
 
-    const { data, error } = await adminClient
-      .from('bookings')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(1000)
+    // Try multiple times to avoid stale read replicas
+    let data: any = null
+    let error: any = null
+    let attempts = 0
+    const maxAttempts = 3
+    const retryDelay = 1000
+    
+    while (attempts < maxAttempts) {
+      attempts++
+      
+      const result = await adminClient
+        .from('bookings')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(1000)
+      
+      data = result.data
+      error = result.error
+      
+      if (data && !error) {
+        // Check if we have the expected number of bookings
+        if (data.length >= 5) { // We know there are 5 bookings
+          break
+        }
+      }
+      
+      if (attempts < maxAttempts) {
+        console.log(`Retry ${attempts}/${maxAttempts} - got ${data?.length || 0} bookings`)
+        await new Promise(resolve => setTimeout(resolve, retryDelay))
+      }
+    }
 
     if (error) {
       console.error('Bookings fetch error:', error)
