@@ -12,38 +12,30 @@ export async function GET(request: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
     
-    // AGGRESSIVE retry for Supabase replication lag
+    // TRY bookings_new FIRST (fresh table), fall back to bookings
+    let tableName = 'bookings_new'
     let data: any = null
     let error: any = null
-    let count: number = 0
-    let attempts = 0
-    const maxAttempts = 5
-    const retryDelay = 2000  // 2 seconds
     
-    while (attempts < maxAttempts) {
-      attempts++
-      
-      const result = await anonClient
+    const result = await anonClient
+      .from(tableName)
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+    
+    data = result.data
+    error = result.error
+    
+    // If bookings_new doesn't exist or is empty, try old table
+    if (error || !data || data.length === 0) {
+      console.log(`bookings_new not available, trying bookings...`)
+      const oldResult = await anonClient
         .from('bookings')
         .select('*', { count: 'exact' })
         .order('created_at', { ascending: false })
       
-      data = result.data
-      error = result.error
-      count = result.count || 0
-      
-      console.log(`Attempt ${attempts}/${maxAttempts}: Got ${data?.length || 0} bookings (count: ${count})`)
-      
-      // If we got the expected count OR this is our last attempt, break
-      if (data && count > 0 && data.length === count) {
-        console.log(`✅ Got all ${count} bookings`)
-        break
-      }
-      
-      if (attempts < maxAttempts) {
-        console.log(`🔄 Retrying in ${retryDelay}ms...`)
-        await new Promise(resolve => setTimeout(resolve, retryDelay))
-      }
+      data = oldResult.data
+      error = oldResult.error
+      tableName = 'bookings'
     }
     
     if (error) {
@@ -51,11 +43,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
     
-    console.log(`📊 Final: ${data?.length || 0} bookings (DB says: ${count})`)
-    
-    if (count > 0 && data?.length !== count) {
-      console.warn(`⚠️ WARNING: Missing ${count - (data?.length || 0)} bookings due to replication lag`)
-    }
+    console.log(`📊 Using table "${tableName}": ${data?.length || 0} bookings`)
     
     // Minimal transformation
     const bookings = (data || []).map((b: any) => ({
