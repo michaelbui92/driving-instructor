@@ -41,6 +41,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
+    // Log RAW data from Supabase
+    console.log(`📤 GET /api/bookings → RAW Supabase response:`, JSON.stringify(data, null, 2))
+    
     // Log EVERY booking with full details
     console.log(`📤 GET /api/bookings → ${(data || []).length} bookings:`)
     ;(data || []).forEach((b: any, i: number) => {
