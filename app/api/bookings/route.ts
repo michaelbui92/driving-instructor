@@ -77,13 +77,16 @@ export async function GET(request: NextRequest) {
     })
 
     const bookings = (data || []).map((b: any) => {
+      // DEBUG: Log before transformation
+      console.log(`🔍 Transforming ${b.id.substring(0, 8)}: raw status="${b.status}", type=${typeof b.status}`)
+      
       let price = 45
       if (b.lesson_type === 'single') price = 55
       else if (b.lesson_type === 'package10') price = 45 * 10
       else if (b.lesson_type === 'package20') price = 45 * 20
       else if (b.lesson_type === 'test') price = 55
 
-      return {
+      const result = {
         id: b.id,
         studentName: b.student_name || '',
         email: b.email || '',
@@ -101,6 +104,9 @@ export async function GET(request: NextRequest) {
         packageId: b.package_id || null,
         claimCode: b.claim_code || null,
       }
+      
+      console.log(`  → Result status="${result.status}"`)
+      return result
     })
 
     const response = NextResponse.json({ bookings })
