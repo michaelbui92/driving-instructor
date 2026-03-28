@@ -65,9 +65,9 @@ export default function PublicBookingsPage() {
       const data = await res.json()
       
       if (res.ok) {
-        console.log('✅ Update successful!')
-        // Don't reload - optimistic update is already applied
-        // The revalidateTag in the API ensures other pages get fresh data
+        console.log('✅ Update successful — reloading from Supabase')
+        // Reload from Supabase to ensure we have the latest state
+        await loadBookings()
       } else {
         // ROLLBACK on error - restore previous state
         console.error('❌ Update failed:', data.error)
