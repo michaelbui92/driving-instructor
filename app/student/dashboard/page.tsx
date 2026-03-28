@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
+import { supabase } from '@/lib/supabase'
 import { formatDate, getAvailableSlots, type Booking } from '@/lib/booking-utils'
 
 type BookingType = {
@@ -41,12 +42,32 @@ export default function StudentDashboardPage() {
   useEffect(() => {
     loadDashboard()
     
-    // Auto-refresh every 10 seconds
+    // Auto-refresh every 10 seconds as fallback
     const interval = setInterval(() => {
       loadDashboard()
     }, 10000)
-    
-    return () => clearInterval(interval)
+
+    // Real-time subscription — instant updates from Supabase
+    const channel = supabase
+      .channel('student-bookings-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'bookings'
+        },
+        (payload) => {
+          console.log('Real-time booking change:', payload)
+          loadDashboard()
+        }
+      )
+      .subscribe()
+
+    return () => {
+      clearInterval(interval)
+      supabase.removeChannel(channel)
+    }
   }, [])
 
 

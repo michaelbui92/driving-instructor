@@ -50,19 +50,34 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Format for frontend
-    const bookings = (data || []).map((b: any) => ({
-      id: b.id,
-      studentName: b.student_name || '',
-      email: b.email || '',
-      phone: b.phone || '',
-      date: b.date || '',
-      time: b.time || '',
-      lessonType: b.lesson_type || 'casual',
-      status: b.status || 'pending',
-      price: b.lesson_type === 'single' ? 55 : 45,
-      createdAt: b.created_at || new Date().toISOString(),
-    }))
+    // Format for frontend — include ALL fields both portals need
+    const bookings = (data || []).map((b: any) => {
+      // Derive price from lesson_type
+      let price = 45
+      if (b.lesson_type === 'single') price = 55
+      else if (b.lesson_type === 'package10') price = 45 * 10
+      else if (b.lesson_type === 'package20') price = 45 * 20
+      else if (b.lesson_type === 'test') price = 55
+
+      return {
+        id: b.id,
+        studentName: b.student_name || '',
+        email: b.email || '',
+        phone: b.phone || '',
+        date: b.date || '',
+        time: b.time || '',
+        lessonType: b.lesson_type || 'casual',
+        status: b.status || 'pending',
+        price,
+        createdAt: b.created_at || new Date().toISOString(),
+        archived: b.archived || false,
+        originalDate: b.original_date || null,
+        previousDate: b.previous_date || null,
+        rescheduleHistory: b.reschedule_history || [],
+        packageId: b.package_id || null,
+        claimCode: b.claim_code || null,
+      }
+    })
 
     const response = NextResponse.json({ bookings })
     
