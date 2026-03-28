@@ -62,28 +62,23 @@ export default function PublicBookingsPage() {
         body: JSON.stringify({ status: newStatus })
       })
       
-      const data = await res.json()
+      const result = await res.json()
       
-      if (res.ok) {
-        console.log('✅ Update confirmed by Supabase')
-        // Use server response data instead of reloading — avoids Supabase replication lag
-        const result = await res.json()
-        if (result.success && result.booking) {
+      if (res.ok && result.success) {
+        console.log('✅ Update confirmed by Supabase:', result.booking)
+        // Use server response data directly — avoids Supabase replication lag
+        if (result.booking) {
           setBookings(prev => prev.map(b =>
             b.id === result.booking.id
               ? { ...b, status: result.booking.status }
               : b
           ))
-        } else {
-          // Fallback: reload after short delay to let replication catch up
-          await new Promise(r => setTimeout(r, 1500))
-          await loadBookings()
         }
       } else {
         // ROLLBACK on error - restore previous state
-        console.error('❌ Update failed:', data.error)
+        console.error('❌ Update failed:', result.error)
         setBookings(previousBookings)
-        alert(`Failed to update: ${data.error || 'Unknown error'}`)
+        alert(`Failed to update: ${result.error || 'Unknown error'}`)
       }
     } catch (err) {
       console.error('❌ Network error:', err)
