@@ -32,7 +32,7 @@ export async function GET(request: NextRequest) {
       .limit(1)
 
     // Test 3: Try to update a booking with service role
-    let updateTest = { success: false, error: null }
+    let updateTest = { success: false, error: null as string | null }
     try {
       // Get first booking ID
       const { data: firstBooking } = await serviceClient
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
 
         updateTest = {
           success: !updateError,
-          error: updateError?.message
+          error: updateError?.message || null
         }
       }
     } catch (updateErr) {
