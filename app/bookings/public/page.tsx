@@ -102,7 +102,7 @@ export default function PublicBookingsPage() {
           schema: 'public',
           table: 'bookings'
         },
-        (payload) => {
+        (payload: any) => {
           console.log('Real-time booking change in public view:', payload)
           // Update only the changed booking — don't reload all (avoids stale reads overwriting recent updates)
           if (payload.eventType === 'UPDATE' && payload.new) {
@@ -112,7 +112,7 @@ export default function PublicBookingsPage() {
                 : b
             ))
           } else if (payload.eventType === 'INSERT' && payload.new) {
-            setBookings(prev => [payload.new, ...prev])
+            setBookings(prev => [payload.new as Booking, ...prev])
           } else if (payload.eventType === 'DELETE' && payload.old) {
             setBookings(prev => prev.filter(b => b.id !== payload.old.id))
           } else {
