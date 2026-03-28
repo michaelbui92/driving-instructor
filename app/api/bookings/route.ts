@@ -6,28 +6,55 @@ export const dynamic = 'force-dynamic'
 // USE ANON KEY FOR READS - SERVICE ROLE HAS STALE DATA
 export async function GET(request: NextRequest) {
   try {
-    // Use ANON key for reads (fresh data) instead of service role (stale)
+    // Use ANON key for reads
     const anonClient = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
     
-    // Simple query with exact count
-    const { data, error, count } = await anonClient
-      .from('bookings')
-      .select('*', { count: 'exact' })
-      .order('created_at', { ascending: false })
+    // AGGRESSIVE retry for Supabase replication lag
+    let data: any = null
+    let error: any = null
+    let count: number = 0
+    let attempts = 0
+    const maxAttempts = 5
+    const retryDelay = 2000  // 2 seconds
+    
+    while (attempts < maxAttempts) {
+      attempts++
+      
+      const result = await anonClient
+        .from('bookings')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+      
+      data = result.data
+      error = result.error
+      count = result.count || 0
+      
+      console.log(`Attempt ${attempts}/${maxAttempts}: Got ${data?.length || 0} bookings (count: ${count})`)
+      
+      // If we got the expected count OR this is our last attempt, break
+      if (data && count > 0 && data.length === count) {
+        console.log(`✅ Got all ${count} bookings`)
+        break
+      }
+      
+      if (attempts < maxAttempts) {
+        console.log(`🔄 Retrying in ${retryDelay}ms...`)
+        await new Promise(resolve => setTimeout(resolve, retryDelay))
+      }
+    }
     
     if (error) {
       console.error('Bookings fetch error:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
     
-    console.log(`📊 /api/bookings (anon key): Got ${data?.length || 0} bookings (total in DB: ${count})`)
+    console.log(`📊 Final: ${data?.length || 0} bookings (DB says: ${count})`)
     
-    // Log first booking status to verify freshness
-    if (data && data.length > 0) {
-      console.log('First booking status:', data[0].status)
+    if (count > 0 && data?.length !== count) {
+      console.warn(`⚠️ WARNING: Missing ${count - (data?.length || 0)} bookings due to replication lag`)
     }
     
     // Minimal transformation
