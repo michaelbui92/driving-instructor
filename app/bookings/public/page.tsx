@@ -65,9 +65,20 @@ export default function PublicBookingsPage() {
       const data = await res.json()
       
       if (res.ok) {
-        console.log('✅ Update successful — reloading from Supabase')
-        // Reload from Supabase to ensure we have the latest state
-        await loadBookings()
+        console.log('✅ Update confirmed by Supabase')
+        // Use server response data instead of reloading — avoids Supabase replication lag
+        const result = await res.json()
+        if (result.success && result.booking) {
+          setBookings(prev => prev.map(b =>
+            b.id === result.booking.id
+              ? { ...b, status: result.booking.status }
+              : b
+          ))
+        } else {
+          // Fallback: reload after short delay to let replication catch up
+          await new Promise(r => setTimeout(r, 1500))
+          await loadBookings()
+        }
       } else {
         // ROLLBACK on error - restore previous state
         console.error('❌ Update failed:', data.error)

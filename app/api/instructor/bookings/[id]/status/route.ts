@@ -3,10 +3,10 @@ import { createClient } from '@supabase/supabase-js'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const bookingId = params.id
+    const { id: bookingId } = await params
     const { status } = await request.json()
 
     if (!status || !['pending', 'confirmed', 'cancelled', 'completed'].includes(status)) {

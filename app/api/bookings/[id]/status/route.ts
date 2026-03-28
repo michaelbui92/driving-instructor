@@ -5,10 +5,10 @@ import { revalidateTag } from 'next/cache'
 // SIMPLE: Update booking status
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const bookingId = params.id
+    const { id: bookingId } = await params
     const body = await request.json()
     const { status } = body
     
@@ -29,9 +29,9 @@ export async function POST(
     
     const { data, error } = await adminClient
       .from('bookings')
-      .update({ status })
+      .update({ status, updated_at: new Date().toISOString() })
       .eq('id', bookingId)
-      .select()
+      .select('*')
 
     console.log('📝 Supabase update result:', { data, error, count: data?.length })
 

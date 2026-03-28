@@ -12,14 +12,12 @@
     "@supabase/supabase-js": "^2.99.3",
     "aos": "^2.3.4",
     "next": "14.2.0",
-    "pg": "^8.20.0",
     "react": "^18",
     "react-dom": "^18"
   },
   "devDependencies": {
     "@types/aos": "^3.0.7",
     "@types/node": "^20",
-    "@types/pg": "^8.20.0",
     "@types/react": "^18",
     "@types/react-dom": "^18",
     "autoprefixer": "^10.0.1",

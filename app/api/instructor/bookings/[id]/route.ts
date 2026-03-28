@@ -3,10 +3,10 @@ import { createClient } from '@supabase/supabase-js'
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const bookingId = params.id
+    const { id: bookingId } = await params
 
     // Use admin client to bypass RLS
     const adminClient = createClient(
