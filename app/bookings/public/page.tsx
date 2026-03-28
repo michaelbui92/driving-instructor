@@ -66,14 +66,8 @@ export default function PublicBookingsPage() {
       const result = await res.json()
       
       if (res.ok && result.success) {
-        console.log('✅ Update confirmed by Supabase:', result.booking, 'freshConfirmed:', result.freshConfirmed)
-        
-        if (!result.freshConfirmed) {
-          // Update returned success but DB doesn't reflect it — RLS or policy issue
-          alert(`⚠️ Update may not have saved. Database shows: ${result.booking?.status}\n\nCheck Supabase RLS policies on the bookings table.`)
-        }
-        
-        // Use server's fresh read result — this is the authoritative DB state
+        console.log('✅ Update confirmed by Supabase:', result.booking)
+        // Trust the API response — it returns the updated booking directly from Supabase
         if (result.booking) {
           setBookings(prev => prev.map(b =>
             b.id === result.booking.id
@@ -110,20 +104,27 @@ export default function PublicBookingsPage() {
         },
         (payload) => {
           console.log('Real-time booking change in public view:', payload)
-          // Refresh bookings when any change occurs
-          loadBookings()
+          // Update only the changed booking — don't reload all (avoids stale reads overwriting recent updates)
+          if (payload.eventType === 'UPDATE' && payload.new) {
+            setBookings(prev => prev.map(b =>
+              b.id === payload.new.id
+                ? { ...b, status: payload.new.status }
+                : b
+            ))
+          } else if (payload.eventType === 'INSERT' && payload.new) {
+            setBookings(prev => [payload.new, ...prev])
+          } else if (payload.eventType === 'DELETE' && payload.old) {
+            setBookings(prev => prev.filter(b => b.id !== payload.old.id))
+          } else {
+            // Fallback: reload if we can't determine the change
+            loadBookings()
+          }
         }
       )
       .subscribe()
 
-    // Auto-refresh every 30 seconds as backup
-    const interval = setInterval(() => {
-      loadBookings()
-    }, 30000)
-    
     return () => {
       supabase.removeChannel(channel)
-      clearInterval(interval)
     }
   }, [])
 

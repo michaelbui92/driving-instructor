@@ -1,44 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-// Force dynamic rendering - never cache
 export const dynamic = 'force-dynamic'
 
-// GET ALL BOOKINGS — reads directly from Supabase REST API
+// GET ALL BOOKINGS
 export async function GET(request: NextRequest) {
   try {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
 
-    // Use direct REST API call — bypasses Supabase JS client connection pooling
-    // This avoids any stale reads from connection pools on serverless
-    const url = `${supabaseUrl}/rest/v1/bookings?select=*&order=created_at.desc`
-    
-    const response = await fetch(url, {
-      headers: {
-        'apikey': serviceKey,
-        'Authorization': `Bearer ${serviceKey}`,
-        'Content-Type': 'application/json',
-        ' Prefer': 'return=representation',
-      },
-      // Ensure fresh fetch on every call
-      cache: 'no-store',
-    })
+    const { data, error } = await adminClient
+      .from('bookings')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(1000)
 
-    if (!response.ok) {
-      const errText = await response.text()
-      console.error('❌ Supabase REST API error:', response.status, errText)
-      return NextResponse.json({ error: 'Database read failed' }, { status: 500 })
+    if (error) {
+      console.error('Bookings fetch error:', error)
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    const data: any[] = await response.json()
+    const statuses = (data || []).map((b: any) => `${b.id.substring(0, 8)}:${b.status}`)
+    console.log(`📤 GET /api/bookings → ${(data || []).length} bookings:`, statuses)
 
-    // Debug: log raw data statuses
-    const statuses = data.map((b: any) => ({ id: b.id.substring(0, 8), status: b.status }))
-    console.log(`📤 GET /api/bookings → ${data.length} bookings:`, JSON.stringify(statuses))
-
-    // Format for frontend — include ALL fields both portals need
-    const bookings = data.map((b: any) => {
+    const bookings = (data || []).map((b: any) => {
       let price = 45
       if (b.lesson_type === 'single') price = 55
       else if (b.lesson_type === 'package10') price = 45 * 10
@@ -65,13 +52,9 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    const nextResponse = NextResponse.json({ bookings })
-    
-    // No cache
-    nextResponse.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate')
-    nextResponse.headers.set('Pragma', 'no-cache')
-    
-    return nextResponse
+    const response = NextResponse.json({ bookings })
+    response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0')
+    return response
   } catch (error: any) {
     console.error('Bookings API error:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
