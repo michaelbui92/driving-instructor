@@ -12,12 +12,30 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [studentDropdownOpen, setStudentDropdownOpen] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [userEmail, setUserEmail] = useState('')
   const dropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
 
-  // Check auth status
+  // Check auth status and get email
   useEffect(() => {
-    setIsLoggedIn(document.cookie.includes('sb-logged-in'))
+    const checkAuth = () => {
+      const loggedIn = document.cookie.includes('sb-logged-in')
+      setIsLoggedIn(loggedIn)
+      
+      if (loggedIn) {
+        // Try to get email from cookie
+        const cookies = document.cookie.split(';')
+        for (const cookie of cookies) {
+          const [name, value] = cookie.trim().split('=')
+          if (name === 'sb-email') {
+            setUserEmail(decodeURIComponent(value))
+            break
+          }
+        }
+      }
+    }
+    
+    checkAuth()
   }, [])
 
   // Close student dropdown when clicking outside
@@ -58,6 +76,7 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
     try {
       await fetch('/api/student-auth/logout', { method: 'POST' })
       setIsLoggedIn(false)
+      setUserEmail('')
       setStudentDropdownOpen(false)
       router.push('/student/login')
     } catch (err) {
@@ -78,64 +97,59 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
             )}
           </div>
 
-          {/* Desktop Navigation - Simplified without dropdowns */}
+          {/* Desktop Navigation */}
           <div className="hidden md:flex space-x-4 items-center">
-            <Link href="/#services" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">Services</Link>
-            <Link href="/#pricing" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">Pricing</Link>
             <Link href="/about" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">About</Link>
             <Link href="/blog" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">Blog</Link>
             <Link href="/faq" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">FAQ</Link>
             <Link href="/contact" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">Contact</Link>
             <div className="flex space-x-2 ml-2">
-              {/* Student Portal Dropdown */}
-              <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setStudentDropdownOpen(!studentDropdownOpen)}
-                  className="px-3 py-1.5 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition font-medium text-sm flex items-center gap-1"
-                >
-                  Student Portal
-                  <svg className={`w-4 h-4 transition-transform ${studentDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {studentDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50">
-                    {isLoggedIn ? (
-                      <>
-                        <Link
-                          href="/student/dashboard"
-                          onClick={handleLinkClick}
-                          className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-primary transition"
-                        >
-                          📊 Dashboard
-                        </Link>
-                        <Link
-                          href="/student/details"
-                          onClick={handleLinkClick}
-                          className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-primary transition"
-                        >
-                          👤 My Details
-                        </Link>
-                        <div className="border-t border-gray-100 my-1" />
-                        <button
-                          onClick={handleLogout}
-                          className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition"
-                        >
-                          🚪 Logout
-                        </button>
-                      </>
-                    ) : (
+              {/* Student - show email if logged in */}
+              {isLoggedIn ? (
+                <div className="relative" ref={dropdownRef}>
+                  <button
+                    onClick={() => setStudentDropdownOpen(!studentDropdownOpen)}
+                    className="px-3 py-1.5 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition font-medium text-sm flex items-center gap-1 max-w-[200px]"
+                  >
+                    <span className="truncate">{userEmail || 'Student'}</span>
+                    <svg className={`w-4 h-4 transition-transform ${studentDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {studentDropdownOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-100 py-1 z-50">
                       <Link
-                        href="/student/login"
+                        href="/student/dashboard"
                         onClick={handleLinkClick}
                         className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-primary transition"
                       >
-                        🔐 Login
+                        📊 Dashboard
                       </Link>
-                    )}
-                  </div>
-                )}
-              </div>
+                      <Link
+                        href="/student/details"
+                        onClick={handleLinkClick}
+                        className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-primary transition"
+                      >
+                        👤 My Details
+                      </Link>
+                      <div className="border-t border-gray-100 my-1" />
+                      <button
+                        onClick={handleLogout}
+                        className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 transition"
+                      >
+                        🚪 Logout
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Link
+                  href="/student/login"
+                  className="px-3 py-1.5 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition font-medium text-sm"
+                >
+                  Student Login
+                </Link>
+              )}
               <Link href="/instructor" className="px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-secondary transition font-medium text-sm">Instructor Portal</Link>
             </div>
           </div>
@@ -160,28 +174,29 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
           </div>
         </div>
 
-        {/* Mobile menu with slide animation - Simplified */}
+        {/* Mobile menu */}
         <div className={`md:hidden overflow-hidden transition-all duration-500 ease-in-out ${mobileMenuOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
           <div className="pb-4 space-y-1 pt-3">
-            <Link href="/#services" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium">Services</Link>
-            <Link href="/#pricing" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium">Pricing</Link>
             <Link href="/about" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium">About</Link>
             <Link href="/blog" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium">Blog</Link>
             <Link href="/faq" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium">FAQ</Link>
             <Link href="/contact" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium">Contact</Link>
             
             <div className="pt-3 space-y-2 border-t border-gray-200">
-              <p className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Student Portal</p>
-              <Link href="/student/dashboard" onClick={handleLinkClick} className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-primary rounded-lg transition">📊 Dashboard</Link>
-              <Link href="/student/details" onClick={handleLinkClick} className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-primary rounded-lg transition">👤 My Details</Link>
-              <Link href="/student/login" onClick={handleLinkClick} className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-primary rounded-lg transition">🔐 Login</Link>
-              {isLoggedIn && (
-                <button
-                  onClick={() => { handleLogout(); handleLinkClick(); }}
-                  className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                >
-                  🚪 Logout
-                </button>
+              {isLoggedIn ? (
+                <>
+                  <p className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider truncate">{userEmail}</p>
+                  <Link href="/student/dashboard" onClick={handleLinkClick} className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-primary rounded-lg transition">📊 Dashboard</Link>
+                  <Link href="/student/details" onClick={handleLinkClick} className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-primary rounded-lg transition">👤 My Details</Link>
+                  <button
+                    onClick={() => { handleLogout(); handleLinkClick(); }}
+                    className="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                  >
+                    🚪 Logout
+                  </button>
+                </>
+              ) : (
+                <Link href="/student/login" onClick={handleLinkClick} className="block px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-center">Student Login</Link>
               )}
               <Link href="/instructor" onClick={handleLinkClick} className="block px-4 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition font-medium text-center">Instructor Portal</Link>
             </div>
