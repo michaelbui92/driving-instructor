@@ -30,7 +30,7 @@ import {
   getSortedRules
 } from '@/lib/booking-utils'
 
-type TabType = 'upcoming' | 'all' | 'rules' | 'availability' | 'calendar' | 'profile'
+type TabType = 'upcoming' | 'all' | 'rules' | 'availability' | 'calendar' | 'profile' | 'create-booking'
 
 interface InstructorProfile {
   id: string
@@ -108,6 +108,18 @@ export default function InstructorPage() {
     maxBookings: 1,
     repeatType: RepeatType.REPEATING
   })
+
+  // Booking creation form state
+  const [bookingForm, setBookingForm] = useState({
+    studentName: '',
+    email: '',
+    phone: '',
+    date: '',
+    time: '9:00 AM',
+    lessonType: 'single'
+  })
+  const [creatingBooking, setCreatingBooking] = useState(false)
+  const [availableTimes, setAvailableTimes] = useState<string[]>([])
 
   // Load bookings function (can be called from anywhere)
   const loadBookings = async () => {
@@ -307,6 +319,82 @@ export default function InstructorPage() {
 
   const getTotalRevenue = () => bookings.filter(b => b.status === 'completed').reduce((sum, b) => sum + b.price, 0)
   const getPendingRevenue = () => bookings.filter(b => b.status !== 'cancelled').reduce((sum, b) => sum + b.price, 0)
+
+  // Fetch available times for booking form
+  const fetchAvailableTimes = async (date: string) => {
+    try {
+      const res = await fetch(`/api/availability?date=${date}`)
+      if (res.ok) {
+        const data = await res.json()
+        setAvailableTimes(data.availableSlots || [])
+      }
+    } catch (error) {
+      console.error('Error fetching availability:', error)
+    }
+  }
+
+  // Handle booking form date change
+  const handleBookingDateChange = (date: string) => {
+    setBookingForm({ ...bookingForm, date, time: '9:00 AM' })
+    fetchAvailableTimes(date)
+  }
+
+  // Create booking handler
+  const handleCreateBooking = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!bookingForm.studentName || !bookingForm.date || !bookingForm.time) {
+      alert('Please fill in student name, date, and time')
+      return
+    }
+
+    setCreatingBooking(true)
+    
+    try {
+      const res = await fetch('/api/bookings/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentName: bookingForm.studentName,
+          email: bookingForm.email || 'guest@example.com',
+          phone: bookingForm.phone,
+          date: bookingForm.date,
+          time: bookingForm.time,
+          lessonType: bookingForm.lessonType
+        })
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to create booking')
+      }
+
+      alert(`Booking created successfully for ${bookingForm.studentName} on ${formatDate(bookingForm.date)} at ${bookingForm.time}`)
+      
+      // Reset form
+      setBookingForm({
+        studentName: '',
+        email: '',
+        phone: '',
+        date: '',
+        time: '9:00 AM',
+        lessonType: 'single'
+      })
+      setAvailableTimes([])
+      
+      // Refresh bookings list
+      loadBookings()
+      
+      // Switch to upcoming tab
+      setSelectedTab('upcoming')
+    } catch (error: any) {
+      console.error('Error creating booking:', error)
+      alert(`Error creating booking: ${error.message}`)
+    } finally {
+      setCreatingBooking(false)
+    }
+  }
 
   const handleBlockSlot = () => {
     if (!selectedBlockDate || selectedBlockTimes.length === 0) {
@@ -1396,6 +1484,147 @@ export default function InstructorPage() {
     );
   };
 
+  const renderCreateBookingTab = () => (
+    <div>
+      <h2 className="text-2xl font-bold mb-6">Create New Booking</h2>
+      <p className="text-gray-600 mb-6">
+        Create a booking directly in the system. The booking will be created with 'pending' status.
+      </p>
+
+      <div className="bg-white rounded-xl shadow-lg p-6 max-w-2xl">
+        <form onSubmit={handleCreateBooking} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Student Name *</label>
+            <input
+              type="text"
+              value={bookingForm.studentName}
+              onChange={(e) => setBookingForm({ ...bookingForm, studentName: e.target.value })}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              placeholder="Enter student's full name"
+              required
+            />
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <input
+                type="email"
+                value={bookingForm.email}
+                onChange={(e) => setBookingForm({ ...bookingForm, email: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="student@example.com"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+              <input
+                type="tel"
+                value={bookingForm.phone}
+                onChange={(e) => setBookingForm({ ...bookingForm, phone: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                placeholder="0412 345 678"
+              />
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Date *</label>
+              <input
+                type="date"
+                value={bookingForm.date}
+                onChange={(e) => handleBookingDateChange(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Time *</label>
+              <select
+                value={bookingForm.time}
+                onChange={(e) => setBookingForm({ ...bookingForm, time: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                required
+              >
+                {availableTimes.length > 0 ? (
+                  availableTimes.map(time => (
+                    <option key={time} value={time}>{time}</option>
+                  ))
+                ) : (
+                  <>
+                    <option value="8:00 AM">8:00 AM</option>
+                    <option value="9:00 AM">9:00 AM</option>
+                    <option value="10:00 AM">10:00 AM</option>
+                    <option value="11:00 AM">11:00 AM</option>
+                    <option value="12:00 PM">12:00 PM</option>
+                    <option value="1:00 PM">1:00 PM</option>
+                    <option value="2:00 PM">2:00 PM</option>
+                    <option value="3:00 PM">3:00 PM</option>
+                    <option value="4:00 PM">4:00 PM</option>
+                    <option value="5:00 PM">5:00 PM</option>
+                    <option value="6:00 PM">6:00 PM</option>
+                    <option value="7:00 PM">7:00 PM</option>
+                    <option value="8:00 PM">8:00 PM</option>
+                  </>
+                )}
+              </select>
+              {bookingForm.date && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {availableTimes.length} slots available
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Lesson Type</label>
+              <select
+                value={bookingForm.lessonType}
+                onChange={(e) => setBookingForm({ ...bookingForm, lessonType: e.target.value })}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+              >
+                <option value="single">Single Lesson ($55)</option>
+                <option value="casual">Casual Driving ($45)</option>
+                <option value="test">Driving Test ($75)</option>
+                <option value="package_5">5-Lesson Package ($225)</option>
+                <option value="package_10">10-Lesson Package ($440)</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t">
+            <div className="flex gap-4">
+              <button
+                type="submit"
+                disabled={creatingBooking || !bookingForm.studentName || !bookingForm.date || !bookingForm.time}
+                className="flex-1 px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary disabled:opacity-50 disabled:cursor-not-allowed transition font-semibold"
+              >
+                {creatingBooking ? 'Creating...' : 'Create Booking'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setBookingForm({
+                    studentName: '',
+                    email: '',
+                    phone: '',
+                    date: '',
+                    time: '9:00 AM',
+                    lessonType: 'single'
+                  })
+                  setAvailableTimes([])
+                }}
+                className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+
   const renderBookingList = () => {
     const filtered = getFilteredBookings()
     if (filtered.length === 0) {
@@ -1711,10 +1940,14 @@ export default function InstructorPage() {
                 className={`flex-1 px-6 py-4 font-semibold transition ${selectedTab === 'profile' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
                 onClick={() => setSelectedTab('profile')}
               >👤 Profile</button>
+              <button
+                className={`flex-1 px-6 py-4 font-semibold transition ${selectedTab === 'create-booking' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
+                onClick={() => setSelectedTab('create-booking')}
+              >➕ New Booking</button>
             </div>
           </div>
           <div className="p-6">
-            {selectedTab === 'availability' ? renderAvailabilityTab() : selectedTab === 'rules' ? renderRulesTab() : selectedTab === 'calendar' ? renderCalendarTab() : selectedTab === 'profile' ? renderProfileTab() : (
+            {selectedTab === 'create-booking' ? renderCreateBookingTab() : selectedTab === 'availability' ? renderAvailabilityTab() : selectedTab === 'rules' ? renderRulesTab() : selectedTab === 'calendar' ? renderCalendarTab() : selectedTab === 'profile' ? renderProfileTab() : (
               <>
                 {selectedTab === 'all' && (
                   <div className="mb-4">
