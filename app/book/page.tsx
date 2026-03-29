@@ -11,6 +11,7 @@ type BookingForm = {
   studentName: string
   email: string
   phone: string
+  address: string
   lessonType: string
   date: string
   time: string
@@ -45,6 +46,7 @@ export default function BookPage() {
     studentName: '',
     email: '',
     phone: '',
+    address: '',
     lessonType: 'single',
     date: '',
     time: ''
@@ -188,6 +190,7 @@ export default function BookPage() {
           student_name: form.studentName,
           email: form.email,
           phone: form.phone,
+          address: form.address,
           date: form.date,
           time: form.time,
           lesson_type: form.lessonType,
@@ -461,6 +464,17 @@ export default function BookPage() {
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
                     placeholder="0412 345 678"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Address</label>
+                  <input
+                    type="text"
+                    value={form.address}
+                    onChange={(e) => setForm({ ...form, address: e.target.value })}
+                    placeholder="Your address for pickup"
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
                 </div>
