@@ -486,7 +486,7 @@ export default function InstructorPage() {
     }
   }
 
-  const handleBlockSlot = () => {
+  const handleBlockSlot = async () => {
     if (!selectedBlockDate || selectedBlockTimes.length === 0) {
       alert('Please select a date and at least one time slot to block')
       return
@@ -602,7 +602,7 @@ export default function InstructorPage() {
   }
 
   // ============== Rules Management Functions ==============
-  const handleCreateRule = () => {
+  const handleCreateRule = async () => {
     try {
       // Validation
       if (!ruleForm.name.trim()) {
@@ -652,7 +652,7 @@ export default function InstructorPage() {
     }
   }
 
-  const handleUpdateRule = (id: string) => {
+  const handleUpdateRule = async (id: string) => {
     try {
       // Validation (same as create)
       if (!ruleForm.name.trim()) {
