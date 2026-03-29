@@ -31,15 +31,14 @@ export async function POST(request: NextRequest) {
         },
         body: JSON.stringify({
           to: ['drivewithbui@agentmail.to'],
-          subject: `📧 Contact Form: ${subject || 'General Inquiry'} from ${name}`,
+          subject: `Contact Form ${subject || 'Other'}`,
           text: `
-New Contact Form Submission:
+Contact Form ${subject || 'Other'}
 
-👤 Name: ${name}
-📧 Email: ${email}
-📋 Subject: ${subject || 'General Inquiry'}
+Name: ${name}
+Email: ${email}
 
-💬 Message:
+Message:
 ${message}
 
 ---

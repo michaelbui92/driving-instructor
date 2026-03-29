@@ -58,29 +58,59 @@ export default function BlogPage() {
         <p className="text-center text-gray-600 mb-12" data-aos="fade-up" data-aos-delay="100">Helpful tips and insights for new and experienced drivers</p>
         
         <div className="space-y-8">
-          {blogPosts.map((post, index) => (
-            <div 
-              key={post.id} 
-              className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition hover-lift"
-              data-aos="fade-up"
-              data-aos-delay={index * 100}
-            >
-              <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
-                <span>📅 {post.date}</span>
-                <span>•</span>
-                <span>⏱️ {post.readTime}</span>
+          {blogPosts.map((post, index) => {
+            // Determine appropriate link for each blog post
+            let link = "/faq"
+            let linkText = "Read More →"
+            
+            // Map blog posts to relevant links
+            if (post.title.includes("Mirror Checks")) {
+              link = "/faq#safety"
+              linkText = "Learn Safety Tips →"
+            } else if (post.title.includes("NSW Road Rules")) {
+              link = "/faq#requirements"
+              linkText = "View Requirements →"
+            } else if (post.title.includes("Night Driving")) {
+              link = "/faq#lessons"
+              linkText = "Book a Lesson →"
+            } else if (post.title.includes("Driving Test")) {
+              link = "/faq#test"
+              linkText = "Test Preparation →"
+            } else if (post.title.includes("Roundabouts")) {
+              link = "/faq#skills"
+              linkText = "Build Skills →"
+            } else if (post.title.includes("Sydney Traffic")) {
+              link = "/contact"
+              linkText = "Get Help →"
+            }
+            
+            return (
+              <div 
+                key={post.id} 
+                className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition hover-lift"
+                data-aos="fade-up"
+                data-aos-delay={index * 100}
+              >
+                <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
+                  <span>📅 {post.date}</span>
+                  <span>•</span>
+                  <span>⏱️ {post.readTime}</span>
+                </div>
+                <h2 className="text-2xl font-bold mb-3 hover:text-primary transition cursor-pointer">
+                  {post.title}
+                </h2>
+                <p className="text-gray-600 mb-4">
+                  {post.excerpt}
+                </p>
+                <Link 
+                  href={link}
+                  className="inline-flex items-center gap-1 text-primary font-semibold hover:underline"
+                >
+                  {linkText}
+                </Link>
               </div>
-              <h2 className="text-2xl font-bold mb-3 hover:text-primary transition cursor-pointer">
-                {post.title}
-              </h2>
-              <p className="text-gray-600 mb-4">
-                {post.excerpt}
-              </p>
-              <button className="text-primary font-semibold hover:underline">
-                Read More →
-              </button>
-            </div>
-          ))}
+            )
+          })}
         </div>
 
         <div 
