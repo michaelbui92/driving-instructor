@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
     // Get all bookings
     const { data, error } = await adminClient
-      .from('bookings')
+      .from('bookings_new')
       .select('*')
       .order('date', { ascending: false })
 

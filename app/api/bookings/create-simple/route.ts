@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     
     // Create booking
     const { data, error } = await adminClient
-      .from('bookings')
+      .from('bookings_new')
       .insert([
         {
           student_name: studentName,

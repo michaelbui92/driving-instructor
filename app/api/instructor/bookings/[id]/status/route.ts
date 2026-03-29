@@ -20,7 +20,7 @@ export async function POST(
     )
 
     const { data, error } = await adminClient
-      .from('bookings')
+      .from('bookings_new')
       .update({ status })
       .eq('id', bookingId)
       .select()

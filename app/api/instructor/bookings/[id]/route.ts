@@ -15,7 +15,7 @@ export async function DELETE(
     )
 
     const { error } = await adminClient
-      .from('bookings')
+      .from('bookings_new')
       .delete()
       .eq('id', bookingId)
 

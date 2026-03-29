@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     
     // Get existing bookings for this date
     const { data: bookings, error: bookingsError } = await supabase
-      .from('bookings')
+      .from('bookings_new')
       .select('*')
       .eq('date', date)
       .eq('status', 'confirmed')

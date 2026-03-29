@@ -298,7 +298,7 @@ export default function InstructorPage() {
 
       const newArchived = !booking.archived
       const { error } = await supabase
-        .from('bookings')
+        .from('bookings_new')
         .update({ archived: newArchived })
         .eq('id', bookingId)
 
