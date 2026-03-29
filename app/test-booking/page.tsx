@@ -35,7 +35,8 @@ export default function TestBookingPage() {
       if (error) {
         setSupabaseStatus(`Error: ${error.message}`)
       } else {
-        setSupabaseStatus(`Connected ✓ (${data?.count || 0} bookings)`)
+        const count = (data as any)?.count || 0
+        setSupabaseStatus(`Connected ✓ (${count} bookings)`)
       }
     } catch (err: any) {
       setSupabaseStatus(`Failed: ${err.message}`)
