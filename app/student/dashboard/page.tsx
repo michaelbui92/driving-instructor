@@ -311,15 +311,6 @@ export default function StudentDashboardPage() {
             <p className="text-gray-600">{userEmail}</p>
           </div>
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => {
-                setBookings([])
-                loadDashboard()
-              }}
-              className="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-semibold shadow-md"
-            >
-              🔄 Refresh
-            </button>
             <Link
               href="/book"
               className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold shadow-md"

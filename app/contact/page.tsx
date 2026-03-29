@@ -5,36 +5,53 @@ import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 
 export default function ContactPage() {
-  const [form, setForm] = useState({
+  const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
+    subject: '',
     message: ''
   })
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
 
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    })
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
-    
+    setSuccess(false)
+
     try {
-      const res = await fetch('/api/contact', {
+      const response = await fetch('/api/contact', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form)
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
       })
-      
-      if (!res.ok) {
+
+      if (!response.ok) {
         throw new Error('Failed to send message')
       }
-      
+
       setSuccess(true)
-      setForm({ name: '', email: '', phone: '', message: '' })
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        subject: '',
+        message: ''
+      })
     } catch (err) {
-      setError('Failed to send message. Please try again or contact directly.')
+      setError('Failed to send message. Please try again or contact me directly.')
     } finally {
       setLoading(false)
     }
@@ -43,140 +60,234 @@ export default function ContactPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Navbar />
-      
-      <div className="max-w-4xl mx-auto px-4 py-16">
-        <h1 className="text-4xl font-bold text-center mb-4">Get in Touch</h1>
-        <p className="text-center text-gray-600 mb-12">Have questions? Send me a message and I'll get back to you soon.</p>
-        
-        <div className="grid md:grid-cols-2 gap-8">
-          {/* Contact Info */}
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <h2 className="text-2xl font-bold mb-6">Contact Information</h2>
-            
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="text-2xl">📍</div>
-                <div>
-                  <h3 className="font-semibold">Location</h3>
-                  <p className="text-gray-600">Lidcombe Area, Sydney NSW</p>
-                  <p className="text-gray-500 text-sm">Pickup & drop-off available</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-4">
-                <div className="text-2xl">✉️</div>
-                <div>
-                  <h3 className="font-semibold">Email</h3>
-                  <a href="mailto:drivewithbui@agentmail.to" className="text-primary hover:underline">drivewithbui@agentmail.to</a>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-4">
-                <div className="text-2xl">📱</div>
-                <div>
-                  <h3 className="font-semibold">Phone</h3>
-                  <p className="text-gray-600">Message via email for fastest response</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-4">
-                <div className="text-2xl">🕐</div>
-                <div>
-                  <h3 className="font-semibold">Availability</h3>
-                  <p className="text-gray-600">Weekdays: 9am - 8pm</p>
-                  <p className="text-gray-600">Weekends: 8am - 7pm</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start gap-4">
-                <div className="text-2xl">📸</div>
-                <div>
-                  <h3 className="font-semibold">Instagram</h3>
-                  <a href="https://instagram.com/DriveWithBui" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">@DriveWithBui</a>
-                  <p className="text-gray-500 text-sm">Follow for driving tips!</p>
-                </div>
-              </div>
-            </div>
-          </div>
 
+      {/* Hero Section */}
+      <section className="relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+          <div className="text-center">
+            <h1 className="text-5xl md:text-6xl font-bold mb-6" data-aos="fade-up">
+              Get in Touch
+            </h1>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8" data-aos="fade-up" data-aos-delay="100">
+              Have questions about driving lessons? Ready to book? I'm here to help!
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        <div className="grid lg:grid-cols-2 gap-12">
           {/* Contact Form */}
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <h2 className="text-2xl font-bold mb-6">Send a Message</h2>
+          <div className="bg-white rounded-2xl shadow-xl p-8" data-aos="fade-right">
+            <h2 className="text-3xl font-bold mb-6">Send a Message</h2>
             
-            {success ? (
-              <div className="text-center py-8">
-                <div className="text-6xl mb-4">✅</div>
-                <h3 className="text-xl font-bold mb-2">Message Sent!</h3>
-                <p className="text-gray-600 mb-6">I'll get back to you as soon as possible.</p>
-                <button
-                  onClick={() => setSuccess(false)}
-                  className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-                >
-                  Send another message
-                </button>
+            {success && (
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
+                Message sent successfully! I'll get back to you within 24 hours.
               </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="space-y-4">
+            )}
+
+            {error && (
+              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Your Name *
+                  </label>
                   <input
                     type="text"
-                    value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Your name"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="John Smith"
                   />
                 </div>
-                
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Email Address *
+                  </label>
                   <input
                     type="email"
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="your@email.com"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="john@example.com"
                   />
                 </div>
-                
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone (optional)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Phone Number
+                  </label>
                   <input
                     type="tel"
-                    value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
                     placeholder="0412 345 678"
                   />
                 </div>
-                
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
-                  <textarea
-                    value={form.message}
-                    onChange={(e) => setForm({ ...form, message: e.target.value })}
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Subject *
+                  </label>
+                  <select
+                    name="subject"
+                    value={formData.subject}
+                    onChange={handleChange}
                     required
-                    rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
-                    placeholder="How can I help you?"
-                  />
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  >
+                    <option value="">Select a subject</option>
+                    <option value="booking">Booking Inquiry</option>
+                    <option value="pricing">Pricing Question</option>
+                    <option value="test">Driving Test</option>
+                    <option value="area">Service Area</option>
+                    <option value="other">Other</option>
+                  </select>
                 </div>
-                
-                {error && (
-                  <p className="text-red-500 text-sm">{error}</p>
-                )}
-                
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-3 bg-primary text-white rounded-xl font-semibold hover:bg-secondary transition disabled:opacity-50"
-                >
-                  {loading ? 'Sending...' : 'Send Message'}
-                </button>
-              </form>
-            )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Message *
+                </label>
+                <textarea
+                  name="message"
+                  value={formData.message}
+                  onChange={handleChange}
+                  required
+                  rows={5}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                  placeholder="Tell me about your driving goals, preferred times, or any questions you have..."
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full px-6 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-secondary transition disabled:opacity-50"
+              >
+                {loading ? 'Sending...' : 'Send Message'}
+              </button>
+            </form>
+          </div>
+
+          {/* Contact Info */}
+          <div className="space-y-8" data-aos="fade-left">
+            {/* Contact Cards */}
+            <div className="bg-white rounded-2xl shadow-xl p-8">
+              <h3 className="text-2xl font-bold mb-6">Contact Information</h3>
+              <div className="space-y-6">
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <span className="text-2xl">📞</span>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-lg mb-1">Phone</h4>
+                    <a href="tel:+61412345678" className="text-primary hover:underline text-lg">
+                      0412 345 678
+                    </a>
+                    <p className="text-gray-600 text-sm mt-1">Call or text - I respond quickly!</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <span className="text-2xl">✉️</span>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-lg mb-1">Email</h4>
+                    <a href="mailto:hello@drivewithbui.com" className="text-primary hover:underline">
+                      hello@drivewithbui.com
+                    </a>
+                    <p className="text-gray-600 text-sm mt-1">Response within 24 hours</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <span className="text-2xl">📍</span>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-lg mb-1">Service Area</h4>
+                    <p className="text-gray-700">Western Sydney</p>
+                    <p className="text-gray-600 text-sm mt-1">Lidcombe, Parramatta, Bankstown, Liverpool, Campbelltown, Blacktown, Penrith</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-4">
+                  <div className="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <span className="text-2xl">⏰</span>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-lg mb-1">Hours</h4>
+                    <p className="text-gray-700">Monday - Sunday: 7:00 AM - 9:00 PM</p>
+                    <p className="text-gray-600 text-sm mt-1">Flexible scheduling available</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Booking CTA */}
+            <div className="bg-gradient-to-br from-primary to-secondary rounded-2xl p-8 text-white">
+              <h3 className="text-2xl font-bold mb-4">Ready to Start Driving?</h3>
+              <p className="mb-6 opacity-90">
+                Book your first lesson online in just 2 minutes. No phone call needed!
+              </p>
+              <Link
+                href="/book"
+                className="inline-block px-6 py-3 bg-white text-primary font-semibold rounded-lg hover:bg-gray-100 transition"
+              >
+                Book Online Now
+              </Link>
+            </div>
+
+            {/* FAQ Link */}
+            <div className="bg-white rounded-2xl shadow-xl p-8">
+              <h3 className="text-2xl font-bold mb-4">Common Questions</h3>
+              <p className="text-gray-600 mb-4">
+                Check our FAQ for answers to common questions about lessons, pricing, and requirements.
+              </p>
+              <Link
+                href="/faq"
+                className="inline-flex items-center gap-2 text-primary font-semibold hover:underline"
+              >
+                View FAQ
+                <span>→</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Map & Location */}
+        <div className="mt-12 bg-white rounded-2xl shadow-xl p-8" data-aos="fade-up">
+          <h3 className="text-2xl font-bold mb-6">Service Area Map</h3>
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-8 text-center">
+            <div className="text-8xl mb-6">🗺️</div>
+            <h4 className="text-xl font-bold mb-2">Western Sydney Coverage</h4>
+            <p className="text-gray-600 mb-4">
+              I service all of Western Sydney with free pickup within 20km of Lidcombe.
+            </p>
+            <div className="inline-flex flex-wrap gap-2 justify-center">
+              <span className="px-4 py-2 bg-blue-100 text-blue-700 rounded-full font-medium">Lidcombe</span>
+              <span className="px-4 py-2 bg-green-100 text-green-700 rounded-full font-medium">Parramatta</span>
+              <span className="px-4 py-2 bg-purple-100 text-purple-700 rounded-full font-medium">Bankstown</span>
+              <span className="px-4 py-2 bg-orange-100 text-orange-700 rounded-full font-medium">Liverpool</span>
+              <span className="px-4 py-2 bg-red-100 text-red-700 rounded-full font-medium">Campbelltown</span>
+              <span className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full font-medium">Blacktown</span>
+              <span className="px-4 py-2 bg-pink-100 text-pink-700 rounded-full font-medium">Penrith</span>
+            </div>
           </div>
         </div>
       </div>

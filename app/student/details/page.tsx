@@ -27,6 +27,7 @@ export default function StudentDetailsPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -150,11 +151,14 @@ export default function StudentDetailsPage() {
 
       setSuccess(true)
       setDetails(prev => ({ ...prev, hasCompletedDetails: true }))
+      setIsEditing(false)
       
-      // Redirect to dashboard after short delay
-      setTimeout(() => {
-        router.push('/student/dashboard')
-      }, 1500)
+      // Redirect to dashboard after short delay (only for first time)
+      if (!details.hasCompletedDetails) {
+        setTimeout(() => {
+          router.push('/student/dashboard')
+        }, 1500)
+      }
     } catch (err: any) {
       console.error('Save error:', err)
       setError(err.message || 'Failed to save details')
@@ -222,9 +226,10 @@ export default function StudentDetailsPage() {
                 name="fullName"
                 value={details.fullName}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                className={`w-full px-4 py-3 border border-gray-300 rounded-xl ${isEditing || !details.hasCompletedDetails ? 'focus:ring-2 focus:ring-primary focus:border-transparent' : 'bg-gray-100 cursor-not-allowed'}`}
                 placeholder="Your full name"
                 required
+                readOnly={details.hasCompletedDetails && !isEditing}
               />
             </div>
 
@@ -236,9 +241,10 @@ export default function StudentDetailsPage() {
                 name="phone"
                 value={details.phone}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                className={`w-full px-4 py-3 border border-gray-300 rounded-xl ${isEditing || !details.hasCompletedDetails ? 'focus:ring-2 focus:ring-primary focus:border-transparent' : 'bg-gray-100 cursor-not-allowed'}`}
                 placeholder="0412 345 678"
                 required
+                readOnly={details.hasCompletedDetails && !isEditing}
               />
             </div>
 
@@ -250,20 +256,42 @@ export default function StudentDetailsPage() {
                 rows={3}
                 value={details.address}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                className={`w-full px-4 py-3 border border-gray-300 rounded-xl resize-none ${isEditing || !details.hasCompletedDetails ? 'focus:ring-2 focus:ring-primary focus:border-transparent' : 'bg-gray-100 cursor-not-allowed'}`}
                 placeholder="Your address for pickup and drop-off"
                 required
+                readOnly={details.hasCompletedDetails && !isEditing}
               />
             </div>
 
             <div className="pt-4">
-              <button
-                type="submit"
-                disabled={saving}
-                className="w-full px-6 py-3 bg-primary text-white rounded-xl hover:bg-secondary transition font-semibold disabled:opacity-50"
-              >
-                {saving ? 'Saving...' : 'Save Details'}
-              </button>
+              {details.hasCompletedDetails && !isEditing ? (
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(true)}
+                  className="w-full px-6 py-3 bg-primary text-white rounded-xl hover:bg-secondary transition font-semibold"
+                >
+                  Edit Details
+                </button>
+              ) : (
+                <div className="space-y-3">
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="w-full px-6 py-3 bg-primary text-white rounded-xl hover:bg-secondary transition font-semibold disabled:opacity-50"
+                  >
+                    {saving ? 'Saving...' : 'Save Details'}
+                  </button>
+                  {isEditing && (
+                    <button
+                      type="button"
+                      onClick={() => setIsEditing(false)}
+                      className="w-full px-6 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition font-semibold"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           </form>
 

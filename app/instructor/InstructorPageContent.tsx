@@ -2006,21 +2006,12 @@ export default function InstructorPage() {
           </div>
         )}
 
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        {/* Stats Cards */}
+        <div className="grid md:grid-cols-1 gap-6 mb-8">
           <div className="bg-white rounded-xl p-6 shadow-lg">
             <div className="text-3xl mb-2">🗓️</div>
             <div className="text-3xl font-bold text-blue-600">{todayBookings.length + upcomingBookings.length}</div>
             <p className="text-gray-600">Today & Upcoming</p>
-          </div>
-          <div className="bg-white rounded-xl p-6 shadow-lg">
-            <div className="text-3xl mb-2">✅</div>
-            <div className="text-3xl font-bold text-green-600">${getTotalRevenue()}</div>
-            <p className="text-gray-600">Revenue</p>
-          </div>
-          <div className="bg-white rounded-xl p-6 shadow-lg">
-            <div className="text-3xl mb-2">💰</div>
-            <div className="text-3xl font-bold text-accent">${getPendingRevenue()}</div>
-            <p className="text-gray-600">Pending</p>
           </div>
         </div>
 

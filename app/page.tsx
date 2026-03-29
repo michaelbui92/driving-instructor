@@ -53,7 +53,7 @@ export default function Home() {
       <section className="bg-gradient-to-br from-blue-50 to-indigo-100 py-16" id="pricing">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-xl p-8 border-4 border-primary" data-aos="fade-up" data-aos-delay="200">
+            <div className="bg-white rounded-2xl shadow-xl p-8" data-aos="fade-up" data-aos-delay="200">
               <div className="text-center">
                 <span className="inline-block px-4 py-1 bg-primary text-white text-sm font-semibold rounded-full mb-4">Most Popular</span>
                 <h3 className="text-2xl font-bold mb-2">Single Lesson</h3>
