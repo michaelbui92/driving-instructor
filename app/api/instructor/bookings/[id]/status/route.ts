@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getDBClient } from '@/lib/db-client'
 
 export async function POST(
   request: NextRequest,
@@ -13,24 +13,19 @@ export async function POST(
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
     }
 
-    // Use admin client to bypass RLS
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const db = getDBClient()
 
-    const { data, error } = await adminClient
-      .from('bookings_new')
+    const result = await db
+      .from('bookings')
       .update({ status })
       .eq('id', bookingId)
-      .select()
 
-    if (error) {
-      console.error('Error updating booking status:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (result.error) {
+      console.error('Error updating booking status:', result.error)
+      return NextResponse.json({ error: result.error }, { status: 500 })
     }
 
-    return NextResponse.json({ success: true, booking: data[0] })
+    return NextResponse.json({ success: true, booking: result.data?.[0] || result.data })
   } catch (error: any) {
     console.error('Booking status update error:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })

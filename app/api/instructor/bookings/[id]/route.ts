@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getDBClient } from '@/lib/db-client'
 
 export async function DELETE(
   request: NextRequest,
@@ -7,21 +7,16 @@ export async function DELETE(
 ) {
   try {
     const { id: bookingId } = await params
+    const db = getDBClient()
 
-    // Use admin client to bypass RLS
-    const adminClient = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
-
-    const { error } = await adminClient
-      .from('bookings_new')
+    const result = await db
+      .from('bookings')
       .delete()
       .eq('id', bookingId)
 
-    if (error) {
-      console.error('Error deleting booking:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (result.error) {
+      console.error('Error deleting booking:', result.error)
+      return NextResponse.json({ error: result.error }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
