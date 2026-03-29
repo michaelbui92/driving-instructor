@@ -234,6 +234,16 @@ export default function FAQPage() {
             <h3 className="font-bold text-lg mb-2">Get in Touch</h3>
             <p className="text-gray-600 text-sm">Contact me directly with any questions</p>
           </Link>
+          <a 
+            href="https://instagram.com/drivewithbui"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition text-center group"
+          >
+            <div className="text-4xl mb-4 group-hover:scale-110 transition">📸</div>
+            <h3 className="font-bold text-lg mb-2">Instagram</h3>
+            <p className="text-gray-600 text-sm">Follow @drivewithbui for driving tips</p>
+          </a>
         </div>
       </div>
     </div>

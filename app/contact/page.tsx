@@ -270,6 +270,27 @@ export default function ContactPage() {
           </div>
         </div>
 
+        {/* Social Media */}
+        <div className="mt-12 bg-white rounded-2xl shadow-xl p-8" data-aos="fade-up">
+          <h3 className="text-2xl font-bold mb-6">Follow Us</h3>
+          <div className="text-center">
+            <div className="text-6xl mb-6">📱</div>
+            <h4 className="text-xl font-bold mb-2">Stay Updated on Instagram</h4>
+            <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+              Follow @drivewithbui for driving tips, lesson updates, and student success stories.
+            </p>
+            <a
+              href="https://instagram.com/drivewithbui"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-lg hover:opacity-90 transition"
+            >
+              <span className="text-xl">📸</span>
+              Follow @drivewithbui on Instagram
+            </a>
+          </div>
+        </div>
+
         {/* Map & Location */}
         <div className="mt-12 bg-white rounded-2xl shadow-xl p-8" data-aos="fade-up">
           <h3 className="text-2xl font-bold mb-6">Service Area Map</h3>

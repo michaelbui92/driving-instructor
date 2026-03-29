@@ -32,11 +32,25 @@ export default function AboutPage() {
               <h2 className="text-4xl font-bold mb-6">Hi, I'm Michael</h2>
               <div className="space-y-4 text-gray-600">
                 <p>
-                  Your patient and professional driving instructor in the Lidcombe area. With years of experience helping international students and nervous drivers build confidence on Sydney roads, I specialize in creating a supportive, stress-free learning environment.
+                  Your patient and professional driving instructor in the Lidcombe area. I specialize in creating a supportive, stress-free learning environment for international students and nervous drivers.
                 </p>
                 <p>
                   My teaching approach focuses on practical skills, safety awareness, and building your confidence step by step. Whether you're a complete beginner or just need to sharpen your skills, I'm here to guide you every step of the way.
                 </p>
+                <div className="flex flex-wrap gap-4 mt-6">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
+                    <span className="text-green-600">✓</span>
+                    <span className="font-medium">Fully Insured</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+                    <span className="text-blue-600">✓</span>
+                    <span className="font-medium">Licensed Instructor</span>
+                  </div>
+                  <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 border border-purple-200 rounded-lg">
+                    <span className="text-purple-600">✓</span>
+                    <span className="font-medium">Dual Control Vehicle</span>
+                  </div>
+                </div>
               </div>
             </div>
             <div className="relative">
