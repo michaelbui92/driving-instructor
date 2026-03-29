@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase'
+import { createClient } from '@/lib/db-client'
 
 export default function TestBookingPage() {
   const [bookings, setBookings] = useState<any[]>([])
