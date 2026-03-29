@@ -8,7 +8,6 @@ export default function ContactPage() {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
     subject: '',
     message: ''
   })
@@ -46,7 +45,6 @@ export default function ContactPage() {
       setFormData({
         name: '',
         email: '',
-        phone: '',
         subject: '',
         message: ''
       })
@@ -126,39 +124,24 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone Number
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="0412 345 678"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Subject *
-                  </label>
-                  <select
-                    name="subject"
-                    value={formData.subject}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                  >
-                    <option value="">Select a subject</option>
-                    <option value="booking">Booking Inquiry</option>
-                    <option value="pricing">Pricing Question</option>
-                    <option value="test">Driving Test</option>
-                    <option value="area">Service Area</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Subject *
+                </label>
+                <select
+                  name="subject"
+                  value={formData.subject}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                >
+                  <option value="">Select a subject</option>
+                  <option value="booking">Booking Inquiry</option>
+                  <option value="pricing">Pricing Question</option>
+                  <option value="test">Driving Test</option>
+                  <option value="area">Service Area</option>
+                  <option value="other">Other</option>
+                </select>
               </div>
 
               <div>
@@ -193,47 +176,16 @@ export default function ContactPage() {
               <h3 className="text-2xl font-bold mb-6">Contact Information</h3>
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <span className="text-2xl">📞</span>
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-lg mb-1">Phone</h4>
-                    <a href="tel:+61412345678" className="text-primary hover:underline text-lg">
-                      0412 345 678
-                    </a>
-                    <p className="text-gray-600 text-sm mt-1">Call or text - I respond quickly!</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
                   <div className="flex-shrink-0 w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                     <span className="text-2xl">✉️</span>
                   </div>
                   <div>
                     <h4 className="font-bold text-lg mb-1">Email</h4>
-                    <a href="mailto:hello@drivewithbui.com" className="text-primary hover:underline">
-                      hello@drivewithbui.com
+                    <a href="mailto:drivewithbui@agentmail.to" className="text-primary hover:underline">
+                      drivewithbui@agentmail.to
                     </a>
                     <p className="text-gray-600 text-sm mt-1">Response within 24 hours</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                    <span className="text-2xl">📍</span>
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-lg mb-1">Service Area</h4>
-                    <p className="text-gray-700">Western Sydney</p>
-                    <p className="text-gray-600 text-sm mt-1">Lidcombe, Parramatta, Bankstown, Liverpool, Campbelltown, Blacktown, Penrith</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                    <span className="text-2xl">⏰</span>
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-lg mb-1">Hours</h4>
-                    <p className="text-gray-700">Monday - Sunday: 7:00 AM - 9:00 PM</p>
-                    <p className="text-gray-600 text-sm mt-1">Flexible scheduling available</p>
+                    <p className="text-gray-600 text-sm mt-1">Replies thread automatically for easy tracking</p>
                   </div>
                 </div>
               </div>
@@ -291,26 +243,7 @@ export default function ContactPage() {
           </div>
         </div>
 
-        {/* Map & Location */}
-        <div className="mt-12 bg-white rounded-2xl shadow-xl p-8" data-aos="fade-up">
-          <h3 className="text-2xl font-bold mb-6">Service Area Map</h3>
-          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-8 text-center">
-            <div className="text-8xl mb-6">🗺️</div>
-            <h4 className="text-xl font-bold mb-2">Western Sydney Coverage</h4>
-            <p className="text-gray-600 mb-4">
-              I service all of Western Sydney with free pickup within 20km of Lidcombe.
-            </p>
-            <div className="inline-flex flex-wrap gap-2 justify-center">
-              <span className="px-4 py-2 bg-blue-100 text-blue-700 rounded-full font-medium">Lidcombe</span>
-              <span className="px-4 py-2 bg-green-100 text-green-700 rounded-full font-medium">Parramatta</span>
-              <span className="px-4 py-2 bg-purple-100 text-purple-700 rounded-full font-medium">Bankstown</span>
-              <span className="px-4 py-2 bg-orange-100 text-orange-700 rounded-full font-medium">Liverpool</span>
-              <span className="px-4 py-2 bg-red-100 text-red-700 rounded-full font-medium">Campbelltown</span>
-              <span className="px-4 py-2 bg-indigo-100 text-indigo-700 rounded-full font-medium">Blacktown</span>
-              <span className="px-4 py-2 bg-pink-100 text-pink-700 rounded-full font-medium">Penrith</span>
-            </div>
-          </div>
-        </div>
+
       </div>
     </div>
   )

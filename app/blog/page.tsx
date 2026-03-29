@@ -54,12 +54,17 @@ export default function BlogPage() {
       <Navbar />
       
       <div className="max-w-4xl mx-auto px-4 py-16">
-        <h1 className="text-4xl font-bold text-center mb-4">Driving Tips & Blog</h1>
-        <p className="text-center text-gray-600 mb-12">Helpful tips and insights for new and experienced drivers</p>
+        <h1 className="text-4xl font-bold text-center mb-4" data-aos="fade-up">Driving Tips & Blog</h1>
+        <p className="text-center text-gray-600 mb-12" data-aos="fade-up" data-aos-delay="100">Helpful tips and insights for new and experienced drivers</p>
         
         <div className="space-y-8">
-          {blogPosts.map((post) => (
-            <div key={post.id} className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition">
+          {blogPosts.map((post, index) => (
+            <div 
+              key={post.id} 
+              className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition hover-lift"
+              data-aos="fade-up"
+              data-aos-delay={index * 100}
+            >
               <div className="flex items-center gap-4 text-sm text-gray-500 mb-3">
                 <span>📅 {post.date}</span>
                 <span>•</span>
@@ -78,10 +83,17 @@ export default function BlogPage() {
           ))}
         </div>
 
-        <div className="mt-12 bg-primary rounded-2xl p-8 text-center text-white">
+        <div 
+          className="mt-12 bg-primary rounded-2xl p-8 text-center text-white"
+          data-aos="fade-up"
+          data-aos-delay="200"
+        >
           <h2 className="text-2xl font-bold mb-4">Ready to Hit the Road?</h2>
           <p className="mb-6 opacity-90">Book your first lesson and start your journey to becoming a confident driver.</p>
-          <Link href="/book" className="inline-block px-8 py-3 bg-white text-primary rounded-lg hover:bg-gray-100 transition font-semibold">
+          <Link 
+            href="/book" 
+            className="inline-block px-8 py-3 bg-white text-primary rounded-lg hover:bg-gray-100 transition font-semibold hover-lift"
+          >
             Book a Lesson
           </Link>
         </div>

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, phone, message } = await request.json()
+    const { name, email, subject, message } = await request.json()
 
     if (!name || !email || !message) {
       return NextResponse.json(
@@ -11,18 +11,65 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Log the contact form submission (in production, this would send an email)
-    console.log('📬 Contact form submission:', { name, email, phone, message })
-    
-    // For now, just acknowledge receipt
-    // In production, integrate with email service like:
-    // - Resend
-    // - SendGrid
-    // - Supabase Edge Functions with email
-    
+    // Send email via AgentMail
+    const apiKey = process.env.NEXT_PUBLIC_AGENTMAIL_API_KEY
+    if (!apiKey) {
+      console.error('AgentMail API key not configured')
+      return NextResponse.json(
+        { error: 'Email service not configured' },
+        { status: 500 }
+      )
+    }
+
+    const response = await fetch(
+      `https://api.agentmail.to/v0/inboxes/drivewithbui@agentmail.to/messages/send`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          to: ['drivewithbui@agentmail.to'],
+          subject: `📧 Contact Form: ${subject || 'General Inquiry'} from ${name}`,
+          text: `
+New Contact Form Submission:
+
+👤 Name: ${name}
+📧 Email: ${email}
+📋 Subject: ${subject || 'General Inquiry'}
+
+💬 Message:
+${message}
+
+---
+This message was sent via the contact form on drivewithbui.com
+Replies will thread automatically with the sender's email.
+          `.trim(),
+          // Add headers for email threading
+          headers: {
+            'Reply-To': email,
+            'In-Reply-To': `contact-${Date.now()}@drivewithbui.com`,
+            'References': `contact-${Date.now()}@drivewithbui.com`
+          }
+        }),
+      }
+    )
+
+    if (!response.ok) {
+      const errorText = await response.text()
+      console.error('Failed to send contact form email:', errorText)
+      return NextResponse.json(
+        { error: 'Failed to send message' },
+        { status: 500 }
+      )
+    }
+
+    console.log('📬 Contact form submitted:', { name, email, subject })
+
     return NextResponse.json({
       success: true,
-      message: 'Message received! We will get back to you soon.'
+      message: 'Message sent successfully! We will get back to you within 24 hours.'
     })
   } catch (error) {
     console.error('Contact form error:', error)

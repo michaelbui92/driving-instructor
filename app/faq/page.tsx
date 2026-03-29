@@ -38,7 +38,7 @@ const faqData: FAQItem[] = [
   },
   {
     question: "What happens if I'm running late for my lesson?",
-    answer: "Please call or text me if you're running late. I'll wait up to 15 minutes, but the lesson will still finish at the scheduled time. If you're more than 15 minutes late without contact, the lesson may be considered a no-show.",
+    answer: "Please contact me via email if you're running late. I'll wait up to 15 minutes, but the lesson will still finish at the scheduled time. If you're more than 15 minutes late without contact, the lesson may be considered a no-show.",
     category: "Booking & Cancellations"
   },
   {
@@ -202,49 +202,13 @@ export default function FAQPage() {
                 href="tel:+61412345678"
                 className="px-6 py-3 bg-transparent border-2 border-white text-white font-semibold rounded-lg hover:bg-white/10 transition"
               >
-                Call Now: 0412 345 678
+                Email: drivewithbui@agentmail.to
               </a>
             </div>
           </div>
         </div>
 
-        {/* Quick Links */}
-        <div className="mt-12 grid md:grid-cols-3 gap-6">
-          <Link 
-            href="/book" 
-            className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition text-center group"
-          >
-            <div className="text-4xl mb-4 group-hover:scale-110 transition">📅</div>
-            <h3 className="font-bold text-lg mb-2">Book a Lesson</h3>
-            <p className="text-gray-600 text-sm">Schedule your driving lesson online in 2 minutes</p>
-          </Link>
-          <Link 
-            href="/about" 
-            className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition text-center group"
-          >
-            <div className="text-4xl mb-4 group-hover:scale-110 transition">👨‍🏫</div>
-            <h3 className="font-bold text-lg mb-2">About Me</h3>
-            <p className="text-gray-600 text-sm">Learn about my experience and teaching approach</p>
-          </Link>
-          <Link 
-            href="/contact" 
-            className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition text-center group"
-          >
-            <div className="text-4xl mb-4 group-hover:scale-110 transition">📞</div>
-            <h3 className="font-bold text-lg mb-2">Get in Touch</h3>
-            <p className="text-gray-600 text-sm">Contact me directly with any questions</p>
-          </Link>
-          <a 
-            href="https://instagram.com/drivewithbui"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition text-center group"
-          >
-            <div className="text-4xl mb-4 group-hover:scale-110 transition">📸</div>
-            <h3 className="font-bold text-lg mb-2">Instagram</h3>
-            <p className="text-gray-600 text-sm">Follow @drivewithbui for driving tips</p>
-          </a>
-        </div>
+
       </div>
     </div>
   )
