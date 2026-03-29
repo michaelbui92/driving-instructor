@@ -141,7 +141,20 @@ export default function StudentDashboardPage() {
   const handleReschedule = (booking: BookingType) => {
     setReschedulingBooking(booking)
     setSelectedNewDate(booking.date)
-    const availableSlots = getAvailableSlots(booking.date, bookings.filter(b => b.id !== booking.id))
+    // Convert to Booking format expected by getAvailableSlots
+    const bookingsForCheck = bookings.map(b => ({
+      id: b.id,
+      studentName: b.student_name,
+      email: b.email,
+      phone: b.phone,
+      date: b.date,
+      time: b.time,
+      lessonType: b.lesson_type,
+      status: b.status,
+      price: getLessonPrice(b.lesson_type),
+      createdAt: b.created_at,
+    }))
+    const availableSlots = getAvailableSlots(booking.date, bookingsForCheck.filter(b => b.id !== booking.id))
     setDateHasNoSlots(availableSlots.length === 0)
   }
 
@@ -206,7 +219,20 @@ export default function StudentDashboardPage() {
 
   const getAvailableTimeOptions = (date: string) => {
     if (!date) return []
-    const existingBookingsExcludingCurrent = bookings.filter(b => b.id !== reschedulingBooking?.id)
+    // Convert to Booking format expected by getAvailableSlots
+    const bookingsForCheck = bookings.map(b => ({
+      id: b.id,
+      studentName: b.student_name,
+      email: b.email,
+      phone: b.phone,
+      date: b.date,
+      time: b.time,
+      lessonType: b.lesson_type,
+      status: b.status,
+      price: getLessonPrice(b.lesson_type),
+      createdAt: b.created_at,
+    }))
+    const existingBookingsExcludingCurrent = bookingsForCheck.filter(b => b.id !== reschedulingBooking?.id)
     const availableSlots = getAvailableSlots(date, existingBookingsExcludingCurrent)
     return availableSlots.map(slot => slot.time)
   }
@@ -215,14 +241,28 @@ export default function StudentDashboardPage() {
     const dates: {date: string, formatted: string, hasSlots: boolean}[] = []
     const today = new Date()
     
+    // Convert to Booking format expected by getAvailableSlots
+    const bookingsForCheck = bookings.map(b => ({
+      id: b.id,
+      studentName: b.student_name,
+      email: b.email,
+      phone: b.phone,
+      date: b.date,
+      time: b.time,
+      lessonType: b.lesson_type,
+      status: b.status,
+      price: getLessonPrice(b.lesson_type),
+      createdAt: b.created_at,
+    }))
+    
     for (let i = 1; i <= 28; i++) {
       const date = new Date(today)
       date.setDate(today.getDate() + i)
       const dateString = date.toISOString().split('T')[0]
       
       const existingBookingsExcludingCurrent = reschedulingBooking 
-        ? bookings.filter(b => b.id !== reschedulingBooking.id)
-        : bookings
+        ? bookingsForCheck.filter(b => b.id !== reschedulingBooking.id)
+        : bookingsForCheck
       const availableSlots = getAvailableSlots(dateString, existingBookingsExcludingCurrent)
       const hasSlots = availableSlots.length > 0
       
@@ -481,7 +521,19 @@ export default function StudentDashboardPage() {
                     const newDate = e.target.value
                     setSelectedNewDate(newDate)
                     if (newDate) {
-                      const availableSlots = getAvailableSlots(newDate, bookings.filter(b => b.id !== reschedulingBooking?.id))
+                      const bookingsForCheck = bookings.map(b => ({
+                        id: b.id,
+                        studentName: b.student_name,
+                        email: b.email,
+                        phone: b.phone,
+                        date: b.date,
+                        time: b.time,
+                        lessonType: b.lesson_type,
+                        status: b.status,
+                        price: getLessonPrice(b.lesson_type),
+                        createdAt: b.created_at,
+                      }))
+                      const availableSlots = getAvailableSlots(newDate, bookingsForCheck.filter(b => b.id !== reschedulingBooking?.id))
                       setDateHasNoSlots(availableSlots.length === 0)
                     } else {
                       setDateHasNoSlots(false)
