@@ -53,7 +53,6 @@ export default function BookPage() {
   })
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([])
   const [existingBookings, setExistingBookings] = useState<any[]>([])
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -164,9 +163,8 @@ export default function BookPage() {
         throw new Error(data.error || 'Invalid code')
       }
       
-      // Success - close modal and redirect to dashboard
-      setShowVerifyModal(false)
-      setSuccess(true)
+      // Success - cookies are set by the API, redirect to dashboard
+      window.location.href = '/student/dashboard'
     } catch (err: any) {
       setOtpError(err.message)
     } finally {
@@ -592,13 +590,6 @@ export default function BookPage() {
                 </button>
               </div>
             )}
-            
-            <button
-              onClick={() => setShowVerifyModal(false)}
-              className="mt-4 w-full py-2 text-gray-500 hover:text-gray-700"
-            >
-              Skip for now
-            </button>
           </div>
         </div>
       )}
