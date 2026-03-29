@@ -608,3 +608,237 @@ export function getLessonTypes() {
     { id: 'casual', name: 'Casual Driving', duration: '60 min', price: 45 },
   ]
 }
+
+// Supabase-based async functions for rules persistence
+// Note: These require the availability_rules and blocked_slots tables to be created in Supabase
+// Run the SQL migration script first: scripts/migrate-rules-to-supabase.sql
+
+import { supabase } from './supabase'
+
+// Helper: Generate unique ID
+function generateSupabaseId(): string {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+}
+
+// Async CRUD operations for rules using Supabase
+export async function getRulesAsync(): Promise<AvailabilityRule[]> {
+  try {
+    const { data, error } = await supabase
+      .from('availability_rules')
+      .select('*')
+      .order('priority', { ascending: true })
+    
+    if (error) {
+      console.error('Error loading rules from Supabase:', error)
+      return []
+    }
+    
+    // Convert from database format to AvailabilityRule type
+    return (data || []).map(rule => ({
+      id: rule.id,
+      name: rule.name,
+      type: rule.type as RuleType,
+      priority: rule.priority,
+      dayType: rule.day_type as DayType,
+      startTime: rule.start_time,
+      endTime: rule.end_time,
+      maxBookings: rule.max_bookings,
+      repeatType: rule.repeat_type as RepeatType,
+      enabled: rule.enabled,
+      createdAt: rule.created_at
+    }))
+  } catch (error) {
+    console.error('Error in getRulesAsync:', error)
+    return []
+  }
+}
+
+export async function addRuleAsync(rule: Omit<AvailabilityRule, 'id' | 'createdAt'>): Promise<string> {
+  try {
+    const newRule = {
+      id: generateSupabaseId(),
+      name: rule.name,
+      type: rule.type,
+      priority: rule.priority,
+      day_type: rule.dayType,
+      start_time: rule.startTime,
+      end_time: rule.endTime,
+      max_bookings: rule.maxBookings,
+      repeat_type: rule.repeatType,
+      enabled: rule.enabled,
+      created_at: new Date().toISOString()
+    }
+    
+    const { data, error } = await supabase
+      .from('availability_rules')
+      .insert(newRule)
+      .select()
+      .single()
+    
+    if (error) {
+      console.error('Error adding rule to Supabase:', error)
+      throw error
+    }
+    
+    return data.id
+  } catch (error) {
+    console.error('Error in addRuleAsync:', error)
+    throw error
+  }
+}
+
+export async function updateRuleAsync(id: string, updates: Partial<AvailabilityRule>): Promise<void> {
+  try {
+    // Convert camelCase to snake_case for database
+    const dbUpdates: any = {}
+    if (updates.name !== undefined) dbUpdates.name = updates.name
+    if (updates.type !== undefined) dbUpdates.type = updates.type
+    if (updates.priority !== undefined) dbUpdates.priority = updates.priority
+    if (updates.dayType !== undefined) dbUpdates.day_type = updates.dayType
+    if (updates.startTime !== undefined) dbUpdates.start_time = updates.startTime
+    if (updates.endTime !== undefined) dbUpdates.end_time = updates.endTime
+    if (updates.maxBookings !== undefined) dbUpdates.max_bookings = updates.maxBookings
+    if (updates.repeatType !== undefined) dbUpdates.repeat_type = updates.repeatType
+    if (updates.enabled !== undefined) dbUpdates.enabled = updates.enabled
+    
+    const { error } = await supabase
+      .from('availability_rules')
+      .update(dbUpdates)
+      .eq('id', id)
+    
+    if (error) {
+      console.error('Error updating rule in Supabase:', error)
+      throw error
+    }
+  } catch (error) {
+    console.error('Error in updateRuleAsync:', error)
+    throw error
+  }
+}
+
+export async function deleteRuleAsync(id: string): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('availability_rules')
+      .delete()
+      .eq('id', id)
+    
+    if (error) {
+      console.error('Error deleting rule from Supabase:', error)
+      throw error
+    }
+  } catch (error) {
+    console.error('Error in deleteRuleAsync:', error)
+    throw error
+  }
+}
+
+export async function toggleRuleAsync(id: string, enabled: boolean): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('availability_rules')
+      .update({ enabled })
+      .eq('id', id)
+    
+    if (error) {
+      console.error('Error toggling rule in Supabase:', error)
+      throw error
+    }
+  } catch (error) {
+    console.error('Error in toggleRuleAsync:', error)
+    throw error
+  }
+}
+
+export async function getSortedRulesAsync(): Promise<AvailabilityRule[]> {
+  const rules = await getRulesAsync()
+  return rules.sort((a, b) => a.priority - b.priority)
+}
+
+// Async CRUD operations for blocked slots using Supabase
+export async function getBlockedSlotsAsync(): Promise<BlockedSlot[]> {
+  try {
+    const { data, error } = await supabase
+      .from('blocked_slots')
+      .select('*')
+      .order('date', { ascending: true })
+    
+    if (error) {
+      console.error('Error loading blocked slots from Supabase:', error)
+      return []
+    }
+    
+    return (data || []).map(slot => ({
+      id: slot.id,
+      date: slot.date,
+      time: slot.time,
+      reason: slot.reason,
+      createdAt: slot.created_at
+    }))
+  } catch (error) {
+    console.error('Error in getBlockedSlotsAsync:', error)
+    return []
+  }
+}
+
+export async function addBlockedSlotAsync(date: string, time: string, reason?: string): Promise<void> {
+  try {
+    const newSlot = {
+      id: generateSupabaseId(),
+      date,
+      time,
+      reason,
+      created_at: new Date().toISOString()
+    }
+    
+    const { error } = await supabase
+      .from('blocked_slots')
+      .insert(newSlot)
+    
+    if (error) {
+      console.error('Error adding blocked slot to Supabase:', error)
+      throw error
+    }
+  } catch (error) {
+    console.error('Error in addBlockedSlotAsync:', error)
+    throw error
+  }
+}
+
+export async function removeBlockedSlotAsync(date: string, time: string): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('blocked_slots')
+      .delete()
+      .eq('date', date)
+      .eq('time', time)
+    
+    if (error) {
+      console.error('Error removing blocked slot from Supabase:', error)
+      throw error
+    }
+  } catch (error) {
+    console.error('Error in removeBlockedSlotAsync:', error)
+    throw error
+  }
+}
+
+export async function isSlotBlockedAsync(date: string, time: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('blocked_slots')
+      .select('id')
+      .eq('date', date)
+      .eq('time', time)
+      .single()
+    
+    if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+      console.error('Error checking blocked slot in Supabase:', error)
+    }
+    
+    return !!data
+  } catch (error) {
+    console.error('Error in isSlotBlockedAsync:', error)
+    return false
+  }
+}

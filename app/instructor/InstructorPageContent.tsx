@@ -12,9 +12,6 @@ import {
   getLessonTypeName,
   getLessonPrice,
   generateTimeSlots,
-  getBlockedSlots,
-  addBlockedSlot,
-  removeBlockedSlot,
   getAvailableSlots,
   shouldBlockSlot,
   type Booking,
@@ -23,12 +20,15 @@ import {
   DayType,
   RepeatType,
   type AvailabilityRule,
-  getRules,
-  addRule,
-  updateRule,
-  deleteRule,
-  toggleRule,
-  getSortedRules
+  getRulesAsync,
+  addRuleAsync,
+  updateRuleAsync,
+  deleteRuleAsync,
+  toggleRuleAsync,
+  getSortedRulesAsync,
+  getBlockedSlotsAsync,
+  addBlockedSlotAsync,
+  removeBlockedSlotAsync
 } from '@/lib/booking-utils'
 
 type TabType = 'upcoming' | 'all' | 'rules' | 'availability' | 'calendar' | 'profile' | 'create-booking'
@@ -196,8 +196,21 @@ export default function InstructorPage() {
   // Load bookings on mount and set up real-time subscription
   useEffect(() => {
     loadBookings()
-    setBlockedSlots(getBlockedSlots())
-    setRules(getRules())
+    
+    // Load rules and blocked slots from Supabase
+    const loadRulesAndSlots = async () => {
+      try {
+        const [rulesData, blockedSlotsData] = await Promise.all([
+          getRulesAsync(),
+          getBlockedSlotsAsync()
+        ])
+        setRules(rulesData)
+        setBlockedSlots(blockedSlotsData)
+      } catch (error) {
+        console.error('Error loading rules or blocked slots:', error)
+      }
+    }
+    loadRulesAndSlots()
     
     // Set up real-time subscription for database changes (matching test booking page)
     if (supabase) {
@@ -479,8 +492,12 @@ export default function InstructorPage() {
       return
     }
     try {
-      selectedBlockTimes.forEach(time => addBlockedSlot(selectedBlockDate, time))
-      setBlockedSlots(getBlockedSlots())
+      // Add all blocked slots asynchronously
+      await Promise.all(
+        selectedBlockTimes.map(time => addBlockedSlotAsync(selectedBlockDate, time))
+      )
+      const updatedSlots = await getBlockedSlotsAsync()
+      setBlockedSlots(updatedSlots)
       setSelectedBlockTimes([])
       alert(`Blocked ${selectedBlockTimes.length} time slot(s) successfully`)
     } catch (error) {
@@ -489,22 +506,24 @@ export default function InstructorPage() {
     }
   }
 
-  const handleUnblockSlot = (date: string, time: string) => {
+  const handleUnblockSlot = async (date: string, time: string) => {
     try {
-      removeBlockedSlot(date, time)
-      setBlockedSlots(getBlockedSlots())
+      await removeBlockedSlotAsync(date, time)
+      const updatedSlots = await getBlockedSlotsAsync()
+      setBlockedSlots(updatedSlots)
     } catch (error) {
       console.error('Error unblocking slot:', error)
       alert('Error unblocking slot. Please try again.')
     }
   }
 
-  const handleBulkBlock = () => {
+  const handleBulkBlock = async () => {
     if (bulkMode === 'none') return
     
     try {
       const slots = generateTimeSlots()
       let blockedCount = 0
+      const blockPromises: Promise<void>[] = []
       
       if (bulkMode === 'weekdays') {
         // Block all weekdays EXCEPT 6pm, 7pm, 8pm
@@ -515,7 +534,7 @@ export default function InstructorPage() {
           const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
           
           if (!isWeekend && !allowedTimes.includes(slot.time)) {
-            addBlockedSlot(slot.date, slot.time)
+            blockPromises.push(addBlockedSlotAsync(slot.date, slot.time))
             blockedCount++
           }
         })
@@ -528,7 +547,7 @@ export default function InstructorPage() {
           const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
           
           if (isWeekend && !allowedTimes.includes(slot.time)) {
-            addBlockedSlot(slot.date, slot.time)
+            blockPromises.push(addBlockedSlotAsync(slot.date, slot.time))
             blockedCount++
           }
         })
@@ -542,14 +561,17 @@ export default function InstructorPage() {
         slots.forEach(slot => {
           if (slot.date >= bulkStartDate && slot.date <= bulkEndDate) {
             if (!allowedTimes.includes(slot.time)) {
-              addBlockedSlot(slot.date, slot.time)
+              blockPromises.push(addBlockedSlotAsync(slot.date, slot.time))
               blockedCount++
             }
           }
         })
       }
       
-      setBlockedSlots(getBlockedSlots())
+      // Wait for all block operations to complete
+      await Promise.all(blockPromises)
+      const updatedSlots = await getBlockedSlotsAsync()
+      setBlockedSlots(updatedSlots)
       alert(`Blocked ${blockedCount} time slot(s). Remaining slots: 6pm, 7pm, 8pm.`)
       setBulkMode('none')
     } catch (error) {
@@ -618,8 +640,9 @@ export default function InstructorPage() {
         enabled: true
       }
 
-      addRule(newRule)
-      setRules(getRules())
+      await addRuleAsync(newRule)
+      const updatedRules = await getRulesAsync()
+      setRules(updatedRules)
       setShowRuleForm(false)
       resetRuleForm()
       alert('Rule created successfully!')
@@ -654,7 +677,7 @@ export default function InstructorPage() {
         return
       }
 
-      updateRule(id, {
+      await updateRuleAsync(id, {
         name: ruleForm.name,
         type: ruleForm.type,
         priority: ruleForm.priority,
@@ -665,7 +688,8 @@ export default function InstructorPage() {
         maxBookings: ruleForm.type === RuleType.MAX_BOOKING ? ruleForm.maxBookings : undefined
       })
 
-      setRules(getRules())
+      const updatedRules = await getRulesAsync()
+      setRules(updatedRules)
       setShowRuleForm(false)
       setEditingRule(null)
       resetRuleForm()
@@ -676,11 +700,12 @@ export default function InstructorPage() {
     }
   }
 
-  const handleDeleteRule = (id: string) => {
+  const handleDeleteRule = async (id: string) => {
     if (confirm('Are you sure you want to delete this rule?')) {
       try {
-        deleteRule(id)
-        setRules(getRules())
+        await deleteRuleAsync(id)
+        const updatedRules = await getRulesAsync()
+        setRules(updatedRules)
         alert('Rule deleted successfully!')
       } catch (error) {
         console.error('Error deleting rule:', error)
@@ -721,10 +746,11 @@ export default function InstructorPage() {
     setSavingProfile(false)
   }
 
-  const handleToggleRule = (id: string, enabled: boolean) => {
+  const handleToggleRule = async (id: string, enabled: boolean) => {
     try {
-      toggleRule(id, enabled)
-      setRules(getRules())
+      await toggleRuleAsync(id, enabled)
+      const updatedRules = await getRulesAsync()
+      setRules(updatedRules)
     } catch (error) {
       console.error('Error toggling rule:', error)
       alert('Error toggling rule. Please try again.')
@@ -1198,11 +1224,19 @@ export default function InstructorPage() {
             </button>
           </div>
           <button
-            onClick={() => {
+            onClick={async () => {
               if (confirm('This will unblock ALL slots. Continue?')) {
-                blockedSlots.forEach(b => removeBlockedSlot(b.date, b.time))
-                setBlockedSlots(getBlockedSlots())
-                alert('All slots unblocked!')
+                try {
+                  await Promise.all(
+                    blockedSlots.map(b => removeBlockedSlotAsync(b.date, b.time))
+                  )
+                  const updatedSlots = await getBlockedSlotsAsync()
+                  setBlockedSlots(updatedSlots)
+                  alert('All slots unblocked!')
+                } catch (error) {
+                  console.error('Error clearing blocked slots:', error)
+                  alert('Error clearing blocked slots. Please try again.')
+                }
               }
             }}
             className="px-4 py-3 bg-red-50 border-2 border-red-300 rounded-lg hover:border-red-500 transition text-left"
