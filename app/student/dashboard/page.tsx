@@ -5,27 +5,19 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { supabase } from '@/lib/supabase'
-import { formatDate, getAvailableSlots, type Booking } from '@/lib/booking-utils'
+import { formatDate, getAvailableSlots, getLessonPrice } from '@/lib/booking-utils'
 
 type BookingType = {
   id: string
-  studentName: string
+  student_name: string
   email: string
   phone: string
+  address: string
   date: string
   time: string
-  lessonType: string
+  lesson_type: string
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed'
-  price: number
-  createdAt: string
-  claimCode?: string
-}
-
-type Student = {
-  id: string
-  email: string
-  fullName?: string
-  phone?: string
+  created_at: string
 }
 
 export default function StudentDashboardPage() {
@@ -37,28 +29,44 @@ export default function StudentDashboardPage() {
   const [dateHasNoSlots, setDateHasNoSlots] = useState<boolean>(false)
   const [actionLoading, setActionLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [userEmail, setUserEmail] = useState<string>('')
   const router = useRouter()
 
+  // Get user email from cookie
   useEffect(() => {
+    const cookies = document.cookie.split(';')
+    for (const cookie of cookies) {
+      const [name, value] = cookie.trim().split('=')
+      if (name === 'sb-email') {
+        setUserEmail(decodeURIComponent(value))
+        break
+      }
+    }
+  }, [])
+
+  // Load bookings on mount and auto-refresh
+  useEffect(() => {
+    if (!userEmail) return
+    
     loadDashboard()
     
-    // Auto-refresh every 10 seconds as fallback
+    // Auto-refresh every 10 seconds
     const interval = setInterval(() => {
       loadDashboard()
     }, 10000)
 
-    // Real-time subscription — instant updates from Supabase
+    // Real-time subscription
     const channel = supabase
       .channel('student-bookings-changes')
       .on(
         'postgres_changes',
         {
-          event: '*', // INSERT, UPDATE, DELETE
+          event: '*',
           schema: 'public',
-          table: 'bookings'
+          table: 'bookings_new'
         },
-        (payload) => {
-          console.log('Real-time booking change:', payload)
+        () => {
+          console.log('Real-time booking change detected')
           loadDashboard()
         }
       )
@@ -68,30 +76,27 @@ export default function StudentDashboardPage() {
       clearInterval(interval)
       supabase.removeChannel(channel)
     }
-  }, [])
-
-
+  }, [userEmail])
 
   const loadDashboard = async () => {
+    if (!userEmail) return
+    
     try {
-      // Cache busting via query param
-      const cacheBuster = `t=${Date.now()}`
-      const res = await fetch(`/api/student/dashboard?${cacheBuster}`)
+      console.log('📊 Loading bookings for:', userEmail)
       
-      console.log('📊 Student dashboard API response status:', res.status)
-      
-      if (!res.ok) {
-        throw new Error(`Failed to load bookings: ${res.status}`)
+      const { data, error } = await supabase
+        .from('bookings_new')
+        .select('*')
+        .eq('email', userEmail)
+        .order('date', { ascending: false })
+
+      if (error) {
+        console.error('Error loading bookings:', error)
+        throw error
       }
 
-      const data = await res.json()
-      console.log('✅ Student dashboard received:', {
-        bookingsCount: data.bookings?.all?.length,
-        bookings: data.bookings?.all?.map((b: any) => ({ id: b.id, status: b.status, date: b.date }))
-      })
-      
-      // Use bookings filtered by this student's email
-      setBookings(data.bookings?.all || [])
+      console.log('✅ Loaded bookings:', data?.length || 0)
+      setBookings(data || [])
     } catch (err) {
       console.error('Dashboard load error:', err)
       setMessage({ type: 'error', text: 'Failed to load bookings' })
@@ -110,28 +115,24 @@ export default function StudentDashboardPage() {
     }
   }
 
-
-
   const handleCancel = async (bookingId: string) => {
     if (!confirm('Are you sure you want to cancel this booking?')) return
 
     setActionLoading(true)
     try {
-      const res = await fetch(`/api/student/bookings/${bookingId}/cancel`, {
-        method: 'POST',
-      })
+      const { error } = await supabase
+        .from('bookings_new')
+        .update({ status: 'cancelled' })
+        .eq('id', bookingId)
 
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error || 'Failed to cancel')
-      }
+      if (error) throw error
 
       setBookings((prev) =>
         prev.map((b) => (b.id === bookingId ? { ...b, status: 'cancelled' as const } : b))
       )
       setMessage({ type: 'success', text: 'Booking cancelled successfully' })
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message })
+      setMessage({ type: 'error', text: err.message || 'Failed to cancel' })
     } finally {
       setActionLoading(false)
     }
@@ -140,7 +141,6 @@ export default function StudentDashboardPage() {
   const handleReschedule = (booking: BookingType) => {
     setReschedulingBooking(booking)
     setSelectedNewDate(booking.date)
-    // Check if current date has available slots (excluding current booking)
     const availableSlots = getAvailableSlots(booking.date, bookings.filter(b => b.id !== booking.id))
     setDateHasNoSlots(availableSlots.length === 0)
   }
@@ -157,14 +157,6 @@ export default function StudentDashboardPage() {
       return
     }
 
-    // Check if selected date has slots
-    const selectedDateOption = newDateSelect.options[newDateSelect.selectedIndex]
-    if (selectedDateOption?.disabled) {
-      alert('This date has no available slots. Please select a different date.')
-      return
-    }
-
-    // Check if time selector exists (it won't if there are no available slots)
     if (!newTimeSelect) {
       alert('No available time slots for this date. Please select a different date.')
       return
@@ -172,16 +164,12 @@ export default function StudentDashboardPage() {
 
     setActionLoading(true)
     try {
-      const res = await fetch(`/api/student/bookings/${reschedulingBooking?.id}/reschedule`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newDate, newTime }),
-      })
+      const { error } = await supabase
+        .from('bookings_new')
+        .update({ date: newDate, time: newTime, status: 'pending' })
+        .eq('id', reschedulingBooking?.id)
 
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error || 'Failed to reschedule')
-      }
+      if (error) throw error
 
       setBookings((prev) =>
         prev.map((b) =>
@@ -192,7 +180,7 @@ export default function StudentDashboardPage() {
       setSelectedNewDate('')
       setMessage({ type: 'success', text: 'Booking rescheduled! Awaiting instructor confirmation.' })
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message })
+      setMessage({ type: 'error', text: err.message || 'Failed to reschedule' })
     } finally {
       setActionLoading(false)
     }
@@ -208,6 +196,7 @@ export default function StudentDashboardPage() {
   const getLessonName = (type: string) => {
     const names: Record<string, string> = {
       single: 'Single Lesson',
+      casual: 'Casual Driving',
       package10: '10 Lesson Package',
       package20: '20 Lesson Package',
       test: 'Driving Test Package',
@@ -217,17 +206,11 @@ export default function StudentDashboardPage() {
 
   const getAvailableTimeOptions = (date: string) => {
     if (!date) return []
-    
-    // Use getAvailableSlots to get only actually available slots
-    // Exclude the current booking being rescheduled from the existing bookings check
     const existingBookingsExcludingCurrent = bookings.filter(b => b.id !== reschedulingBooking?.id)
     const availableSlots = getAvailableSlots(date, existingBookingsExcludingCurrent)
-    
-    // Return just the time strings from available slots
     return availableSlots.map(slot => slot.time)
   }
 
-  // Get dates with available slots for the next 28 days
   const getDatesWithAvailableSlots = () => {
     const dates: {date: string, formatted: string, hasSlots: boolean}[] = []
     const today = new Date()
@@ -237,8 +220,6 @@ export default function StudentDashboardPage() {
       date.setDate(today.getDate() + i)
       const dateString = date.toISOString().split('T')[0]
       
-      // Check if this date has any available slots
-      // Exclude the current booking being rescheduled (if any)
       const existingBookingsExcludingCurrent = reschedulingBooking 
         ? bookings.filter(b => b.id !== reschedulingBooking.id)
         : bookings
@@ -266,33 +247,42 @@ export default function StudentDashboardPage() {
     )
   }
 
+  if (!userEmail) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <Navbar />
+        <div className="max-w-6xl mx-auto px-4 py-16 text-center">
+          <p className="text-gray-500">Please log in to view your dashboard.</p>
+          <Link href="/student/login" className="text-primary hover:underline">Login</Link>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Navbar showLocation={false} />
 
-      {/* Main Content */}
       <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="mb-8 flex flex-col md:flex-row items-start md:items-center gap-6">
           <div className="flex-1">
             <h1 className="text-4xl font-bold mb-2">My Dashboard</h1>
-            <p className="text-gray-600">All your bookings</p>
+            <p className="text-gray-600">{userEmail}</p>
           </div>
           <div className="flex items-center gap-4">
             <button
               onClick={() => {
-                console.log('🔄 Manual refresh triggered')
-                setBookings([]) // Clear state first
+                setBookings([])
                 loadDashboard()
               }}
-              disabled={loading}
-              className="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-semibold shadow-md hover:-translate-y-0.5 disabled:opacity-50 flex items-center gap-2"
+              className="px-4 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition font-semibold shadow-md"
             >
-              🔄 Force Refresh
+              🔄 Refresh
             </button>
             <Link
               href="/book"
-              className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold shadow-md hover:-translate-y-0.5"
+              className="px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold shadow-md"
             >
               📅 Book a Lesson
             </Link>
@@ -374,13 +364,6 @@ export default function StudentDashboardPage() {
 
           {/* Bookings List */}
           <div className="p-6">
-            {/* Debug info */}
-            <div className="mb-4 p-2 bg-gray-100 rounded text-xs">
-              <p>Debug: {bookings.length} total bookings | Active tab: {activeTab} | Showing: {filteredBookings.length}</p>
-              <p>Statuses: {JSON.stringify(bookings.reduce((acc, b) => { acc[b.status] = (acc[b.status] || 0) + 1; return acc }, {} as Record<string, number>))}</p>
-              <p>All IDs: {bookings.map(b => `${b.id.substring(0, 8)}:${b.status}`).join(', ')}</p>
-            </div>
-
             {filteredBookings.length === 0 ? (
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">
@@ -412,7 +395,7 @@ export default function StudentDashboardPage() {
                       <div>
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="font-semibold text-lg text-gray-900">
-                            {getLessonName(booking.lessonType)}
+                            {getLessonName(booking.lesson_type)}
                           </h3>
                           <span
                             className={`px-3 py-1 text-xs font-semibold rounded-full ${
@@ -431,9 +414,12 @@ export default function StudentDashboardPage() {
                         <p className="text-gray-600">
                           📅 {formatDate(booking.date)} at {booking.time}
                         </p>
-                        {booking.claimCode && (
-                          <p className="text-sm text-gray-400 mt-1">
-                            Booking ref: {booking.claimCode}
+                        <p className="text-gray-600">
+                          💰 ${getLessonPrice(booking.lesson_type)}
+                        </p>
+                        {booking.address && (
+                          <p className="text-gray-500 text-sm mt-1">
+                            📍 {booking.address}
                           </p>
                         )}
                       </div>
@@ -494,7 +480,6 @@ export default function StudentDashboardPage() {
                   onChange={(e) => {
                     const newDate = e.target.value
                     setSelectedNewDate(newDate)
-                    // Check if date has available slots
                     if (newDate) {
                       const availableSlots = getAvailableSlots(newDate, bookings.filter(b => b.id !== reschedulingBooking?.id))
                       setDateHasNoSlots(availableSlots.length === 0)
@@ -504,23 +489,15 @@ export default function StudentDashboardPage() {
                   }}
                 >
                   <option value="">Select a date</option>
-                  {getDatesWithAvailableSlots().map(({date, formatted, hasSlots}) => (
-                    <option 
-                      key={date} 
-                      value={date}
-                      disabled={!hasSlots}
-                      className={!hasSlots ? 'text-gray-400 bg-gray-100' : ''}
-                    >
-                      {formatted} {!hasSlots ? '(No available slots)' : ''}
+                  {getDatesWithAvailableSlots()
+                    .filter(d => d.hasSlots)
+                    .map(({date, formatted}) => (
+                    <option key={date} value={date}>
+                      {formatted}
                     </option>
                   ))}
                 </select>
-                <p className="text-xs text-gray-500 mt-1">Dates with no available slots are greyed out</p>
-                {dateHasNoSlots && selectedNewDate && (
-                  <div className="mt-2 bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
-                    ⚠️ No available time slots for {formatDate(selectedNewDate)}. Please select a different date.
-                  </div>
-                )}
+                <p className="text-xs text-gray-500 mt-1">Only dates with available slots are shown</p>
               </div>
 
               <div>
@@ -530,7 +507,7 @@ export default function StudentDashboardPage() {
                   if (availableTimes.length === 0) {
                     return (
                       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-sm text-yellow-800">
-                        No available time slots for this date. Please select a different date.
+                        No available time slots for this date.
                       </div>
                     )
                   }
@@ -573,7 +550,7 @@ export default function StudentDashboardPage() {
                     : 'bg-primary text-white hover:bg-secondary'
                 }`}
               >
-                {dateHasNoSlots ? 'No Available Slots' : 'Save Changes'}
+                {dateHasNoSlots ? 'No Slots' : 'Save Changes'}
               </button>
             </div>
           </div>

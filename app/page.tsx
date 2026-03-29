@@ -52,49 +52,21 @@ export default function Home() {
       {/* Pricing Section */}
       <section className="bg-gradient-to-br from-blue-50 to-indigo-100 py-16" id="pricing">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-4" data-aos="fade-up">Simple, Transparent Pricing</h2>
-          <p className="text-center text-gray-600 mb-12 max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="100">
-            No hidden fees. No pressure sales. Just quality driving lessons at fair prices.
-          </p>
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <div className="bg-white rounded-2xl shadow-xl p-8 border-4 border-primary" data-aos="fade-up" data-aos-delay="200">
               <div className="text-center">
                 <span className="inline-block px-4 py-1 bg-primary text-white text-sm font-semibold rounded-full mb-4">Most Popular</span>
                 <h3 className="text-2xl font-bold mb-2">Single Lesson</h3>
-                <p className="text-gray-600 mb-4">60 minute lesson</p>
-                <div className="text-5xl font-bold text-primary mb-4">$55</div>
-                <p className="text-sm text-gray-500 mb-6">per lesson</p>
+                <div className="text-5xl font-bold text-primary mb-2">$55</div>
+                <p className="text-gray-500">60 minute lesson</p>
               </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Professional instruction</li>
-                <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Pickup & drop-off included</li>
-                <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Learn essential driving skills</li>
-                <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Road rules & safety</li>
-                <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Parking techniques</li>
-                <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Build confidence</li>
-              </ul>
-              <Link href="/book" className="block w-full py-3 bg-primary text-white text-center rounded-lg hover:bg-secondary transition font-semibold">
-                Book Now
-              </Link>
             </div>
             <div className="bg-white rounded-2xl shadow-xl p-8" data-aos="fade-up" data-aos-delay="300">
               <div className="text-center">
                 <h3 className="text-2xl font-bold mb-2">Casual Driving</h3>
-                <p className="text-gray-600 mb-4">60 minute relaxed session</p>
-                <div className="text-5xl font-bold text-gray-800 mb-4">$45</div>
-                <p className="text-sm text-gray-500 mb-6">per session</p>
+                <div className="text-5xl font-bold text-gray-800 mb-2">$45</div>
+                <p className="text-gray-500">60 minute relaxed session</p>
               </div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Keep skills up to date</li>
-                <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Practice without pressure</li>
-                <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Various road types</li>
-                <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Relaxed learning</li>
-                <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Test preparation</li>
-                <li className="flex items-center"><span className="text-green-500 mr-2">✓</span> Muscle memory building</li>
-              </ul>
-              <Link href="/book" className="block w-full py-3 border-2 border-primary text-primary text-center rounded-lg hover:bg-primary hover:text-white transition font-semibold">
-                Book Now
-              </Link>
             </div>
           </div>
         </div>
