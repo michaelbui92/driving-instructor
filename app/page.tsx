@@ -28,10 +28,10 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start" data-aos="fade-up" data-aos-delay="300">
               <Link
-                href="/instructor"
+                href="/book"
                 className="shimmer-btn bg-primary text-white px-8 py-3 rounded-lg text-lg hover:bg-secondary transition font-semibold text-center"
               >
-                Instructor Portal
+                Book a Lesson
               </Link>
             </div>
           </div>
@@ -81,10 +81,10 @@ export default function Home() {
             Contact us to book your driving lessons
           </p>
           <Link
-            href="/instructor"
+            href="/book"
             className="shimmer-btn inline-block bg-white text-primary px-8 py-3 rounded-lg text-lg hover:bg-gray-100 transition font-semibold"
           >
-            Go to Instructor Portal
+            Book Now
           </Link>
         </div>
       </section>

@@ -86,7 +86,6 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
             <Link href="/blog" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">Blog</Link>
             <Link href="/faq" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">FAQ</Link>
             <Link href="/contact" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">Contact</Link>
-            <Link href="/test-booking" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1 bg-yellow-50 rounded">Test Booking</Link>
             <div className="flex space-x-2 ml-2">
               {/* Student Portal Dropdown */}
               <div className="relative" ref={dropdownRef}>
@@ -170,7 +169,6 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
             <Link href="/blog" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium">Blog</Link>
             <Link href="/faq" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium">FAQ</Link>
             <Link href="/contact" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium">Contact</Link>
-            <Link href="/test-booking" onClick={handleLinkClick} className="block px-4 py-3 text-gray-800 hover:text-primary hover:bg-blue-50 rounded-lg transition font-medium bg-yellow-50">Test Booking</Link>
             
             <div className="pt-3 space-y-2 border-t border-gray-200">
               <p className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">Student Portal</p>
