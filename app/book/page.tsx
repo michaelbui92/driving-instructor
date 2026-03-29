@@ -63,10 +63,54 @@ export default function BookPage() {
   const [otpError, setOtpError] = useState('')
   const [otpSuccess, setOtpSuccess] = useState('')
 
-  // Check if user is logged in
+  // Check if user is logged in and load student details
   useEffect(() => {
-    setIsLoggedIn(document.cookie.includes('sb-access-token'))
+    const isLogged = document.cookie.includes('sb-access-token') || document.cookie.includes('sb-logged-in')
+    setIsLoggedIn(isLogged)
+    
+    // Load student details if logged in
+    if (isLogged) {
+      loadStudentDetails()
+    }
   }, [])
+
+  const loadStudentDetails = async () => {
+    try {
+      // Get email from cookie
+      const cookies = document.cookie.split(';')
+      let email = ''
+      for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split('=')
+        if (name === 'sb-email') {
+          email = decodeURIComponent(value)
+          break
+        }
+      }
+      
+      if (!email) return
+      
+      // Query students table for this email
+      const { data: student } = await supabase
+        .from('students')
+        .select('*')
+        .eq('email', email)
+        .single()
+      
+      if (student) {
+        setForm(prev => ({
+          ...prev,
+          email: email,
+          studentName: student.full_name || '',
+          phone: student.phone || '',
+          address: student.address || '',
+        }))
+      } else {
+        setForm(prev => ({ ...prev, email }))
+      }
+    } catch (err) {
+      console.error('Error loading student details:', err)
+    }
+  }
 
   // Load existing bookings to check availability
   useEffect(() => {
