@@ -6,6 +6,7 @@ import Image from 'next/image'
 import Navbar from '@/components/Navbar'
 import { supabase } from '@/lib/supabase'
 import { formatDate, generateTimeSlots, getAvailableSlots, type TimeSlot } from '@/lib/booking-utils'
+import { sendBookingConfirmationEmail } from '@/lib/booking-email'
 
 type BookingForm = {
   studentName: string
@@ -241,6 +242,23 @@ export default function BookPage() {
 
       if (insertError) {
         throw insertError
+      }
+
+      // Send booking confirmation email
+      const price = form.lessonType === 'single' ? 55 : 45
+      const emailResult = await sendBookingConfirmationEmail({
+        studentName: form.studentName,
+        email: form.email,
+        date: form.date,
+        time: form.time,
+        lessonType: form.lessonType as 'single' | 'casual',
+        price,
+        address: form.address
+      })
+
+      if (!emailResult.success) {
+        console.warn('Failed to send booking confirmation email:', emailResult.error)
+        // Continue anyway - booking was created successfully
       }
 
       // Check if logged in

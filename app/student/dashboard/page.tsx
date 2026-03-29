@@ -6,6 +6,7 @@ import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { supabase } from '@/lib/supabase'
 import { formatDate, getAvailableSlots, getLessonPrice } from '@/lib/booking-utils'
+import { sendBookingCancellationEmail, sendBookingRescheduleEmail } from '@/lib/booking-email'
 
 type BookingType = {
   id: string
@@ -120,12 +121,30 @@ export default function StudentDashboardPage() {
 
     setActionLoading(true)
     try {
+      // Get booking details before cancelling
+      const booking = bookings.find(b => b.id === bookingId)
+      if (!booking) throw new Error('Booking not found')
+
       const { error } = await supabase
         .from('bookings_new')
         .update({ status: 'cancelled' })
         .eq('id', bookingId)
 
       if (error) throw error
+
+      // Send cancellation email
+      const emailResult = await sendBookingCancellationEmail({
+        studentName: booking.student_name,
+        email: booking.email,
+        date: booking.date,
+        time: booking.time,
+        lessonType: booking.lesson_type as 'single' | 'casual'
+      })
+
+      if (!emailResult.success) {
+        console.warn('Failed to send cancellation email:', emailResult.error)
+        // Continue anyway - booking was cancelled successfully
+      }
 
       setBookings((prev) =>
         prev.map((b) => (b.id === bookingId ? { ...b, status: 'cancelled' as const } : b))
@@ -177,16 +196,34 @@ export default function StudentDashboardPage() {
 
     setActionLoading(true)
     try {
+      if (!reschedulingBooking) throw new Error('No booking selected for rescheduling')
+
       const { error } = await supabase
         .from('bookings_new')
         .update({ date: newDate, time: newTime, status: 'pending' })
-        .eq('id', reschedulingBooking?.id)
+        .eq('id', reschedulingBooking.id)
 
       if (error) throw error
 
+      // Send reschedule email
+      const emailResult = await sendBookingRescheduleEmail({
+        studentName: reschedulingBooking.student_name,
+        email: reschedulingBooking.email,
+        oldDate: reschedulingBooking.date,
+        oldTime: reschedulingBooking.time,
+        newDate,
+        newTime,
+        lessonType: reschedulingBooking.lesson_type as 'single' | 'casual'
+      })
+
+      if (!emailResult.success) {
+        console.warn('Failed to send reschedule email:', emailResult.error)
+        // Continue anyway - booking was rescheduled successfully
+      }
+
       setBookings((prev) =>
         prev.map((b) =>
-          b.id === reschedulingBooking?.id ? { ...b, date: newDate, time: newTime, status: 'pending' as const } : b
+          b.id === reschedulingBooking.id ? { ...b, date: newDate, time: newTime, status: 'pending' as const } : b
         )
       )
       setReschedulingBooking(null)
