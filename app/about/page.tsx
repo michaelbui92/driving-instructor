@@ -132,32 +132,36 @@ export default function AboutPage() {
           <div className="grid md:grid-cols-2 gap-12">
             <div>
               <p className="text-gray-600 mb-6">
-                I provide driving lessons throughout Western Sydney and surrounding areas. Whether you're in the city suburbs or further out, I can come to you.
+                I provide driving lessons within a 10km radius of Lidcombe. This focused service area ensures I can provide timely, reliable lessons while maintaining quality instruction.
               </p>
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 bg-primary rounded-full"></div>
-                  <span className="font-medium">Lidcombe & Surrounds</span>
+                  <span className="font-medium">Lidcombe</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="font-medium">Parramatta Area</span>
+                  <span className="font-medium">Auburn</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                  <span className="font-medium">Bankstown Region</span>
+                  <span className="font-medium">Homebush</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
-                  <span className="font-medium">Liverpool & Campbelltown</span>
+                  <span className="font-medium">Strathfield</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                  <span className="font-medium">Blacktown & Penrith</span>
+                  <span className="font-medium">Granville</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <span className="font-medium">Olympic Park</span>
                 </div>
               </div>
               <p className="mt-6 text-gray-600">
-                <strong>Note:</strong> I'm flexible with locations! If you're outside these areas, contact me to discuss options. Additional travel fees may apply for locations beyond 20km from Lidcombe.
+                <strong>Note:</strong> I'm focused on providing quality service within this 10km radius. If you're outside this area, contact me to discuss options. Additional travel fees may apply for locations beyond 10km from Lidcombe.
               </p>
             </div>
             <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-6">
@@ -166,7 +170,7 @@ export default function AboutPage() {
                 <h3 className="text-2xl font-bold mb-2">Pickup Service</h3>
                 <p className="text-gray-600 mb-4">I offer convenient pickup from your home, school, or workplace within my service area.</p>
                 <div className="inline-block px-4 py-2 bg-primary text-white rounded-lg font-semibold">
-                  Free Pickup Within Zone
+                  Free Pickup Within 10km
                 </div>
               </div>
             </div>
@@ -181,7 +185,7 @@ export default function AboutPage() {
               <div className="mb-6">
                 <h3 className="text-2xl font-bold mb-4">Modern, Safe & Reliable</h3>
                 <p className="text-gray-600">
-                  I teach in a well-maintained, dual-controlled vehicle equipped with all the safety features you need to learn confidently.
+                  I teach in a reliable Toyota Corolla with dual brake controls. It's a comfortable, easy-to-drive car perfect for learning.
                 </p>
               </div>
               <div className="space-y-4">
@@ -190,35 +194,35 @@ export default function AboutPage() {
                     <span className="text-xl">🛡️</span>
                   </div>
                   <div>
-                    <h4 className="font-bold">Dual Controls</h4>
-                    <p className="text-sm text-gray-600">Instructor brake and clutch for added safety</p>
+                    <h4 className="font-bold">Dual Brake</h4>
+                    <p className="text-sm text-gray-600">Instructor brake for added safety and confidence</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <span className="text-xl">📱</span>
-                  </div>
-                  <div>
-                    <h4 className="font-bold">Modern Features</h4>
-                    <p className="text-sm text-gray-600">Reverse camera, parking sensors, Bluetooth</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                     <span className="text-xl">🔄</span>
                   </div>
                   <div>
                     <h4 className="font-bold">Automatic Transmission</h4>
-                    <p className="text-sm text-gray-600">Easy to learn, focus on road skills</p>
+                    <p className="text-sm text-gray-600">Easy to learn, focus on road skills rather than gear changes</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                     <span className="text-xl">🧼</span>
                   </div>
                   <div>
                     <h4 className="font-bold">Clean & Sanitized</h4>
                     <p className="text-sm text-gray-600">Regularly cleaned for your comfort and safety</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+                    <span className="text-xl">🔧</span>
+                  </div>
+                  <div>
+                    <h4 className="font-bold">Well-Maintained</h4>
+                    <p className="text-sm text-gray-600">Regularly serviced and reliable for all lessons</p>
                   </div>
                 </div>
               </div>
@@ -227,7 +231,7 @@ export default function AboutPage() {
               <div className="text-center">
                 <div className="text-8xl mb-6">🚙</div>
                 <h3 className="text-2xl font-bold mb-2">Toyota Corolla</h3>
-                <p className="text-gray-600 mb-4">2023 Model • Automatic • Petrol</p>
+                <p className="text-gray-600 mb-4">2012 Model • Automatic • Petrol</p>
                 <div className="inline-flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg">
                   <span className="text-green-600">✓</span>
                   <span className="font-medium">Full Comprehensive Insurance</span>
