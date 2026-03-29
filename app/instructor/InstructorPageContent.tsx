@@ -30,7 +30,7 @@ import {
   removeBlockedSlotAsync
 } from '@/lib/booking-utils'
 
-type TabType = 'upcoming' | 'all' | 'rules' | 'availability' | 'calendar' | 'profile' | 'create-booking'
+type TabType = 'upcoming' | 'all' | 'rules' | 'availability' | 'calendar' | 'create-booking'
 
 interface InstructorProfile {
   id: string
@@ -2038,17 +2038,13 @@ export default function InstructorPage() {
                 onClick={() => setSelectedTab('calendar')}
               >📅 Calendar</button>
               <button
-                className={`flex-1 px-6 py-4 font-semibold transition ${selectedTab === 'profile' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
-                onClick={() => setSelectedTab('profile')}
-              >👤 Profile</button>
-              <button
                 className={`flex-1 px-6 py-4 font-semibold transition ${selectedTab === 'create-booking' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
                 onClick={() => setSelectedTab('create-booking')}
               >➕ New Booking</button>
             </div>
           </div>
           <div className="p-6">
-            {selectedTab === 'create-booking' ? renderCreateBookingTab() : selectedTab === 'availability' ? renderAvailabilityTab() : selectedTab === 'rules' ? renderRulesTab() : selectedTab === 'calendar' ? renderCalendarTab() : selectedTab === 'profile' ? renderProfileTab() : (
+            {selectedTab === 'create-booking' ? renderCreateBookingTab() : selectedTab === 'availability' ? renderAvailabilityTab() : selectedTab === 'rules' ? renderRulesTab() : selectedTab === 'calendar' ? renderCalendarTab() : (
               <>
                 {selectedTab === 'all' && (
                   <div className="mb-4">
