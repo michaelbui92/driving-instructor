@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Navbar from '@/components/Navbar'
 import { logout } from '@/lib/auth'
-import { supabase, type Booking as SupabaseBooking } from '@/lib/supabase'
+import { supabase as globalSupabase, type Booking as SupabaseBooking } from '@/lib/supabase'
+import { createClient, RealtimeChannel } from '@supabase/supabase-js'
 import {
   formatDate,
   getLessonTypeName,
@@ -58,6 +59,23 @@ interface RuleFormData {
   endTime: string
   maxBookings: number
   repeatType: RepeatType
+}
+
+// Booking type from Supabase (snake_case from database)
+interface SupabaseBookingRecord {
+  id: string
+  student_name: string
+  email: string
+  phone: string
+  date: string
+  time: string
+  lesson_type: string
+  status: 'pending' | 'confirmed' | 'cancelled' | 'completed'
+  created_at: string
+  archived?: boolean
+  originalDate?: string
+  previousDate?: string
+  rescheduleHistory?: Array<{ date: string; time: string; changedAt: string }>
 }
 
 export default function InstructorPage() {
@@ -121,58 +139,111 @@ export default function InstructorPage() {
   const [creatingBooking, setCreatingBooking] = useState(false)
   const [availableTimes, setAvailableTimes] = useState<string[]>([])
 
-  // Load bookings function (can be called from anywhere)
+  // Supabase status for debugging
+  const [supabaseStatus, setSupabaseStatus] = useState<string>('Connecting...')
+
+  // Supabase client - DIRECT initialization (same pattern as test booking page)
+  const supabaseUrl = typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_SUPABASE_URL : undefined
+  const supabaseKey = typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY : undefined
+  const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null
+  const subscriptionRef = useRef<RealtimeChannel | null>(null)
+
+  // Load bookings function using DIRECT Supabase queries (matching test booking page pattern)
   const loadBookings = async () => {
+    if (!supabase) {
+      console.error('Supabase client not available')
+      return
+    }
+    
     try {
-      // Cache busting via query param to avoid stale data
-      const cacheBuster = `t=${Date.now()}`
-      const res = await fetch(`/api/bookings?${cacheBuster}`)
-      
-      if (!res.ok) {
-        throw new Error('Failed to load bookings')
+      const { data, error } = await supabase
+        .from('bookings_new')
+        .select('*')
+        .order('date', { ascending: false })
+
+      if (error) {
+        console.error('Error loading bookings:', error)
+        setSupabaseStatus(`Error: ${error.message}`)
+        return
       }
 
-      const data = await res.json()
-      
-      // Convert to app format
-      const formatted: Booking[] = (data.bookings || []).map((b: any) => ({
+      // Convert to app format (snake_case from DB -> camelCase for app)
+      const formatted: Booking[] = ((data as SupabaseBookingRecord[]) || []).map((b) => ({
         id: b.id,
-        studentName: b.student_name || b.studentName,
-        email: b.email,
-        phone: b.phone,
-        date: b.date,
-        time: b.time,
-        lessonType: b.lesson_type || b.lessonType,
-        status: b.status,
-        price: getLessonPrice(b.lesson_type || b.lessonType),
-        createdAt: b.created_at || b.createdAt,
+        studentName: b.student_name || '',
+        email: b.email || '',
+        phone: b.phone || '',
+        date: b.date || '',
+        time: b.time || '',
+        lessonType: b.lesson_type || 'single',
+        status: b.status || 'pending',
+        price: getLessonPrice(b.lesson_type || 'single'),
+        createdAt: b.created_at || '',
+        archived: b.archived || false,
+        originalDate: b.originalDate,
+        previousDate: b.previousDate,
+        rescheduleHistory: b.rescheduleHistory,
       }))
       setBookings(formatted)
+      setSupabaseStatus(`✅ Connected (${data?.length || 0} bookings)`)
     } catch (error) {
       console.error('Error loading bookings:', error)
       setBookings([])
+      setSupabaseStatus(`Error: ${error}`)
     }
   }
 
-  // Load bookings on mount and auto-refresh
+  // Load bookings on mount and set up real-time subscription
   useEffect(() => {
     loadBookings()
     setBlockedSlots(getBlockedSlots())
     setRules(getRules())
     
-    // Auto-refresh every 10 seconds
+    // Set up real-time subscription for database changes (matching test booking page)
+    if (supabase) {
+      // Clean up any existing subscription
+      if (subscriptionRef.current) {
+        supabase.removeChannel(subscriptionRef.current)
+      }
+      
+      // Subscribe to changes on bookings_new table
+      subscriptionRef.current = supabase
+        .channel('instructor-bookings-changes')
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'bookings_new' },
+          (payload) => {
+            console.log('Real-time update received:', payload)
+            // Reload bookings on any change
+            loadBookings()
+          }
+        )
+        .subscribe((status) => {
+          console.log('Subscription status:', status)
+          if (status === 'SUBSCRIBED') {
+            setSupabaseStatus(prev => prev.includes('✅') ? '✅ Connected (subscribed)' : prev)
+          }
+        })
+    }
+    
+    // Auto-refresh every 30 seconds as backup (in addition to real-time)
     const interval = setInterval(() => {
       loadBookings()
-    }, 10000)
+    }, 30000)
     
-    return () => clearInterval(interval)
+    return () => {
+      clearInterval(interval)
+      if (subscriptionRef.current && supabase) {
+        supabase.removeChannel(subscriptionRef.current)
+      }
+    }
   }, [])
 
   // Load instructor profile from Supabase
   useEffect(() => {
     async function loadProfile() {
       try {
-        const { data, error } = await supabase
+        const { data, error } = await globalSupabase
           .from('instructor_profile')
           .select('*')
           .single()
@@ -220,8 +291,9 @@ export default function InstructorPage() {
     return []
   }
 
+  // UPDATE BOOKING STATUS using DIRECT Supabase query (replacing API route)
   const updateBookingStatus = async (bookingId: string, newStatus: Booking['status']) => {
-    if (actionLoading) return // Prevent rapid actions
+    if (actionLoading || !supabase) return // Prevent rapid actions
     setActionLoading(true)
     
     try {
@@ -230,33 +302,32 @@ export default function InstructorPage() {
         b.id === bookingId ? { ...b, status: newStatus } : b
       ))
       
-      // Now update server
-      const res = await fetch(`/api/bookings/${bookingId}/status`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus }),
-      })
+      // DIRECT Supabase query (matching test booking page pattern)
+      const { error } = await supabase
+        .from('bookings_new')
+        .update({ status: newStatus })
+        .eq('id', bookingId)
 
-      if (!res.ok) {
+      if (error) {
         // Rollback on error
         await loadBookings()
-        throw new Error('Failed to update status')
+        throw new Error(error.message || 'Failed to update status')
       }
 
-      // Refresh to ensure sync (lightweight, just to confirm)
-      await loadBookings()
-      
       alert(`Booking status updated to: ${newStatus}`)
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating booking status:', error)
       alert('Error updating booking status. Please try again.')
+      // Reload to ensure sync
+      await loadBookings()
     } finally {
       setActionLoading(false)
     }
   }
 
+  // DELETE BOOKING using DIRECT Supabase query (replacing API route)
   const deleteBooking = async (bookingId: string) => {
-    if (actionLoading) return // Prevent rapid actions
+    if (actionLoading || !supabase) return // Prevent rapid actions
     if (!confirm('⚠️ WARNING: This will permanently delete the booking. This action cannot be undone.\n\nAre you sure you want to delete this booking?')) {
       return
     }
@@ -271,27 +342,30 @@ export default function InstructorPage() {
     setActionLoading(true)
     
     try {
-      const res = await fetch(`/api/instructor/bookings/${bookingId}`, {
-        method: 'DELETE',
-      })
+      // DIRECT Supabase query (matching test booking page pattern)
+      const { error } = await supabase
+        .from('bookings_new')
+        .delete()
+        .eq('id', bookingId)
 
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.error || 'Failed to delete booking')
+      if (error) {
+        throw new Error(error.message || 'Failed to delete booking')
       }
 
       alert('Booking deleted successfully')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error deleting booking:', error)
       // ROLLBACK on error - restore previous state
       setBookings(previousBookings)
-      alert('Error deleting booking. Please try again.')
+      alert(`Error deleting booking: ${error.message}. Please try again.`)
     } finally {
       setActionLoading(false)
     }
   }
 
   const archiveBooking = async (bookingId: string) => {
+    if (!supabase) return
+    
     try {
       const booking = bookings.find(b => b.id === bookingId)
       if (!booking) return
@@ -339,9 +413,14 @@ export default function InstructorPage() {
     fetchAvailableTimes(date)
   }
 
-  // Create booking handler
+  // Create booking handler using DIRECT Supabase query (replacing API route)
   const handleCreateBooking = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!supabase) {
+      alert('Database connection not available. Please refresh the page.')
+      return
+    }
     
     if (!bookingForm.studentName || !bookingForm.date || !bookingForm.time) {
       alert('Please fill in student name, date, and time')
@@ -351,23 +430,21 @@ export default function InstructorPage() {
     setCreatingBooking(true)
     
     try {
-      const res = await fetch('/api/bookings/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          studentName: bookingForm.studentName,
+      // DIRECT Supabase insert (matching test booking page pattern)
+      const { error } = await supabase
+        .from('bookings_new')
+        .insert([{
+          student_name: bookingForm.studentName,
           email: bookingForm.email || 'guest@example.com',
           phone: bookingForm.phone,
           date: bookingForm.date,
           time: bookingForm.time,
-          lessonType: bookingForm.lessonType
-        })
-      })
+          lesson_type: bookingForm.lessonType,
+          status: 'pending'
+        }])
 
-      const data = await res.json()
-
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to create booking')
+      if (error) {
+        throw new Error(error.message || 'Failed to create booking')
       }
 
       alert(`Booking created successfully for ${bookingForm.studentName} on ${formatDate(bookingForm.date)} at ${bookingForm.time}`)
@@ -383,8 +460,8 @@ export default function InstructorPage() {
       })
       setAvailableTimes([])
       
-      // Refresh bookings list
-      loadBookings()
+      // Refresh bookings list (real-time subscription will also handle this)
+      await loadBookings()
       
       // Switch to upcoming tab
       setSelectedTab('upcoming')
@@ -615,7 +692,7 @@ export default function InstructorPage() {
   const handleSaveProfile = async () => {
     setSavingProfile(true)
     try {
-      const { error } = await supabase
+      const { error } = await globalSupabase
         .from('instructor_profile')
         .update({
           bio: profileForm.bio,
