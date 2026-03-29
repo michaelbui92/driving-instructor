@@ -28,15 +28,16 @@ export default function TestBookingPage() {
     }
     
     try {
-      const { data, error } = await supabase
+      // Get actual bookings to count them
+      const { data, error, count } = await supabase
         .from('bookings_new')
-        .select('count', { count: 'exact', head: true })
+        .select('*', { count: 'exact' })
+        .limit(1)
       
       if (error) {
         setSupabaseStatus(`Error: ${error.message}`)
       } else {
-        const count = (data as any)?.count || 0
-        setSupabaseStatus(`Connected ✓ (${count} bookings)`)
+        setSupabaseStatus(`Connected ✓ (${count || 0} bookings)`)
       }
     } catch (err: any) {
       setSupabaseStatus(`Failed: ${err.message}`)
@@ -89,6 +90,25 @@ export default function TestBookingPage() {
       alert(`Error: ${error.message}`)
     } else {
       alert('Test booking created!')
+      loadBookings()
+    }
+  }
+
+  const updateBookingStatus = async (id: string, status: string) => {
+    if (!supabase) {
+      alert('No Supabase client')
+      return
+    }
+    
+    const { error } = await supabase
+      .from('bookings_new')
+      .update({ status })
+      .eq('id', id)
+
+    if (error) {
+      alert(`Error: ${error.message}`)
+    } else {
+      alert(`Booking status updated to ${status}`)
       loadBookings()
     }
   }
@@ -167,6 +187,7 @@ export default function TestBookingPage() {
                   <th className="px-4 py-2 text-left text-sm font-medium">Date/Time</th>
                   <th className="px-4 py-2 text-left text-sm font-medium">Type</th>
                   <th className="px-4 py-2 text-left text-sm font-medium">Status</th>
+                  <th className="px-4 py-2 text-left text-sm font-medium">Actions</th>
                   <th className="px-4 py-2 text-left text-sm font-medium">Created</th>
                 </tr>
               </thead>
@@ -194,6 +215,42 @@ export default function TestBookingPage() {
                       }`}>
                         {booking.status}
                       </span>
+                    </td>
+                    <td className="px-4 py-2">
+                      <div className="flex gap-1">
+                        {booking.status === 'pending' && (
+                          <>
+                            <button
+                              onClick={() => updateBookingStatus(booking.id, 'confirmed')}
+                              className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700"
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                              className="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        )}
+                        {booking.status === 'confirmed' && (
+                          <button
+                            onClick={() => updateBookingStatus(booking.id, 'cancelled')}
+                            className="text-xs bg-red-600 text-white px-2 py-1 rounded hover:bg-red-700"
+                          >
+                            Cancel
+                          </button>
+                        )}
+                        {booking.status === 'cancelled' && (
+                          <button
+                            onClick={() => updateBookingStatus(booking.id, 'confirmed')}
+                            className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-700"
+                          >
+                            Re-confirm
+                          </button>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-2 text-sm">
                       {new Date(booking.created_at).toLocaleDateString()}
