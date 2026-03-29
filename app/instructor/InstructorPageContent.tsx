@@ -25,7 +25,6 @@ import {
   updateRuleAsync,
   deleteRuleAsync,
   toggleRuleAsync,
-  getSortedRulesAsync,
   getBlockedSlotsAsync,
   addBlockedSlotAsync,
   removeBlockedSlotAsync
@@ -785,7 +784,7 @@ export default function InstructorPage() {
     })
   }
 
-  const sortedRules = getSortedRules()
+  const sortedRules = rules.sort((a, b) => a.priority - b.priority)
 
   const renderProfileTab = () => (
     <div>
