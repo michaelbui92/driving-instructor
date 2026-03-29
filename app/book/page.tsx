@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import Navbar from '@/components/Navbar'
 import { supabase } from '@/lib/supabase'
-import { formatDate, generateTimeSlots, getAvailableSlots, getLessonTypes, type TimeSlot } from '@/lib/booking-utils'
+import { formatDate, generateTimeSlots, getAvailableSlots, type TimeSlot } from '@/lib/booking-utils'
 
 type BookingForm = {
   studentName: string
@@ -16,8 +17,31 @@ type BookingForm = {
   time: string
 }
 
+type Step = 1 | 2 | 3 | 4 // 4 = email verification needed
+
+const LESSON_TYPES = [
+  {
+    id: 'single',
+    name: 'Single Lesson',
+    price: 55,
+    duration: '60 min',
+    image: '/images/hover-single.png',
+    title: 'Single Lesson',
+    description: 'Perfect for new students taking their first steps. Learn essential driving skills including proper steering and mirror checks, lane changing and merging safely, parking techniques, road rules and situational awareness, and building confidence behind the wheel.',
+  },
+  {
+    id: 'casual',
+    name: 'Casual Driving',
+    price: 45,
+    duration: '60 min relaxed',
+    image: '/images/hover-casual.png',
+    title: 'Casual Driving',
+    description: 'For students who already know the basics and want to maintain their skills. Practice real-world driving without pressure: keep your skills up to date, gain experience on various road types, relaxed stress-free driving practice, prepare for your driving test, and build muscle memory and independence.',
+  },
+]
+
 export default function BookPage() {
-  const [step, setStep] = useState(1)
+  const [step, setStep] = useState<Step>(1)
   const [form, setForm] = useState<BookingForm>({
     studentName: '',
     email: '',
@@ -32,8 +56,18 @@ export default function BookPage() {
   const [success, setSuccess] = useState(false)
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([])
   const [existingBookings, setExistingBookings] = useState<any[]>([])
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [showVerifyModal, setShowVerifyModal] = useState(false)
+  const [otpCode, setOtpCode] = useState('')
+  const [otpSent, setOtpSent] = useState(false)
+  const [otpLoading, setOtpLoading] = useState(false)
+  const [otpError, setOtpError] = useState('')
+  const [otpSuccess, setOtpSuccess] = useState('')
 
-  const lessonTypes = getLessonTypes()
+  // Check if user is logged in
+  useEffect(() => {
+    setIsLoggedIn(document.cookie.includes('sb-access-token'))
+  }, [])
 
   // Load existing bookings to check availability
   useEffect(() => {
@@ -59,6 +93,86 @@ export default function BookPage() {
       setAvailableSlots(slots)
     }
   }, [form.date, existingBookings])
+
+  // Generate dates for the next 28 days with availability info
+  const availableDates = useMemo(() => {
+    const dates: { date: string; hasSlots: boolean }[] = []
+    const today = new Date()
+    
+    for (let i = 1; i <= 28; i++) {
+      const d = new Date(today)
+      d.setDate(today.getDate() + i)
+      const dateString = d.toISOString().split('T')[0]
+      const slots = getAvailableSlots(dateString, existingBookings)
+      dates.push({
+        date: dateString,
+        hasSlots: slots.length > 0
+      })
+    }
+    
+    return dates
+  }, [existingBookings])
+
+  const handleSendOTP = async () => {
+    if (!form.email) {
+      setOtpError('Email is required')
+      return
+    }
+    
+    setOtpLoading(true)
+    setOtpError('')
+    
+    try {
+      const res = await fetch('/api/student-auth/otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email }),
+      })
+      
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Failed to send code')
+      }
+      
+      setOtpSent(true)
+      setOtpSuccess('Code sent! Check your email.')
+    } catch (err: any) {
+      setOtpError(err.message)
+    } finally {
+      setOtpLoading(false)
+    }
+  }
+
+  const handleVerifyOTP = async () => {
+    if (!otpCode || otpCode.length < 6) {
+      setOtpError('Please enter the 6-digit code')
+      return
+    }
+    
+    setOtpLoading(true)
+    setOtpError('')
+    
+    try {
+      const res = await fetch('/api/student-auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email, code: otpCode }),
+      })
+      
+      if (!res.ok) {
+        const data = await res.json()
+        throw new Error(data.error || 'Invalid code')
+      }
+      
+      // Success - close modal and redirect to dashboard
+      setShowVerifyModal(false)
+      setSuccess(true)
+    } catch (err: any) {
+      setOtpError(err.message)
+    } finally {
+      setOtpLoading(false)
+    }
+  }
 
   const handleSubmit = async () => {
     if (!form.studentName || !form.email || !form.phone || !form.date || !form.time) {
@@ -87,8 +201,14 @@ export default function BookPage() {
         throw insertError
       }
 
-      setSuccess(true)
-      setStep(3)
+      // Check if logged in
+      if (isLoggedIn) {
+        // Already logged in - redirect to dashboard
+        window.location.href = '/student/dashboard'
+      } else {
+        // Not logged in - show email verification modal
+        setShowVerifyModal(true)
+      }
     } catch (err: any) {
       setError(err.message || 'Failed to create booking')
     } finally {
@@ -96,34 +216,8 @@ export default function BookPage() {
     }
   }
 
-  if (success) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-        <Navbar />
-        <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-          <div className="bg-white rounded-2xl shadow-lg p-8">
-            <div className="text-6xl mb-4">✅</div>
-            <h1 className="text-3xl font-bold mb-4">Booking Submitted!</h1>
-            <p className="text-gray-600 mb-6">
-              Your booking request has been sent. You'll receive a confirmation once it's reviewed.
-            </p>
-            <div className="bg-blue-50 rounded-lg p-4 mb-6 text-left">
-              <p><strong>Name:</strong> {form.studentName}</p>
-              <p><strong>Date:</strong> {formatDate(form.date)}</p>
-              <p><strong>Time:</strong> {form.time}</p>
-              <p><strong>Lesson:</strong> {form.lessonType === 'single' ? 'Single Lesson ($55)' : 'Casual Driving ($45)'}</p>
-            </div>
-            <Link
-              href="/student/login"
-              className="inline-block px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition"
-            >
-              View My Bookings
-            </Link>
-          </div>
-        </div>
-      </div>
-    )
-  }
+  const getLessonInfo = (id: string) => LESSON_TYPES.find(l => l.id === id) || LESSON_TYPES[0]
+  const selectedLesson = getLessonInfo(form.lessonType)
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -131,8 +225,8 @@ export default function BookPage() {
 
       {/* Progress */}
       <div className="bg-white shadow-sm">
-        <div className="max-w-2xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
+        <div className="max-w-4xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-center">
             {[1, 2, 3].map((s) => (
               <div key={s} className="flex items-center">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
@@ -140,44 +234,76 @@ export default function BookPage() {
                 }`}>
                   {s < 3 ? s : '✓'}
                 </div>
-                {s < 3 && <div className={`w-24 h-1 mx-2 ${step > s ? 'bg-primary' : 'bg-gray-200'}`} />}
+                {s < 3 && <div className={`w-32 h-1 mx-2 ${step > s ? 'bg-primary' : 'bg-gray-200'}`} />}
               </div>
             ))}
           </div>
-          <div className="flex justify-between mt-2 text-sm text-gray-600">
-            <span>Lesson Type</span>
-            <span>Date & Time</span>
-            <span>Your Details</span>
+          <div className="flex justify-between mt-2 text-sm text-gray-600 max-w-xl mx-auto">
+            <span className={step >= 1 ? 'text-primary font-medium' : ''}>Lesson Type</span>
+            <span className={step >= 2 ? 'text-primary font-medium' : ''}>Date & Time</span>
+            <span className={step >= 3 ? 'text-primary font-medium' : ''}>Your Details</span>
           </div>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-12">
-        {/* Step 1: Lesson Type */}
+      <div className="max-w-4xl mx-auto px-4 py-12">
+        {/* Step 1: Lesson Type with Images */}
         {step === 1 && (
           <div>
-            <h2 className="text-3xl font-bold mb-6">Choose Your Lesson</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              {lessonTypes.map((type) => (
+            <h2 className="text-3xl font-bold mb-6 text-center">Choose Your Lesson</h2>
+            
+            <div className="grid md:grid-cols-2 gap-8 mb-8">
+              {LESSON_TYPES.map((type) => (
                 <div
                   key={type.id}
                   onClick={() => setForm({ ...form, lessonType: type.id })}
-                  className={`p-6 rounded-xl border-2 cursor-pointer transition ${
+                  className={`cursor-pointer transition-all duration-300 ${
                     form.lessonType === type.id
-                      ? 'border-primary bg-blue-50'
-                      : 'border-gray-200 bg-white hover:border-primary'
+                      ? 'transform scale-[1.02]'
+                      : 'hover:transform hover:scale-[1.01]'
                   }`}
                 >
-                  <h3 className="text-xl font-bold mb-2">{type.name}</h3>
-                  <p className="text-gray-600 mb-4">{type.duration}</p>
-                  <div className="text-3xl font-bold text-primary">${type.price}</div>
+                  <div className={`rounded-2xl overflow-hidden border-4 transition-all ${
+                    form.lessonType === type.id
+                      ? 'border-primary shadow-xl'
+                      : 'border-gray-200 shadow-lg hover:shadow-xl'
+                  }`}>
+                    {/* Image */}
+                    <div className="relative h-48 bg-gradient-to-br from-blue-100 to-indigo-100">
+                      <Image
+                        src={type.image}
+                        alt={type.title}
+                        fill
+                        className="object-contain p-4"
+                      />
+                      {form.lessonType === type.id && (
+                        <div className="absolute top-4 right-4 bg-primary text-white px-3 py-1 rounded-full text-sm font-semibold">
+                          Selected
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="p-6 bg-white">
+                      <div className="flex justify-between items-start mb-3">
+                        <div>
+                          <h3 className="text-xl font-bold">{type.name}</h3>
+                          <p className="text-gray-500 text-sm">{type.duration}</p>
+                        </div>
+                        <div className="text-2xl font-bold text-primary">${type.price}</div>
+                      </div>
+                      
+                      <p className="text-gray-600 text-sm leading-relaxed">{type.description}</p>
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
-            <div className="flex justify-end mt-8">
+
+            <div className="flex justify-end">
               <button
                 onClick={() => setStep(2)}
-                className="px-8 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold"
+                className="px-8 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold text-lg"
               >
                 Next →
               </button>
@@ -185,50 +311,105 @@ export default function BookPage() {
           </div>
         )}
 
-        {/* Step 2: Date & Time */}
+        {/* Step 2: Date & Time with Calendar Picker */}
         {step === 2 && (
           <div>
-            <h2 className="text-3xl font-bold mb-6">Select Date & Time</h2>
+            <h2 className="text-3xl font-bold mb-6 text-center">Select Date & Time</h2>
             
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Date</label>
-              <input
-                type="date"
-                value={form.date}
-                min={new Date().toISOString().split('T')[0]}
-                onChange={(e) => setForm({ ...form, date: e.target.value, time: '' })}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary"
-              />
+            {/* Date Selection - Calendar Style */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold mb-4">Available Dates</h3>
+              <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
+                {availableDates.map(({ date, hasSlots }) => {
+                  const d = new Date(date)
+                  const dayName = d.toLocaleDateString('en-AU', { weekday: 'short' })
+                  const dayNum = d.getDate()
+                  const monthName = d.toLocaleDateString('en-AU', { month: 'short' })
+                  const isSelected = form.date === date
+                  const isDisabled = !hasSlots
+                  
+                  return (
+                    <button
+                      key={date}
+                      disabled={isDisabled}
+                      onClick={() => hasSlots && setForm({ ...form, date, time: '' })}
+                      className={`p-3 rounded-xl border-2 transition-all text-center ${
+                        isSelected
+                          ? 'border-primary bg-primary text-white'
+                          : isDisabled
+                          ? 'border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed'
+                          : 'border-gray-200 bg-white hover:border-primary hover:bg-blue-50'
+                      }`}
+                    >
+                      <div className={`text-xs font-medium ${isSelected ? 'text-blue-100' : 'text-gray-500'}`}>
+                        {dayName}
+                      </div>
+                      <div className={`text-lg font-bold ${isSelected ? 'text-white' : ''}`}>
+                        {dayNum}
+                      </div>
+                      <div className={`text-xs ${isSelected ? 'text-blue-100' : 'text-gray-400'}`}>
+                        {monthName}
+                      </div>
+                      {isDisabled && (
+                        <div className="text-xs text-gray-400 mt-1">Full</div>
+                      )}
+                    </button>
+                  )
+                })}
+              </div>
+              {form.date && (
+                <p className="mt-3 text-sm text-gray-600">
+                  Selected: <span className="font-semibold">{formatDate(form.date)}</span>
+                </p>
+              )}
             </div>
 
+            {/* Time Selection */}
             {form.date && (
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Available Times</label>
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold mb-4">
+                  Available Times for {formatDate(form.date)}
+                </h3>
                 {availableSlots.length === 0 ? (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-800">
                     No available slots for this date. Please select another date.
                   </div>
                 ) : (
-                  <div className="grid grid-cols-3 gap-3">
-                    {availableSlots.map((slot) => (
-                      <button
-                        key={slot.id}
-                        onClick={() => setForm({ ...form, time: slot.time })}
-                        className={`p-3 rounded-lg border-2 transition ${
-                          form.time === slot.time
-                            ? 'border-primary bg-blue-50'
-                            : 'border-gray-200 hover:border-primary'
-                        }`}
-                      >
-                        {slot.time}
-                      </button>
-                    ))}
+                  <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+                    {availableSlots.map((slot) => {
+                      const isNightTime = slot.time === '8:00 PM'
+                      const isSelected = form.time === slot.time
+                      
+                      return (
+                        <button
+                          key={slot.id}
+                          onClick={() => setForm({ ...form, time: slot.time })}
+                          className={`p-4 rounded-xl border-2 transition-all ${
+                            isSelected
+                              ? 'border-primary bg-primary text-white'
+                              : isNightTime
+                              ? 'border-purple-300 bg-purple-50 hover:border-purple-400 hover:bg-purple-100'
+                              : 'border-gray-200 bg-white hover:border-primary hover:bg-blue-50'
+                          }`}
+                        >
+                          <div className={`font-semibold ${isSelected ? 'text-white' : ''}`}>
+                            {slot.time}
+                          </div>
+                          {isNightTime && !isSelected && (
+                            <div className="text-xs text-purple-600 mt-1">🌙 Night Time</div>
+                          )}
+                          {isNightTime && isSelected && (
+                            <div className="text-xs text-purple-200 mt-1">🌙 Night</div>
+                          )}
+                        </button>
+                      )
+                    })}
                   </div>
                 )}
               </div>
             )}
 
-            <div className="flex justify-between mt-8">
+            <div className="flex justify-between">
               <button
                 onClick={() => setStep(1)}
                 className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
@@ -246,72 +427,98 @@ export default function BookPage() {
           </div>
         )}
 
-        {/* Step 3: Details */}
+        {/* Step 3: Your Details */}
         {step === 3 && (
           <div>
-            <h2 className="text-3xl font-bold mb-6">Your Details</h2>
+            <h2 className="text-3xl font-bold mb-6 text-center">Your Details</h2>
             
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-                <input
-                  type="text"
-                  value={form.studentName}
-                  onChange={(e) => setForm({ ...form, studentName: e.target.value })}
-                  placeholder="Your full name"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                <input
-                  type="email"
-                  value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
-                  placeholder="your@email.com"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone *</label>
-                <input
-                  type="tel"
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  placeholder="0412 345 678"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Address</label>
-                <input
-                  type="text"
-                  value={form.address}
-                  onChange={(e) => setForm({ ...form, address: e.target.value })}
-                  placeholder="Your address for pickup"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary"
-                />
+            <div className="bg-white rounded-2xl shadow-lg p-8 mb-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                  <input
+                    type="text"
+                    value={form.studentName}
+                    onChange={(e) => setForm({ ...form, studentName: e.target.value })}
+                    placeholder="Your full name"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    placeholder="your@email.com"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">We'll send your booking confirmation here</p>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+                  <input
+                    type="tel"
+                    value={form.phone}
+                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    placeholder="0412 345 678"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Address</label>
+                  <input
+                    type="text"
+                    value={form.address}
+                    onChange={(e) => setForm({ ...form, address: e.target.value })}
+                    placeholder="Your address for pickup (optional)"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
               </div>
             </div>
 
+            {/* Booking Summary */}
+            <div className="bg-gradient-to-r from-primary to-secondary rounded-2xl p-6 text-white mb-6">
+              <h3 className="font-semibold mb-3">Booking Summary</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-blue-200 text-sm">Lesson</p>
+                  <p className="font-semibold">{selectedLesson.name}</p>
+                </div>
+                <div>
+                  <p className="text-blue-200 text-sm">Price</p>
+                  <p className="font-semibold text-xl">${selectedLesson.price}</p>
+                </div>
+                <div>
+                  <p className="text-blue-200 text-sm">Date</p>
+                  <p className="font-semibold">{formatDate(form.date)}</p>
+                </div>
+                <div>
+                  <p className="text-blue-200 text-sm">Time</p>
+                  <p className="font-semibold">
+                    {form.time}
+                    {form.time === '8:00 PM' && ' 🌙'}
+                  </p>
+                </div>
+              </div>
+              {form.time === '8:00 PM' && (
+                <p className="mt-3 text-sm bg-white/20 rounded-lg p-2">
+                  🌙 This is a night time booking - headlights will be used
+                </p>
+              )}
+            </div>
+
             {error && (
-              <div className="mt-4 bg-red-50 border border-red-200 rounded-lg p-3 text-red-700">
+              <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3 text-red-700">
                 {error}
               </div>
             )}
 
-            {/* Summary */}
-            <div className="mt-6 bg-blue-50 rounded-lg p-4">
-              <h3 className="font-semibold mb-2">Booking Summary</h3>
-              <p><strong>Lesson:</strong> {form.lessonType === 'single' ? 'Single Lesson ($55)' : 'Casual Driving ($45)'}</p>
-              <p><strong>Date:</strong> {formatDate(form.date)}</p>
-              <p><strong>Time:</strong> {form.time}</p>
-            </div>
-
-            <div className="flex justify-between mt-8">
+            <div className="flex justify-between">
               <button
                 onClick={() => setStep(2)}
                 className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
@@ -320,15 +527,81 @@ export default function BookPage() {
               </button>
               <button
                 onClick={handleSubmit}
-                disabled={loading}
-                className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold disabled:opacity-50"
+                disabled={loading || !form.studentName || !form.email || !form.phone}
+                className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Submitting...' : 'Submit Booking'}
+                {loading ? 'Submitting...' : 'Confirm Booking'}
               </button>
             </div>
           </div>
         )}
       </div>
+
+      {/* Email Verification Modal */}
+      {showVerifyModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full">
+            <h2 className="text-2xl font-bold mb-4">Verify Your Email</h2>
+            <p className="text-gray-600 mb-6">
+              We've sent a login code to <strong>{form.email}</strong>. 
+              Enter it below to view your booking on your dashboard.
+            </p>
+            
+            {!otpSent ? (
+              <button
+                onClick={handleSendOTP}
+                disabled={otpLoading}
+                className="w-full py-3 bg-primary text-white rounded-xl font-semibold hover:bg-secondary transition disabled:opacity-50"
+              >
+                {otpLoading ? 'Sending...' : 'Send Login Code'}
+              </button>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <input
+                    type="text"
+                    value={otpCode}
+                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="123456"
+                    maxLength={6}
+                    className="w-full py-4 text-center text-2xl tracking-widest border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+                
+                {otpError && (
+                  <p className="text-red-500 text-sm">{otpError}</p>
+                )}
+                {otpSuccess && (
+                  <p className="text-green-500 text-sm">{otpSuccess}</p>
+                )}
+                
+                <button
+                  onClick={handleVerifyOTP}
+                  disabled={otpLoading || otpCode.length < 6}
+                  className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition disabled:opacity-50"
+                >
+                  {otpLoading ? 'Verifying...' : 'Verify & View Dashboard'}
+                </button>
+                
+                <button
+                  onClick={handleSendOTP}
+                  disabled={otpLoading}
+                  className="w-full py-2 text-gray-500 hover:text-gray-700 text-sm"
+                >
+                  Resend code
+                </button>
+              </div>
+            )}
+            
+            <button
+              onClick={() => setShowVerifyModal(false)}
+              className="mt-4 w-full py-2 text-gray-500 hover:text-gray-700"
+            >
+              Skip for now
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
