@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import Navbar from '@/components/Navbar'
+import { useState } from 'react'
 
 const blogPosts = [
   {
@@ -58,63 +58,143 @@ const blogPosts = [
     slug: "sydney-traffic-tips",
     category: "City Driving"
   },
+  {
+    id: 7,
+    title: "Merging Lanes Safely: A Step-by-Step Guide",
+    excerpt: "Lane merging is one of the trickiest maneuvers for new drivers. Master the technique with this comprehensive guide.",
+    date: "March 20, 2026",
+    readTime: "5 min read",
+    slug: "merging-lanes",
+    category: "Skills"
+  },
+  {
+    id: 8,
+    title: "Understanding Blind Spots: The Hidden Dangers",
+    excerpt: "Blind spots cause countless accidents every year. Learn how to identify and manage them to stay safe on the road.",
+    date: "March 22, 2026",
+    readTime: "4 min read",
+    slug: "blind-spots",
+    category: "Safety"
+  },
 ]
 
+const categories = ["All", "Safety", "Road Rules", "Test Preparation", "Skills", "City Driving"]
+
+const categoryColors: Record<string, string> = {
+  "Safety": "bg-red-100 text-red-700 hover:bg-red-200",
+  "Road Rules": "bg-green-100 text-green-700 hover:bg-green-200",
+  "Test Preparation": "bg-yellow-100 text-yellow-700 hover:bg-yellow-200",
+  "Skills": "bg-indigo-100 text-indigo-700 hover:bg-indigo-200",
+  "City Driving": "bg-orange-100 text-orange-700 hover:bg-orange-200"
+}
+
 export default function BlogPage() {
+  const [selectedCategory, setSelectedCategory] = useState("All")
+
+  const filteredPosts = selectedCategory === "All" 
+    ? blogPosts 
+    : blogPosts.filter(post => post.category === selectedCategory)
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <Navbar />
+      {/* Import Navbar */}
+      <nav className="bg-white shadow-lg sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <Link href="/" className="text-2xl font-bold text-primary hover:text-secondary transition">
+                🚗 Drive With Bui
+              </Link>
+              <span className="ml-2 text-sm text-gray-600 hidden md:inline">• Lidcombe Area</span>
+            </div>
+            <div className="hidden md:flex space-x-4 items-center">
+              <Link href="/about" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">About</Link>
+              <Link href="/blog" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">Blog</Link>
+              <Link href="/faq" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">FAQ</Link>
+              <Link href="/contact" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">Contact</Link>
+              <div className="flex space-x-2 ml-2">
+                <Link href="/student/login" className="px-3 py-1.5 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition font-medium text-sm">Student Login</Link>
+                <Link href="/instructor" className="px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-secondary transition font-medium text-sm">Instructor Portal</Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </nav>
       
       <div className="max-w-4xl mx-auto px-4 py-16">
         <h1 className="text-4xl font-bold text-center mb-4" data-aos="fade-up">Driving Tips & Blog</h1>
-        <p className="text-center text-gray-600 mb-12" data-aos="fade-up" data-aos-delay="100">Helpful tips and insights for new and experienced drivers</p>
+        <p className="text-center text-gray-600 mb-8" data-aos="fade-up" data-aos-delay="100">Helpful tips and insights for new and experienced drivers</p>
         
-        <div className="space-y-8">
-          {blogPosts.map((post, index) => {
-            // Determine category color based on category
-            const categoryColors: Record<string, string> = {
-              "Safety": "bg-red-100 text-red-700",
-              "Road Rules": "bg-green-100 text-green-700",
-              "Test Preparation": "bg-yellow-100 text-yellow-700",
-              "Skills": "bg-indigo-100 text-indigo-700",
-              "City Driving": "bg-orange-100 text-orange-700"
-            }
-            
-            const categoryColor = categoryColors[post.category] || "bg-blue-100 text-blue-700"
-            const link = `/blog/${post.slug}`
-            
-            return (
-              <div 
-                key={post.id} 
-                className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition hover-lift"
-                data-aos="fade-up"
-                data-aos-delay={index * 100}
-              >
-                <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 mb-3">
-                  <span>📅 {post.date}</span>
-                  <span>•</span>
-                  <span>⏱️ {post.readTime}</span>
-                  <span>•</span>
-                  <span className={`px-3 py-1 ${categoryColor} rounded-full text-xs font-medium`}>
-                    {post.category}
-                  </span>
-                </div>
-                <h2 className="text-2xl font-bold mb-3 hover:text-primary transition cursor-pointer">
-                  {post.title}
-                </h2>
-                <p className="text-gray-600 mb-4">
-                  {post.excerpt}
-                </p>
-                <Link 
-                  href={link}
-                  className="inline-flex items-center gap-1 text-primary font-semibold hover:underline"
-                >
-                  Read Article →
-                </Link>
-              </div>
-            )
-          })}
+        {/* Category Filter */}
+        <div className="flex flex-wrap justify-center gap-2 mb-12" data-aos="fade-up" data-aos-delay="150">
+          {categories.map(category => (
+            <button
+              key={category}
+              onClick={() => setSelectedCategory(category)}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition ${
+                selectedCategory === category
+                  ? "bg-primary text-white shadow-md"
+                  : "bg-white text-gray-700 hover:bg-gray-100 border border-gray-200"
+              }`}
+            >
+              {category}
+            </button>
+          ))}
         </div>
+        
+        {filteredPosts.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">📚</div>
+            <h3 className="text-xl font-semibold mb-2">No articles in this category yet</h3>
+            <p className="text-gray-600">Check back soon for new content!</p>
+            <button
+              onClick={() => setSelectedCategory("All")}
+              className="mt-4 px-6 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition"
+            >
+              View All Articles
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {filteredPosts.map((post, index) => {
+              const link = `/blog/${post.slug}`
+              const colorClass = categoryColors[post.category] || "bg-blue-100 text-blue-700"
+              
+              return (
+                <div 
+                  key={post.id} 
+                  className="bg-white rounded-2xl shadow-lg p-8 hover:shadow-xl transition hover-lift"
+                  data-aos="fade-up"
+                  data-aos-delay={index * 100}
+                >
+                  <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500 mb-3">
+                    <span>📅 {post.date}</span>
+                    <span>•</span>
+                    <span>⏱️ {post.readTime}</span>
+                    <span>•</span>
+                    <span className={`px-3 py-1 ${colorClass} rounded-full text-xs font-medium`}>
+                      {post.category}
+                    </span>
+                  </div>
+                  <Link href={link}>
+                    <h2 className="text-2xl font-bold mb-3 hover:text-primary transition cursor-pointer">
+                      {post.title}
+                    </h2>
+                  </Link>
+                  <p className="text-gray-600 mb-4">
+                    {post.excerpt}
+                  </p>
+                  <Link 
+                    href={link}
+                    className="inline-flex items-center gap-1 text-primary font-semibold hover:underline"
+                  >
+                    Read Article →
+                  </Link>
+                </div>
+              )
+            })}
+          </div>
+        )}
 
         <div 
           className="mt-12 bg-primary rounded-2xl p-8 text-center text-white"

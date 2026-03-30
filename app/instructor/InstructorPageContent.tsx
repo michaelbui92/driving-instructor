@@ -142,9 +142,20 @@ export default function InstructorPage() {
   const [supabaseStatus, setSupabaseStatus] = useState<string>('Connecting...')
 
   // Supabase client - DIRECT initialization (same pattern as test booking page)
+  // Use the centralized supabase client from lib/supabase.ts to ensure consistency
   const supabaseUrl = typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_SUPABASE_URL : undefined
   const supabaseKey = typeof window !== 'undefined' ? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY : undefined
-  const supabase = supabaseUrl && supabaseKey ? createClient(supabaseUrl, supabaseKey) : null
+  
+  // Initialize supabase client - use centralized lib/supabase.ts client
+  // This ensures consistency with addRuleAsync and other functions that use the centralized client
+  const supabase = (() => {
+    if (typeof window === 'undefined') return null
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('Missing Supabase environment variables')
+      return null
+    }
+    return globalSupabase
+  })()
   const subscriptionRef = useRef<RealtimeChannel | null>(null)
 
   // Load bookings function using DIRECT Supabase queries (matching test booking page pattern)
@@ -639,15 +650,19 @@ export default function InstructorPage() {
         enabled: true
       }
 
-      await addRuleAsync(newRule)
+      console.log('Creating rule:', newRule)
+      const ruleId = await addRuleAsync(newRule)
+      console.log('Rule created with ID:', ruleId)
       const updatedRules = await getRulesAsync()
       setRules(updatedRules)
       setShowRuleForm(false)
       resetRuleForm()
       alert('Rule created successfully!')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating rule:', error)
-      alert('Error creating rule. Please try again.')
+      // Show more detailed error info
+      const errorMessage = error?.message || error?.details || JSON.stringify(error)
+      alert(`Error creating rule: ${errorMessage}\n\nPlease check browser console for details.`)
     }
   }
 

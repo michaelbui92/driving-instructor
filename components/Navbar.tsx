@@ -18,20 +18,48 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
 
   // Check auth status and get email
   useEffect(() => {
-    const checkAuth = () => {
-      const loggedIn = document.cookie.includes('sb-logged-in')
-      setIsLoggedIn(loggedIn)
+    const checkAuth = async () => {
+      // First check the basic cookie
+      const hasLoginCookie = document.cookie.includes('sb-logged-in')
       
-      if (loggedIn) {
-        // Try to get email from cookie
-        const cookies = document.cookie.split(';')
-        for (const cookie of cookies) {
-          const [name, value] = cookie.trim().split('=')
-          if (name === 'sb-email') {
-            setUserEmail(decodeURIComponent(value))
-            break
+      if (hasLoginCookie) {
+        // Verify session is still valid by calling the API
+        try {
+          const res = await fetch('/api/student-auth/verify', {
+            method: 'POST',
+            credentials: 'include'
+          })
+          
+          if (res.ok) {
+            const data = await res.json()
+            setIsLoggedIn(true)
+            if (data.email) {
+              setUserEmail(data.email)
+            } else {
+              // Fallback to cookie email
+              const cookies = document.cookie.split(';')
+              for (const cookie of cookies) {
+                const [name, value] = cookie.trim().split('=')
+                if (name === 'sb-email') {
+                  setUserEmail(decodeURIComponent(value))
+                  break
+                }
+              }
+            }
+          } else {
+            // Session invalid/expired - clear cookies and show login
+            setIsLoggedIn(false)
+            setUserEmail('')
+            document.cookie = 'sb-logged-in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+            document.cookie = 'sb-email=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
           }
+        } catch {
+          // Network error - assume logged in if cookie exists
+          setIsLoggedIn(true)
         }
+      } else {
+        setIsLoggedIn(false)
+        setUserEmail('')
       }
     }
     

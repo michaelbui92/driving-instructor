@@ -655,8 +655,9 @@ export async function getRulesAsync(): Promise<AvailabilityRule[]> {
 
 export async function addRuleAsync(rule: Omit<AvailabilityRule, 'id' | 'createdAt'>): Promise<string> {
   try {
+    const ruleId = generateSupabaseId()
     const newRule = {
-      id: generateSupabaseId(),
+      id: ruleId,
       name: rule.name,
       type: rule.type,
       priority: rule.priority,
@@ -669,6 +670,8 @@ export async function addRuleAsync(rule: Omit<AvailabilityRule, 'id' | 'createdA
       created_at: new Date().toISOString()
     }
     
+    console.log('addRuleAsync: Inserting rule with data:', JSON.stringify(newRule, null, 2))
+    
     const { data, error } = await supabase
       .from('availability_rules')
       .insert(newRule)
@@ -677,10 +680,14 @@ export async function addRuleAsync(rule: Omit<AvailabilityRule, 'id' | 'createdA
     
     if (error) {
       console.error('Error adding rule to Supabase:', error)
-      throw error
+      console.error('Error code:', error.code)
+      console.error('Error details:', error.details)
+      console.error('Error hint:', error.hint)
+      throw new Error(error.message || 'Failed to add rule to database')
     }
     
-    return data.id
+    console.log('addRuleAsync: Successfully inserted, returned data:', data)
+    return data?.id || ruleId
   } catch (error) {
     console.error('Error in addRuleAsync:', error)
     throw error
