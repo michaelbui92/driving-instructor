@@ -18,9 +18,14 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
 
   // Check auth status and get email
   useEffect(() => {
+    const getCookie = (name: string) => {
+      const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'))
+      return match ? decodeURIComponent(match[2]) : null
+    }
+
     const checkAuth = async () => {
       // First check the basic cookie
-      const hasLoginCookie = document.cookie.includes('sb-logged-in')
+      const hasLoginCookie = getCookie('sb-logged-in')
       
       if (hasLoginCookie) {
         // Verify session is still valid by calling the API
@@ -43,21 +48,15 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
               }
             } else {
               // Fallback to cookie email
-              const cookies = document.cookie.split(';')
-              for (const cookie of cookies) {
-                const [name, value] = cookie.trim().split('=')
-                if (name === 'sb-email') {
-                  setUserEmail(decodeURIComponent(value))
-                  break
-                }
-              }
+              const cookieEmail = getCookie('sb-email')
+              if (cookieEmail) setUserEmail(cookieEmail)
             }
           } else {
             // Session invalid/expired - clear cookies and show login
             setIsLoggedIn(false)
             setUserEmail('')
-            document.cookie = 'sb-logged-in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
-            document.cookie = 'sb-email=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT'
+            document.cookie = 'sb-logged-in=; path=/; max-age=0; SameSite=lax'
+            document.cookie = 'sb-email=; path=/; max-age=0; SameSite=lax'
           }
         } catch {
           // Network error - assume logged in if cookie exists
@@ -66,6 +65,8 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
       } else {
         setIsLoggedIn(false)
         setUserEmail('')
+        document.cookie = 'sb-logged-in=; path=/; max-age=0; SameSite=lax'
+        document.cookie = 'sb-email=; path=/; max-age=0; SameSite=lax'
       }
     }
     

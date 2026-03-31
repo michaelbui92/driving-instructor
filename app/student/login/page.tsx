@@ -80,7 +80,8 @@ export default function StudentLoginPage() {
       document.cookie = `sb-email=${encodeURIComponent(email)}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=lax`
       document.cookie = `sb-logged-in=true; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=lax`
       const params = new URLSearchParams(window.location.search)
-      router.push(params.get('redirect') || '/student/dashboard')
+      const redirect = params.get('redirect') || '/student/dashboard'
+      window.location.href = redirect
     } catch (err) {
       setError('Something went wrong. Please try again.')
       setLoading(false)
