@@ -1,0 +1,58 @@
+REEL #2: Sydney Test Hack
+Length: 25 seconds
+Format: Listicle + Tips
+Pillar: Test Hacks
+
+[0-3s]   Question on screen: "Which of these FAILS the test?"
+Options: A=Mirror, B=Speed, C=Indicator
+
+[3-8s]   Show clip of all 3 being done
+Voiceover: "Ready? All three can fail you if done wrong"
+
+[8-15s]  Show RIGHT way for each (3 quick cuts)
+Voiceover: "Mirror every 5 seconds. Match posted speed. Signal EARLY"
+
+[15-22s] POV showing all 3 done correctly in one take
+Voiceover: "That's the difference between passing and failing"
+
+[22-25s] End with result
+Voiceover: "Ready to pass your test?"
+
+[Endcard] Get test-ready → @drivewithbui
+
+Hashtags:
+#drivingtest #sydneydrivingtest #nswdrivingtest #learntodrive #drivingschool
+
+---
+
+## Visual Reference
+
+Text overlay positioning:
+- Question at top (30% from top)
+- Options A, B, C below in boxes
+- Green checkmark appears over each when done correctly
+
+Dynamic text:
+- When accelerator foot goes down → "90km/h NOT 95km/h"
+- When indicator on → "Signal 50m BEFORE turn, NOT at intersection"
+
+---
+
+## Voiceover Script
+
+"Which of these three fails the driving test? Mirror, speed, or indicator? All three can fail you if done wrong. Mirror every 5 seconds, not 10. Match posted speed, not exceed it. Signal early, NOT at the intersection. That's the difference between passing and failing. Ready to pass your test?"
+
+---
+
+## Editing Notes
+
+Text animations:
+- Question/Options fade in (0-1s)
+- Options A, B, C highlight sequentially as examples shown
+- Right way clips have slo-mo (0.8x speed)
+- Final take (15-22s) is accelerated (1.2x) to show "ready to test"
+
+Audio:
+- Background: driving, ambient highway
+- Sound: cursor click on hover over options
+- "Ding" when showing correct technique

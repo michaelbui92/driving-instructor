@@ -1,11 +1,53 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import Navbar from '@/components/Navbar'
 import DynamicHeadline from '@/components/DynamicHeadline'
+import StudentUpcomingLessons from '@/components/StudentUpcomingLessons'
 
 export default function Home() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [userEmail, setUserEmail] = useState('')
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const hasLoginCookie = typeof window !== 'undefined' && document.cookie.includes('sb-logged-in')
+      
+      if (hasLoginCookie) {
+        try {
+          const res = await fetch('/api/student-auth/verify', {
+            method: 'POST',
+            credentials: 'include'
+          })
+          
+          if (res.ok) {
+            const data = await res.json()
+            setIsLoggedIn(true)
+            if (data.email) {
+              setUserEmail(data.email)
+            } else {
+              // Fallback to cookie email
+              const cookies = document.cookie.split(';')
+              for (const cookie of cookies) {
+                const [name, value] = cookie.trim().split('=')
+                if (name === 'sb-email') {
+                  setUserEmail(decodeURIComponent(value))
+                  break
+                }
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error checking auth:', error)
+        }
+      }
+    }
+    
+    checkAuth()
+  }, [])
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Navbar />
@@ -46,6 +88,9 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* Student Upcoming Lessons Section */}
+      <StudentUpcomingLessons isLoggedIn={isLoggedIn} userEmail={userEmail} />
 
       {/* Why Choose Drive With Bui? */}
       <section className="bg-white py-16" id="why-choose">

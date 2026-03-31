@@ -68,14 +68,27 @@ export async function POST(request: NextRequest) {
       fullRecord: data[0]
     })
     
-    // Generate claim code for email notification (not stored in DB)
+    // Generate claim code for email notification
     const claimCode = Math.floor(100000 + Math.random() * 900000).toString()
+    
+    // Send confirmation email asynchronously
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_URL || 'http://localhost:3000'}/api/bookings/notify-confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ booking: data[0], claimCode })
+      })
+      console.log('📧 Confirmation email sent for booking', data[0]?.id)
+    } catch (emailError) {
+      console.error('⚠️ Failed to send confirmation email (booking still created):', emailError)
+      // Don't fail the booking if email fails
+    }
     
     return NextResponse.json({ 
       success: true, 
       booking: data[0],
-      claimCode, // For email notification only
-      message: 'Booking created successfully'
+      claimCode,
+      message: 'Booking created successfully! Check your email for confirmation.'
     })
   } catch (error: any) {
     console.error('Booking creation error:', error)

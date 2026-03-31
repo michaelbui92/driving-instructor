@@ -1,0 +1,65 @@
+REEL #4: Lane Merge - The Zipper
+Length: 23 seconds
+Format: Educational
+Pillar: Skills
+
+[0-3s]   POV at merge point
+Caption: Why everyone's doing lane merges WRONG
+
+[3-10s]  Show cars cutting in aggressively
+Voiceover: "Cutting in? That's rude AND dangerous"
+
+[10-15s] Show zipper merge technique (alternating cars)
+Voiceover: "Do THIS: Alternate lanes like a zipper. Traffic flows better"
+
+[15-23s] Multiple POV angles showing zipper working
+Voiceover: "It's not cutting in line. It's efficient driving. Everyone wins"
+
+[Endcard] Master the zipper merge → @drivewithbui
+
+Hashtags:
+#zippermerge #lanechange #motoway #drivingtip #sydneytraffic
+
+---
+
+## Visual Reference
+
+Camera angles:
+- Driver's POV (windscreen mounted)
+- Top-down view (simulated from footage of calming traffic)
+- Split屏幕: left car merging, right car yielding
+
+Graphics overlays:
+- Red "X" at "cutting in" scene
+- Green "✓" at zipper merge scene
+- Animated zipper graphic overlay (z-z-z-z visualization)
+
+Text dynamics:
+- "WRONG" appears at 3-10s (red, uppercase)
+- "RIGHT" appears at 10-15s (green, uppercase)
+- "40% faster" shows during zipper flow
+
+---
+
+## Voiceover Script
+
+"Why's everyone doing lane merges wrong? Cutting in aggressively—that's rude AND dangerous. Do THIS instead: alternate lanes like a zipper. Car from the left, then car from the right, left, right, left, right. Traffic flows better, everyone's happy. It's not cutting in line. It's efficient driving. Everyone wins."
+
+---
+
+## Editing Notes
+
+Tempo shifts:
+- 0-3s: Moderate, build tension
+- 3-10s: Fast, chaotic (aggressive cutting in)
+- 10-18s: Smooth, alternating (zipper visualization)
+- 18-23s: Calm, efficient (all traffic flowing well)
+
+Visual rhythm:
+- Left car, right car at 10-15s (alternating every 2 seconds)
+- At 15-18s, multiple cars seamlessly merging in zipper pattern
+
+Audio:
+- 0-10s: Anxious, fast beat
+- 10-23s: Smooth, flowing beat (slower tempo)
+- Add "whoosh" sound when car merges smoothly

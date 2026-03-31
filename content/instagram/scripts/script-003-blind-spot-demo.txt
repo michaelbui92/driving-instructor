@@ -1,0 +1,60 @@
+REEL #3: Blind Spot Demonstration
+Length: 18 seconds
+Format: Before/After
+Pillar: Dumb Mistakes
+
+[0-3s]   Caption: ⚠️ This blind spot causes ACCIDENTS
+Dramatic music starts
+
+[3-9s]   Show car moving, POV showing mirror check only
+Voiceover: "Mirror check only? You'll miss this car"
+
+[9-12s]  Sudden appearance of car in blind spot (cut effect)
+Sound: *Car horn*
+Voiceover: "See that? Hidden until it's too late"
+
+[12-17s] Show proper check (mirror + shoulder)
+Voiceover: "Now: Mirror PLUS shoulder check. See everything"
+
+[17-18s] Smooth merge
+Music: Calm soundtrack
+
+[Endcard] Check your blind spots → @drivewithbui
+
+Hashtags:
+#blindspot #caraccidentprevention #drivingsafely #learntodrive #mirrors
+
+---
+
+## Visual Reference
+
+Camera: Fixed rear-view camera (simulated blind spot perspective)
+
+L-r overlays:
+- Mirror coverage area (green circle showing what's visible)
+- Blind spot area (red zone showing what's hidden)
+- Cars appearing from red zone (driving in from right/left)
+
+Special effects:
+- 9-12s: "Hidden car" appears abruptly (jump cut with shock effect)
+- 17-18s: Smooth gradient fade to indicate "safe"
+
+---
+
+## Voiceover Script
+
+"This blind spot causes accidents. Mirror check only? You'll miss this car entirely. [HORN CROSS] Now: Mirror PLUS shoulder check. See everything, spot the danger, merge safely. Check your blind spots."
+
+---
+
+## Audio Notes
+
+Music shifts:
+- 0-9s: Tense, building (dramatic)
+- 9-12s: Sudden stop (horn plays)
+- 12-18s: Calm, resolving (smooth)
+
+Sound effects:
+- Car horn (at 9-10s, loud)
+- Mirror adjustment (subtle motorized sound)
+- "Whoosh" when car appears from blind spot

@@ -1,0 +1,86 @@
+REEL #5: Roundabout Rule - NSW Specific
+Length: 28 seconds
+Format: Interactive
+Pillar: Local Authority
+
+[0-5s]   Question on screen: "Who goes first?"
+Visual: 3 cars at roundabout A, B, C
+
+[5-10s]  Countdown: "5...4...3...2...1"
+Sound: Timer ticking
+
+[10-17s] Show WRONG way (confident car goes, causing near-miss)
+Voiceover: "Not this one! Everyone's confused"
+
+[17-24s] Show RIGHT way (car on right has right of way)
+Voiceover: "In NSW: Who's on your RIGHT goes FIRST. Period."
+
+[24-28s] Multiple cars navigating correctly
+Voiceover: "Simple rule, safe driving"
+
+[Endcard] NSW driving rules → @drivewithbui
+
+Hashtags:
+#roundabout #sydneydriving #nswdrivingrules #learntodrive #rightofway
+
+---
+
+## Visual Reference
+
+Roundabout visualization:
+- Top-down view (simulated or drone footage from public domain)
+- Car A (gray) at north entry
+- Car B (blue) at east entry  
+- Car C (red) at south entry
+
+Circle overlay: Draw arrows showing correct flow path
+
+Text overlays:
+- "WHO GOES FIRST?" (0-5s, bold, white on dark)
+- Countdown.timer (5-10s, digital, red)
+- "WRONG" (10-17s, red overlay)
+- "CORRECT" (17-24s, green checkmark)
+- Rule text: "Car on RIGHT → goes FIRST" (17-24s)
+
+---
+
+## Voiceover Script
+
+"Who goes first at this roundabout? Car A from the north? Car B from the east? Or Car C from the south? Take your time, think about it. 5, 4, 3, 2, 1... Not this one! Everyone's confused near misses happen when you guess. In New South Wales, the rule is clear: whoever is on your RIGHT goes FIRST, period. Simple rule, safe driving."
+
+---
+
+## Editing Notes
+
+At 10-17s:
+- Nearly collision effect (cars almost hitting, near-miss zoom)
+- Dramatic music kicks in
+- Game over sound (when showing wrong)
+
+At 17-24s:
+- Smooth gradient fade from near-miss to correct
+- Show multiple cars (A, B, C) flowing correctly
+- Arrows show path (green for right car, gray for others at that moment)
+- Natural resource: Free stock footage of cars at roundabout works well
+
+Text animations:
+- Timer digits pop in (5-10s)
+- Rule text appears letter-by-letter (typewriter effect, 17-20s)
+- "Simple rule" fades at end (24-28s)
+
+Alternative: Use screen recording of static roundabout diagram if stock footage unavailable
+
+---
+
+## Audio Notes
+
+Music flow:
+- 0-10s: Suspenseful, mystery (ticking)
+- 10-17s: Dramatic/failure
+- 17-28s: Resolving, calm
+
+Sound effects:
+- Timer tick (5-10s, rhythmic)
+- Car horn/near collision (10-12s)
+- Success ding (17s)
+- Engine hum for atmosphere
