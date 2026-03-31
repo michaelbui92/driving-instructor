@@ -30,16 +30,16 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
       if (hasLoginCookie) {
         // Verify session is still valid by calling the API
         try {
-          const res = await fetch('/api/student-auth/verify', {
-            method: 'POST',
+          const res = await fetch('/api/student/me', {
+            method: 'GET',
             credentials: 'include'
           })
           
-          if (res.ok) {
-            const data = await res.json()
+          const data = await res.json()
+          
+          if (data.authenticated) {
             setIsLoggedIn(true)
-            // API returns { success, user: { id, email } }
-            const email = data.user?.email || data.email
+            const email = data.email
             if (email) {
               setUserEmail(email)
               // Ensure email cookie is set for cross-page persistence

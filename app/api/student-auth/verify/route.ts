@@ -57,6 +57,15 @@ export async function POST(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 7,
     })
 
+    // Also set email cookie for navbar display
+    response.cookies.set('sb-email', result.session.user.email, {
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24 * 7,
+    })
+
     return response
   } catch (error) {
     console.error('Verify error:', error)
