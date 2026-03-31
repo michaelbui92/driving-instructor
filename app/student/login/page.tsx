@@ -16,8 +16,8 @@ export default function StudentLoginPage() {
 
   // Check if already logged in
   useEffect(() => {
-    const token = document.cookie.includes('sb-access-token')
-    if (token) {
+    const loggedIn = document.cookie.includes('sb-logged-in')
+    if (loggedIn) {
       // Check for redirect param
       const params = new URLSearchParams(window.location.search)
       const redirect = params.get('redirect')

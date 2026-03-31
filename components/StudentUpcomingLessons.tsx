@@ -84,36 +84,7 @@ export default function StudentUpcomingLessons({ isLoggedIn, userEmail }: Studen
   }
 
   if (!isLoggedIn) {
-    return (
-      <section className="bg-gradient-to-br from-blue-50 to-indigo-100 py-12">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold mb-4" data-aos="fade-up">
-              🎯 New to Drive With Bui?
-            </h2>
-            <p className="text-gray-600 mb-8 max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="100">
-              Track your lessons, access driving tips, and manage your schedule - 
-              create a free student account to get started
-            </p>
-
-            <div className="flex justify-center gap-4" data-aos="fade-up" data-aos-delay="200">
-              <Link
-                href="/student/login"
-                className="px-6 py-3 bg-white border-2 border-primary text-primary font-semibold rounded-lg hover:bg-gray-50 transition hover-lift"
-              >
-                Log In
-              </Link>
-              <Link
-                href="/student/login?signup=true"
-                className="px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-secondary transition hover-lift"
-              >
-                Create Account
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-    )
+    return null // Don't show this section if not logged in
   }
 
   return (
