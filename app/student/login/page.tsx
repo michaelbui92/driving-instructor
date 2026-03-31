@@ -77,8 +77,8 @@ export default function StudentLoginPage() {
 
       // Redirect immediately - don't wait for details check
       // Also set email cookie so Navbar shows it without needing another API call
-      document.cookie = `sb-email=${encodeURIComponent(email)}; path=/; max-age=${60 * 60 * 24 * 7}`
-      document.cookie = `sb-logged-in=true; path=/; max-age=${60 * 60 * 24 * 7}`
+      document.cookie = `sb-email=${encodeURIComponent(email)}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=lax`
+      document.cookie = `sb-logged-in=true; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=lax`
       const params = new URLSearchParams(window.location.search)
       router.push(params.get('redirect') || '/student/dashboard')
     } catch (err) {

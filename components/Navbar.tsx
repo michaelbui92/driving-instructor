@@ -33,8 +33,14 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
           if (res.ok) {
             const data = await res.json()
             setIsLoggedIn(true)
-            if (data.email) {
-              setUserEmail(data.email)
+            // API returns { success, user: { id, email } }
+            const email = data.user?.email || data.email
+            if (email) {
+              setUserEmail(email)
+              // Ensure email cookie is set for cross-page persistence
+              if (!document.cookie.includes('sb-email')) {
+                document.cookie = `sb-email=${encodeURIComponent(email)}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=lax`
+              }
             } else {
               // Fallback to cookie email
               const cookies = document.cookie.split(';')
