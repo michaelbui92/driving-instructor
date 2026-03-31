@@ -226,7 +226,7 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
               ) : (
                 <Link href="/student/login" onClick={handleLinkClick} className="block px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium text-center">Student Login</Link>
               )}
-              <Link href="/instructor" onClick={handleLinkClick} className="block px-4 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition font-medium text-center">Instructor Portal</Link>
+
             </div>
             
             {showLocation && (

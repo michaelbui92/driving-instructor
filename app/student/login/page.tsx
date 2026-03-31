@@ -75,25 +75,14 @@ export default function StudentLoginPage() {
         return
       }
 
-      // Check if student has completed details
+      // Redirect immediately - don't wait for details check
+      // Also set email cookie so Navbar shows it without needing another API call
+      document.cookie = `sb-email=${encodeURIComponent(email)}; path=/; max-age=${60 * 60 * 24 * 7}`
+      document.cookie = `sb-logged-in=true; path=/; max-age=${60 * 60 * 24 * 7}`
       const params = new URLSearchParams(window.location.search)
-      try {
-        const detailsRes = await fetch('/api/student/details')
-        const detailsData = await detailsRes.json()
-        
-        // Redirect to details if not completed, otherwise to dashboard
-        const redirectTo = !detailsData.hasCompletedDetails 
-          ? '/student/details' 
-          : (params.get('redirect') || '/student/dashboard')
-        
-        router.push(redirectTo)
-      } catch (err) {
-        // If details check fails, go to dashboard
-        router.push(params.get('redirect') || '/student/dashboard')
-      }
+      router.push(params.get('redirect') || '/student/dashboard')
     } catch (err) {
       setError('Something went wrong. Please try again.')
-    } finally {
       setLoading(false)
     }
   }
