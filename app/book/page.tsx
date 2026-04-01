@@ -130,32 +130,70 @@ export default function BookPage() {
     loadBookings()
   }, [])
 
-  // Update available slots when date changes
+  // Update available slots when date changes - fetch from API
   useEffect(() => {
     if (form.date) {
-      const slots = getAvailableSlots(form.date, existingBookings)
-      setAvailableSlots(slots)
+      fetchAvailableSlots(form.date)
     }
-  }, [form.date, existingBookings])
+  }, [form.date])
 
-  // Generate dates for the next 28 days with availability info
-  const availableDates = useMemo(() => {
+  const fetchAvailableSlots = async (date: string) => {
+    try {
+      const res = await fetch(`/api/availability?date=${date}`)
+      if (res.ok) {
+        const data = await res.json()
+        // Convert time strings to TimeSlot objects
+        const slots: TimeSlot[] = data.availableSlots.map((time: string) => ({
+          id: `${date}-${time}`,
+          date,
+          time,
+          available: true,
+          price: 45,
+          isNightTime: time === '8:00 PM'
+        }))
+        setAvailableSlots(slots)
+      } else {
+        console.error('Failed to fetch availability:', await res.text())
+        setAvailableSlots([])
+      }
+    } catch (err) {
+      console.error('Error fetching availability:', err)
+      setAvailableSlots([])
+    }
+  }
+
+  // Generate dates for the next 28 days - initial placeholder
+  const [availableDates, setAvailableDates] = useState<{ date: string; hasSlots: boolean }[]>([])
+
+  // Fetch available dates on mount
+  useEffect(() => {
+    // Initialize dates first
     const dates: { date: string; hasSlots: boolean }[] = []
     const today = new Date()
-    
     for (let i = 1; i <= 28; i++) {
       const d = new Date(today)
       d.setDate(today.getDate() + i)
       const dateString = d.toISOString().split('T')[0]
-      const slots = getAvailableSlots(dateString, existingBookings)
-      dates.push({
-        date: dateString,
-        hasSlots: slots.length > 0
-      })
+      dates.push({ date: dateString, hasSlots: true })
     }
-    
-    return dates
-  }, [existingBookings])
+    setAvailableDates(dates)
+
+    // Then fetch actual availability from API
+    async function fetchAvailableDates() {
+      try {
+        const res = await fetch('/api/availability-dates')
+        if (res.ok) {
+          const data = await res.json()
+          if (data.availableDates) {
+            setAvailableDates(data.availableDates)
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching available dates:', err)
+      }
+    }
+    fetchAvailableDates()
+  }, [])
 
   const handleSendOTP = async () => {
     if (!form.email) {
