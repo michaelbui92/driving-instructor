@@ -78,13 +78,8 @@ export async function GET(request: NextRequest) {
       const dayOfWeek = dateObj.getDay()
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
       
-      // Default slots for this day
-      let defaultSlots: string[]
-      if (isWeekend) {
-        defaultSlots = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM']
-      } else {
-        defaultSlots = ['9:00 AM', '10:00 AM', '11:00 AM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM']
-      }
+      // ALL hours available by default - rules will block what needs blocking
+      const defaultSlots = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM']
       
       // Blocked times for this date
       const blockedTimes = new Set<string>((blockedSlots || []).filter(b => b.date === date).map(b => b.time))
