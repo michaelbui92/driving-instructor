@@ -74,9 +74,13 @@ function dayMatchesRule(dateStr: string, dayType: string): boolean {
 }
 
 export async function GET(request: NextRequest) {
+  console.log('[Availability API] Request received for date:', request.nextUrl.searchParams.get('date'))
+  
   try {
     const { searchParams } = new URL(request.url)
     const date = searchParams.get('date')
+    
+    console.log('[Availability API] Processing date:', date)
     
     if (!date) {
       return NextResponse.json(
@@ -97,11 +101,14 @@ export async function GET(request: NextRequest) {
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
     
     // Get availability rules from Supabase
+    console.log('[Availability API] Fetching rules from Supabase...')
     const { data: rules, error: rulesError } = await supabase
       .from('availability_rules')
       .select('*')
       .eq('enabled', true)
       .order('priority', { ascending: true })
+    
+    console.log('[Availability API] Raw rules from DB:', JSON.stringify(rules, null, 2))
     
     if (rulesError) {
       console.error('Error fetching availability rules:', rulesError)
@@ -173,11 +180,14 @@ export async function GET(request: NextRequest) {
         const endCompare = slot24 <= normalizedEnd
         const blocked = startCompare && endCompare
         debugTimeConversions[`${rule.id}_${slot}`] = { slot, slot24, normalizedStart, normalizedEnd, startCompare, endCompare, blocked }
+        console.log(`[DEBUG] Slot: ${slot} -> ${slot24}, Start: ${normalizedStart}, End: ${normalizedEnd}, Blocked: ${blocked}`)
         if (blocked) {
           blockedTimes.add(slot)
         }
       }
     }
+    
+    console.log('[Availability API] Blocked times after rules:', Array.from(blockedTimes))
     
     // Apply EXCEPTION rules (unblock times that were blocked)
     const exceptionRules = (rules || []).filter(r => r.type === 'EXCEPTION')
