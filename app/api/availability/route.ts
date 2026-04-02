@@ -108,7 +108,8 @@ export async function GET(request: NextRequest) {
       .eq('enabled', true)
       .order('priority', { ascending: true })
     
-    console.log('[Availability API] Raw rules from DB:', JSON.stringify(rules, null, 2))
+    console.log('[Availability API] Raw rules from DB - count:', (rules || []).length)
+    console.log('[Availability API] All rules:', JSON.stringify(rules, null, 2))
     
     if (rulesError) {
       console.error('Error fetching availability rules:', rulesError)
