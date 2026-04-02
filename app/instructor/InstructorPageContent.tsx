@@ -49,6 +49,21 @@ interface ProfileFormData {
   service_area: string
 }
 
+// Helper function to convert 24h time "HH:MM:SS" or "HH:MM" to "H:MM AM/PM" format
+function formatTimeForDisplay(time: string | undefined): string {
+  if (!time) return ''
+  // Handle "09:00:00" or "09:00" format
+  const parts = time.split(':')
+  if (parts.length < 2) return time
+  
+  let hours = parseInt(parts[0])
+  const minutes = parts[1]
+  const period = hours >= 12 ? 'PM' : 'AM'
+  hours = hours % 12 || 12
+  
+  return `${hours}:${minutes} ${period}`
+}
+
 interface RuleFormData {
   name: string
   type: RuleType
@@ -1149,7 +1164,7 @@ export default function InstructorPage() {
                   {(rule.type === RuleType.TIME_BLOCK || rule.type === RuleType.EXCEPTION) && (
                     <div>
                       <span className="text-gray-600">Time Range:</span>{' '}
-                      <span className="font-semibold">{rule.startTime} - {rule.endTime}</span>
+                      <span className="font-semibold">{formatTimeForDisplay(rule.startTime)} - {formatTimeForDisplay(rule.endTime)}</span>
                     </div>
                   )}
                   {rule.type === RuleType.MAX_BOOKING && (
