@@ -70,8 +70,6 @@ export async function GET(request: NextRequest) {
     // Debug: log what we got
     console.log('[Availability-Dates] Rules count:', finalRules.length)
     console.log('[Availability-Dates] Rules:', JSON.stringify(finalRules))
-    console.log('[Availability-Dates] Bookings count:', (bookings || []).length)
-    console.log('[Availability-Dates] Blocked slots count:', (blockedSlots || []).length)
     
     // Get all future dates for next 28 days
     const futureDates: string[] = []
@@ -171,9 +169,6 @@ export async function GET(request: NextRequest) {
       const availableSlots = allSlots.filter(slot => 
         !blockedForDate.has(slot) && !bookedTimes.has(slot)
       )
-      
-      // Debug log for each date
-      console.log(`[Availability-Dates] ${dateStr}: blocked=${blockedForDate.size}, booked=${bookedTimes.size}, available=${availableSlots.length}`)
       
       return { date: dateStr, hasSlots: availableSlots.length > 0 }
     })
