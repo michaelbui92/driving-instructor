@@ -23,12 +23,22 @@ function to24HourFormat(time12h: string): string {
 function normalizeTime(time: string): string {
   if (!time) return ''
   // If time has seconds like "09:00:00", extract just HH:MM
-  // Handle both "HH:MM:SS" (2 parts after split) and "HH:MM:SS.123" (3 parts)
   const parts = time.split(':')
   if (parts.length >= 2) {
-    return `${parts[0]}:${parts[1]}`
+    return `${parts[0].padStart(2, '0')}:${parts[1]}`
   }
   return time
+}
+
+// Convert HH:MM to minutes since midnight for accurate numeric comparison
+function timeToMinutes(time: string): number {
+  if (!time) return 0
+  const normalized = normalizeTime(time)
+  if (normalized.includes(':')) {
+    const [hours, minutes] = normalized.split(':').map(Number)
+    return hours * 60 + minutes
+  }
+  return 0
 }
 
 // Check if a day matches day_type rule
@@ -107,13 +117,14 @@ export async function GET(request: NextRequest) {
         if (!dayMatchesRule(date, rule.day_type || 'ALL_DAYS')) continue
         if (!rule.start_time || !rule.end_time) continue
         
+        // Convert rule times to minutes for accurate comparison
+        const startMinutes = timeToMinutes(rule.start_time)
+        const endMinutes = timeToMinutes(rule.end_time)
+        
         for (const slot of defaultSlots) {
-          // Convert 12h slot time to 24h, normalize rule times (which may have :ss)
-          const slot24 = to24HourFormat(slot)
-          const start24 = normalizeTime(rule.start_time) || to24HourFormat(rule.start_time)
-          const end24 = normalizeTime(rule.end_time) || to24HourFormat(rule.end_time)
+          const slotMinutes = timeToMinutes(to24HourFormat(slot))
           
-          if (slot24 >= start24 && slot24 <= end24) {
+          if (slotMinutes >= startMinutes && slotMinutes <= endMinutes) {
             blockedTimes.add(slot)
           }
         }
@@ -125,13 +136,14 @@ export async function GET(request: NextRequest) {
         if (!dayMatchesRule(date, rule.day_type || 'ALL_DAYS')) continue
         if (!rule.start_time || !rule.end_time) continue
         
+        // Convert rule times to minutes for accurate comparison
+        const startMinutes = timeToMinutes(rule.start_time)
+        const endMinutes = timeToMinutes(rule.end_time)
+        
         for (const slot of defaultSlots) {
-          // Convert 12h slot time to 24h, normalize rule times (which may have :ss)
-          const slot24 = to24HourFormat(slot)
-          const start24 = normalizeTime(rule.start_time) || to24HourFormat(rule.start_time)
-          const end24 = normalizeTime(rule.end_time) || to24HourFormat(rule.end_time)
+          const slotMinutes = timeToMinutes(to24HourFormat(slot))
           
-          if (slot24 >= start24 && slot24 <= end24) {
+          if (slotMinutes >= startMinutes && slotMinutes <= endMinutes) {
             blockedTimes.delete(slot)
           }
         }
