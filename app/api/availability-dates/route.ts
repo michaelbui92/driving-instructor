@@ -47,6 +47,8 @@ export async function GET(request: NextRequest) {
     })
     
     // If RPC doesn't exist, fall back to direct select with no cache
+    let finalRules: any[] = []
+    
     if (rulesError || !rules) {
       // Try direct select with range to force fresh data
       const { data: directRules, error: directError } = await supabase
@@ -60,9 +62,9 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to fetch rules' }, { status: 500 })
       }
       
-      var finalRules = directRules || []
+      finalRules = directRules || []
     } else {
-      var finalRules = rules
+      finalRules = rules || []
     }
     
     // Get all future dates for next 28 days
