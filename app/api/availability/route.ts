@@ -19,6 +19,17 @@ function to24HourFormat(time12h: string): string {
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
 }
 
+// Normalize time string to HH:MM format for comparison
+function normalizeTime(time: string): string {
+  if (!time) return ''
+  // If time has seconds like "09:00:00", extract just HH:MM
+  if (time.includes(':') && time.split(':').length === 3) {
+    const [hours, minutes] = time.split(':')
+    return `${hours}:${minutes}`
+  }
+  return time
+}
+
 // Time format conversion: "09:00" -> "9:00 AM", "17:00" -> "5:00 PM"  
 function to12HourFormat(time24h: string): string {
   if (!time24h || !time24h.includes(':')) return time24h
@@ -33,10 +44,10 @@ function to12HourFormat(time24h: string): string {
 
 // Check if a 24h time slot falls within a time range
 function isTimeInRange(slotTime: string, startTime: string, endTime: string): boolean {
-  // Convert both to comparable format
-  const slot24 = to24HourFormat(slotTime)
-  const start24 = to24HourFormat(startTime)
-  const end24 = to24HourFormat(endTime)
+  // Normalize all times to HH:MM format
+  const slot24 = normalizeTime(slotTime) || to24HourFormat(slotTime)
+  const start24 = normalizeTime(startTime) || to24HourFormat(startTime)
+  const end24 = normalizeTime(endTime) || to24HourFormat(endTime)
   
   // Handle end time being past midnight (e.g., end at "1:00 AM")
   if (end24 < start24) {
@@ -44,7 +55,8 @@ function isTimeInRange(slotTime: string, startTime: string, endTime: string): bo
     return slot24 >= start24 || slot24 <= end24
   }
   
-  return slot24 >= start24 && slot24 < end24
+  // Use <= to include the end time (block up to and including the end time)
+  return slot24 >= start24 && slot24 <= end24
 }
 
 // Check if a day matches day_type rule

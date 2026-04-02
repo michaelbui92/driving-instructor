@@ -19,6 +19,17 @@ function to24HourFormat(time12h: string): string {
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
 }
 
+// Normalize time string to HH:MM format for comparison
+function normalizeTime(time: string): string {
+  if (!time) return ''
+  // If time has seconds like "09:00:00", extract just HH:MM
+  if (time.includes(':') && time.split(':').length === 3) {
+    const [hours, minutes] = time.split(':')
+    return `${hours}:${minutes}`
+  }
+  return time
+}
+
 // Check if a day matches day_type rule
 function dayMatchesRule(dateStr: string, dayType: string): boolean {
   const date = new Date(dateStr)
@@ -92,12 +103,12 @@ export async function GET(request: NextRequest) {
         if (!rule.start_time || !rule.end_time) continue
         
         for (const slot of defaultSlots) {
-          // Simple range check
+          // Convert 12h slot time to 24h, normalize rule times (which may have :ss)
           const slot24 = to24HourFormat(slot)
-          const start24 = to24HourFormat(rule.start_time)
-          const end24 = to24HourFormat(rule.end_time)
+          const start24 = normalizeTime(rule.start_time) || to24HourFormat(rule.start_time)
+          const end24 = normalizeTime(rule.end_time) || to24HourFormat(rule.end_time)
           
-          if (slot24 >= start24 && slot24 < end24) {
+          if (slot24 >= start24 && slot24 <= end24) {
             blockedTimes.add(slot)
           }
         }
@@ -110,11 +121,12 @@ export async function GET(request: NextRequest) {
         if (!rule.start_time || !rule.end_time) continue
         
         for (const slot of defaultSlots) {
+          // Convert 12h slot time to 24h, normalize rule times (which may have :ss)
           const slot24 = to24HourFormat(slot)
-          const start24 = to24HourFormat(rule.start_time)
-          const end24 = to24HourFormat(rule.end_time)
+          const start24 = normalizeTime(rule.start_time) || to24HourFormat(rule.start_time)
+          const end24 = normalizeTime(rule.end_time) || to24HourFormat(rule.end_time)
           
-          if (slot24 >= start24 && slot24 < end24) {
+          if (slot24 >= start24 && slot24 <= end24) {
             blockedTimes.delete(slot)
           }
         }
