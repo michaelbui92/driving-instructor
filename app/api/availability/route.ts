@@ -147,15 +147,33 @@ export async function GET(request: NextRequest) {
     const bookedTimes = new Set<string>((bookings || []).map(b => b.time))
     const blockedSlotTimes = new Set<string>((blockedSlots || []).map(b => b.time))
     
+    // Debug: trace time conversion
+    const debugTimeConversions: any = {}
+    
     // Apply TIME_BLOCK rules
     const timeBlockRules = (rules || []).filter(r => r.type === 'TIME_BLOCK')
     for (const rule of timeBlockRules) {
       if (!dayMatchesRule(date, rule.day_type || 'ALL_DAYS')) continue
       if (!rule.start_time || !rule.end_time) continue
       
+      // Debug: log what we're working with
+      const normalizedStart = normalizeTime(rule.start_time) || to24HourFormat(rule.start_time)
+      const normalizedEnd = normalizeTime(rule.end_time) || to24HourFormat(rule.end_time)
+      debugTimeConversions[rule.id] = {
+        originalStart: rule.start_time,
+        originalEnd: rule.end_time,
+        normalizedStart,
+        normalizedEnd
+      }
+      
       // Block all slots within this time range
       for (const slot of defaultSlots) {
-        if (isTimeInRange(slot, rule.start_time, rule.end_time)) {
+        const slot24 = to24HourFormat(slot)
+        const startCompare = slot24 >= normalizedStart
+        const endCompare = slot24 <= normalizedEnd
+        const blocked = startCompare && endCompare
+        debugTimeConversions[`${rule.id}_${slot}`] = { slot, slot24, normalizedStart, normalizedEnd, startCompare, endCompare, blocked }
+        if (blocked) {
           blockedTimes.add(slot)
         }
       }
@@ -211,7 +229,8 @@ export async function GET(request: NextRequest) {
         totalRules: (rules || []).length,
         timeBlocks: timeBlockRules.length,
         exceptions: exceptionRules.length,
-        maxBookings: maxBookingRules.length
+        maxBookings: maxBookingRules.length,
+        timeConversions: debugTimeConversions
       }
     })
   } catch (error) {
