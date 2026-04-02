@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
 
-// Time format conversion: "9:00 AM" -> "09:00"
+// Time format conversion: "9:00 AM" -> "09:00", "5:00 PM" -> "17:00"
 function to24HourFormat(time12h: string): string {
   if (!time12h || !time12h.includes(' ')) return time12h
   
@@ -19,38 +19,16 @@ function to24HourFormat(time12h: string): string {
   return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
 }
 
-// Normalize time string to HH:MM format for comparison
-function normalizeTime(time: string): string {
-  if (!time) return ''
-  // If time has seconds like "09:00:00", extract just HH:MM
-  const parts = time.split(':')
-  if (parts.length >= 2) {
-    return `${parts[0].padStart(2, '0')}:${parts[1]}`
-  }
-  return time
-}
-
-// Convert HH:MM to minutes since midnight for accurate numeric comparison
-function timeToMinutes(time: string): number {
-  if (!time) return 0
-  const normalized = normalizeTime(time)
-  if (normalized.includes(':')) {
-    const [hours, minutes] = normalized.split(':').map(Number)
-    return hours * 60 + minutes
-  }
-  return 0
-}
-
-// Check if a day matches day_type rule
-function dayMatchesRule(dateStr: string, dayType: string): boolean {
-  const date = new Date(dateStr)
-  const dayOfWeek = date.getDay()
+// Time format conversion: "09:00" -> "9:00 AM", "17:00" -> "5:00 PM"  
+function to12HourFormat(time24h: string): string {
+  if (!time24h || !time24h.includes(':')) return time24h
   
-  if (dayType === 'ALL_DAYS') return true
-  if (dayType === 'WEEKDAY') return dayOfWeek >= 1 && dayOfWeek <= 5
-  if (dayType === 'WEEKEND') return dayOfWeek === 0 || dayOfWeek === 6
+  const [hoursStr, minutes] = time24h.split(':')
+  let hours = parseInt(hoursStr)
+  const period = hours >= 12 ? 'PM' : 'AM'
+  hours = hours % 12 || 12
   
-  return false
+  return `${hours}:${minutes} ${period}`
 }
 
 export async function GET(request: NextRequest) {
@@ -60,116 +38,134 @@ export async function GET(request: NextRequest) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
     
-    // Get all enabled rules
-    console.log('[Availability-Dates API] Fetching rules from Supabase...')
-    const { data: rules, error: rulesError } = await supabase
-      .from('availability_rules')
-      .select('*')
-      .eq('enabled', true)
+    // Get current timestamp to bust any cache
+    const now = new Date().toISOString()
     
-    console.log('[Availability-Dates API] Rules count:', (rules || []).length)
-    console.log('[Availability-Dates API] Rules:', JSON.stringify(rules, null, 2))
+    // Direct SQL query to bypass any Supabase caching issues
+    const { data: rules, error: rulesError } = await supabase.rpc('get_availability_rules', {
+      current_time: now
+    })
     
-    if (rulesError) {
-      console.error('Error fetching rules:', rulesError)
-      return NextResponse.json({ error: 'Failed to fetch rules' }, { status: 500 })
+    // If RPC doesn't exist, fall back to direct select with no cache
+    if (rulesError || !rules) {
+      // Try direct select with range to force fresh data
+      const { data: directRules, error: directError } = await supabase
+        .from('availability_rules')
+        .select('id, name, type, day_type, start_time, end_time, priority, enabled')
+        .eq('enabled', true)
+        .range(0, 100)  // Force a range query to avoid caching
+      
+      if (directError) {
+        console.error('Error fetching rules:', directError)
+        return NextResponse.json({ error: 'Failed to fetch rules' }, { status: 500 })
+      }
+      
+      var finalRules = directRules || []
+    } else {
+      var finalRules = rules
     }
     
-    // Get blocked slots for next 28 days
-    const today = new Date()
+    // Get all future dates for next 28 days
     const futureDates: string[] = []
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
     for (let i = 1; i <= 28; i++) {
       const d = new Date(today)
       d.setDate(today.getDate() + i)
       futureDates.push(d.toISOString().split('T')[0])
     }
     
-    const { data: blockedSlots } = await supabase
-      .from('blocked_slots')
-      .select('*')
-      .in('date', futureDates)
-    
-    // Get existing bookings for next 28 days
+    // Get existing bookings for these dates
     const { data: bookings } = await supabase
       .from('bookings_new')
-      .select('*')
+      .select('date, time, status')
       .in('date', futureDates)
       .in('status', ['pending', 'confirmed'])
     
-    // Calculate which dates have available slots
-    const availableDates: { date: string; hasSlots: boolean }[] = []
+    // Get blocked slots for these dates
+    const { data: blockedSlots } = await supabase
+      .from('blocked_slots')
+      .select('date, time')
+      .in('date', futureDates)
     
-    for (const date of futureDates) {
-      const dateObj = new Date(date)
+    // All possible time slots
+    const allSlots = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM']
+    
+    // Calculate availability for each date
+    const availableDates = futureDates.map(dateStr => {
+      const dateObj = new Date(dateStr)
       const dayOfWeek = dateObj.getDay()
-      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6
       
-      // ALL hours available by default - rules will block what needs blocking
-      const defaultSlots = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM']
+      // Find matching rules for this day
+      const matchingRules = (finalRules || []).filter(rule => {
+        if (rule.day_type === 'ALL_DAYS') return true
+        if (rule.day_type === 'WEEKDAY') return dayOfWeek >= 1 && dayOfWeek <= 5
+        if (rule.day_type === 'WEEKEND') return dayOfWeek === 0 || dayOfWeek === 6
+        return false
+      })
       
-      // Blocked times for this date
-      const blockedTimes = new Set<string>((blockedSlots || []).filter(b => b.date === date).map(b => b.time))
-      const bookedTimes = new Set<string>((bookings || []).filter(b => b.date === date).map(b => b.time))
+      // Check for TIME_BLOCK rules that block all slots
+      const timeBlockRules = matchingRules.filter(r => r.type === 'TIME_BLOCK')
+      
+      // Get bookings and blocked slots for this date
+      const dateBookings = (bookings || []).filter(b => b.date === dateStr)
+      const dateBlockedSlots = (blockedSlots || []).filter(b => b.date === dateStr)
+      
+      // Calculate blocked slots for this date
+      const blockedForDate = new Set<string>()
+      
+      // Add manual blocks
+      dateBlockedSlots.forEach(b => blockedForDate.add(b.time))
       
       // Apply TIME_BLOCK rules
-      const timeBlockRules = (rules || []).filter(r => r.type === 'TIME_BLOCK')
-      for (const rule of timeBlockRules) {
-        if (!dayMatchesRule(date, rule.day_type || 'ALL_DAYS')) continue
-        if (!rule.start_time || !rule.end_time) continue
+      timeBlockRules.forEach(rule => {
+        if (!rule.start_time || !rule.end_time) return
         
-        // Convert rule times to minutes for accurate comparison
-        const startMinutes = timeToMinutes(rule.start_time)
-        const endMinutes = timeToMinutes(rule.end_time)
+        // Parse rule times (format: "HH:MM:SS")
+        const ruleParts = rule.start_time.split(':')
+        const startHour = parseInt(ruleParts[0])
+        const startMin = parseInt(ruleParts[1])
+        const ruleEndParts = rule.end_time.split(':')
+        const endHour = parseInt(ruleEndParts[0])
+        const endMin = parseInt(ruleEndParts[1])
+        const startMinutes = startHour * 60 + startMin
+        const endMinutes = endHour * 60 + endMin
         
-        for (const slot of defaultSlots) {
-          const slotMinutes = timeToMinutes(to24HourFormat(slot))
+        // Block all slots within range
+        allSlots.forEach(slot => {
+          const slotParts = slot.split(' ')
+          const period = slotParts[1]
+          let [hour, min] = slotParts[0].split(':').map(Number)
+          
+          // Convert to 24h
+          if (period === 'PM' && hour !== 12) hour += 12
+          if (period === 'AM' && hour === 12) hour = 0
+          
+          const slotMinutes = hour * 60 + min
           
           if (slotMinutes >= startMinutes && slotMinutes <= endMinutes) {
-            blockedTimes.add(slot)
+            blockedForDate.add(slot)
           }
-        }
-      }
+        })
+      })
       
-      // Apply EXCEPTION rules
-      const exceptionRules = (rules || []).filter(r => r.type === 'EXCEPTION')
-      for (const rule of exceptionRules) {
-        if (!dayMatchesRule(date, rule.day_type || 'ALL_DAYS')) continue
-        if (!rule.start_time || !rule.end_time) continue
-        
-        // Convert rule times to minutes for accurate comparison
-        const startMinutes = timeToMinutes(rule.start_time)
-        const endMinutes = timeToMinutes(rule.end_time)
-        
-        for (const slot of defaultSlots) {
-          const slotMinutes = timeToMinutes(to24HourFormat(slot))
-          
-          if (slotMinutes >= startMinutes && slotMinutes <= endMinutes) {
-            blockedTimes.delete(slot)
-          }
-        }
-      }
-      
-      // Check MAX_BOOKING rules
-      const maxBookingRules = (rules || []).filter(r => r.type === 'MAX_BOOKING')
+      // Check for MAX_BOOKING rules
+      const maxBookingRules = matchingRules.filter(r => r.type === 'MAX_BOOKING')
       for (const rule of maxBookingRules) {
-        if (!dayMatchesRule(date, rule.day_type || 'ALL_DAYS')) continue
-        
-        const maxBookings = rule.max_bookings || 1
-        const currentBookings = (bookings || []).filter(b => b.date === date && b.status !== 'cancelled').length
-        
-        if (currentBookings >= maxBookings) {
-          availableDates.push({ date, hasSlots: false })
-          continue
+        if (rule.max_bookings && dateBookings.length >= rule.max_bookings) {
+          // All slots are blocked
+          return { date: dateStr, hasSlots: false }
         }
       }
       
-      // Final check: any slots left?
-      const availableForDay = defaultSlots.filter(slot => 
-        !blockedTimes.has(slot) && !bookedTimes.has(slot)
+      // Count available slots
+      const bookedTimes = new Set(dateBookings.map(b => b.time))
+      const availableSlots = allSlots.filter(slot => 
+        !blockedForDate.has(slot) && !bookedTimes.has(slot)
       )
       
-      availableDates.push({ date, hasSlots: availableForDay.length > 0 })
-    }
+      return { date: dateStr, hasSlots: availableSlots.length > 0 }
+    })
     
     return NextResponse.json({ availableDates })
   } catch (error) {
