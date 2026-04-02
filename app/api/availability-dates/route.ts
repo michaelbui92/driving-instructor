@@ -23,9 +23,10 @@ function to24HourFormat(time12h: string): string {
 function normalizeTime(time: string): string {
   if (!time) return ''
   // If time has seconds like "09:00:00", extract just HH:MM
-  if (time.includes(':') && time.split(':').length === 3) {
-    const [hours, minutes] = time.split(':')
-    return `${hours}:${minutes}`
+  // Handle both "HH:MM:SS" (2 parts after split) and "HH:MM:SS.123" (3 parts)
+  const parts = time.split(':')
+  if (parts.length >= 2) {
+    return `${parts[0]}:${parts[1]}`
   }
   return time
 }
@@ -50,10 +51,14 @@ export async function GET(request: NextRequest) {
     )
     
     // Get all enabled rules
+    console.log('[Availability-Dates API] Fetching rules from Supabase...')
     const { data: rules, error: rulesError } = await supabase
       .from('availability_rules')
       .select('*')
       .eq('enabled', true)
+    
+    console.log('[Availability-Dates API] Rules count:', (rules || []).length)
+    console.log('[Availability-Dates API] Rules:', JSON.stringify(rules, null, 2))
     
     if (rulesError) {
       console.error('Error fetching rules:', rulesError)

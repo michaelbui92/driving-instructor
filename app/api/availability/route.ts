@@ -73,14 +73,7 @@ function dayMatchesRule(dateStr: string, dayType: string): boolean {
   return dayNames[dayOfWeek] === dayType.toLowerCase()
 }
 
-export async function GET(request: NextRequest) {
-  console.log('[Availability API] Request received for date:', request.nextUrl.searchParams.get('date'))
-  
-  try {
-    const { searchParams } = new URL(request.url)
-    const date = searchParams.get('date')
-    
-    console.log('[Availability API] Processing date:', date)
+// Time format conversion: "9:00 AM" -> "09:00", "5:00 PM" -> "17:00"
     
     if (!date) {
       return NextResponse.json(
