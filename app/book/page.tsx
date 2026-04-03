@@ -130,7 +130,7 @@ export default function BookPage() {
     loadBookings()
   }, [])
 
-  // Update available slots when date changes - fetch from API
+  // Fetch available slots directly from Supabase when date changes
   useEffect(() => {
     if (form.date) {
       fetchAvailableSlots(form.date)
@@ -139,24 +139,94 @@ export default function BookPage() {
 
   const fetchAvailableSlots = async (date: string) => {
     try {
-      // Add timestamp to bust any caching
-      const res = await fetch(`/api/availability?date=${date}&_=${Date.now()}`)
-      if (res.ok) {
-        const data = await res.json()
-        // Convert time strings to TimeSlot objects
-        const slots: TimeSlot[] = data.availableSlots.map((time: string) => ({
-          id: `${date}-${time}`,
-          date,
-          time,
-          available: true,
-          price: 45,
-          isNightTime: time === '8:00 PM'
-        }))
-        setAvailableSlots(slots)
-      } else {
-        console.error('Failed to fetch availability:', await res.text())
-        setAvailableSlots([])
+      // Get all rules from Supabase directly
+      const { data: rules } = await supabase
+        .from('availability_rules')
+        .select('*')
+        .eq('enabled', true)
+      
+      // Get manual blocked slots for this date from Supabase directly
+      const { data: manualBlocks } = await supabase
+        .from('blocked_slots')
+        .select('time')
+        .eq('date', date)
+      
+      // Get existing bookings for this date
+      const { data: bookings } = await supabase
+        .from('bookings_new')
+        .select('time')
+        .eq('date', date)
+        .in('status', ['pending', 'confirmed'])
+      
+      // All possible time slots
+      const allSlots = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM']
+      
+      // Convert slot to minutes for comparison
+      const slotToMinutes = (slot: string) => {
+        const [time, period] = slot.split(' ')
+        let [hours, minutes] = time.split(':').map(Number)
+        if (period === 'PM' && hours !== 12) hours += 12
+        if (period === 'AM' && hours === 12) hours = 0
+        return hours * 60 + minutes
       }
+      
+      // Check if slot is in time range
+      const isInRange = (slot: string, start: string, end: string) => {
+        const startParts = start.split(':')
+        const endParts = end.split(':')
+        const startMin = parseInt(startParts[0]) * 60 + parseInt(startParts[1])
+        const endMin = parseInt(endParts[0]) * 60 + parseInt(endParts[1])
+        const slotMin = slotToMinutes(slot)
+        return slotMin >= startMin && slotMin <= endMin
+      }
+      
+      // Check if date matches day type
+      const matchesDayType = (d: Date, dayType: string) => {
+        const dayOfWeek = d.getDay()
+        if (dayType === 'ALL_DAYS') return true
+        if (dayType === 'WEEKDAY') return dayOfWeek >= 1 && dayOfWeek <= 5
+        if (dayType === 'WEEKEND') return dayOfWeek === 0 || dayOfWeek === 6
+        return false
+      }
+      
+      const dateObj = new Date(date)
+      const blockedTimes = new Set<string>()
+      const bookedTimes = new Set<string>((bookings || []).map(b => b.time))
+      
+      // Apply TIME_BLOCK rules
+      const timeBlockRules = (rules || []).filter(r => 
+        r.type === 'TIME_BLOCK' && matchesDayType(dateObj, r.day_type || 'ALL_DAYS')
+      )
+      
+      for (const rule of timeBlockRules) {
+        if (!rule.start_time || !rule.end_time) continue
+        for (const slot of allSlots) {
+          if (isInRange(slot, rule.start_time, rule.end_time)) {
+            blockedTimes.add(slot)
+          }
+        }
+      }
+      
+      // Apply manual blocks
+      for (const block of (manualBlocks || [])) {
+        blockedTimes.add(block.time)
+      }
+      
+      // Calculate available slots
+      const available = allSlots.filter(slot => 
+        !blockedTimes.has(slot) && !bookedTimes.has(slot)
+      )
+      
+      const slots: TimeSlot[] = available.map(time => ({
+        id: `${date}-${time}`,
+        date,
+        time,
+        available: true,
+        price: 45,
+        isNightTime: time === '8:00 PM'
+      }))
+      
+      setAvailableSlots(slots)
     } catch (err) {
       console.error('Error fetching availability:', err)
       setAvailableSlots([])
@@ -166,30 +236,111 @@ export default function BookPage() {
   // Generate dates for the next 28 days - initial placeholder
   const [availableDates, setAvailableDates] = useState<{ date: string; hasSlots: boolean }[]>([])
 
-  // Fetch available dates on mount
+  // Fetch available dates from Supabase directly on mount
   useEffect(() => {
-    // Initialize dates first
-    const dates: { date: string; hasSlots: boolean }[] = []
-    const today = new Date()
-    for (let i = 1; i <= 28; i++) {
-      const d = new Date(today)
-      d.setDate(today.getDate() + i)
-      const dateString = d.toISOString().split('T')[0]
-      dates.push({ date: dateString, hasSlots: true })
-    }
-    setAvailableDates(dates)
-
-    // Then fetch actual availability from API (with cache busting)
     async function fetchAvailableDates() {
       try {
-        // Add timestamp to bust any caching
-        const res = await fetch(`/api/availability-dates?_=${Date.now()}`)
-        if (res.ok) {
-          const data = await res.json()
-          if (data.availableDates) {
-            setAvailableDates(data.availableDates)
-          }
+        // Initialize dates
+        const dates: { date: string; hasSlots: boolean }[] = []
+        const today = new Date()
+        for (let i = 1; i <= 28; i++) {
+          const d = new Date(today)
+          d.setDate(today.getDate() + i)
+          const dateString = d.toISOString().split('T')[0]
+          dates.push({ date: dateString, hasSlots: true })
         }
+        
+        // Get all rules from Supabase directly
+        const { data: rules } = await supabase
+          .from('availability_rules')
+          .select('*')
+          .eq('enabled', true)
+        
+        // Get all blocked slots from Supabase directly
+        const { data: manualBlocks } = await supabase
+          .from('blocked_slots')
+          .select('date, time')
+        
+        // Get all bookings from Supabase directly
+        const futureDates = dates.map(d => d.date)
+        const { data: bookings } = await supabase
+          .from('bookings_new')
+          .select('date, time')
+          .in('date', futureDates)
+          .in('status', ['pending', 'confirmed'])
+        
+        // All possible time slots
+        const allSlots = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM']
+        
+        // Convert slot to minutes for comparison
+        const slotToMinutes = (slot: string) => {
+          const [time, period] = slot.split(' ')
+          let [hours, minutes] = time.split(':').map(Number)
+          if (period === 'PM' && hours !== 12) hours += 12
+          if (period === 'AM' && hours === 12) hours = 0
+          return hours * 60 + minutes
+        }
+        
+        // Check if slot is in time range
+        const isInRange = (slot: string, start: string, end: string) => {
+          const startParts = start.split(':')
+          const endParts = end.split(':')
+          const startMin = parseInt(startParts[0]) * 60 + parseInt(startParts[1])
+          const endMin = parseInt(endParts[0]) * 60 + parseInt(endParts[1])
+          const slotMin = slotToMinutes(slot)
+          return slotMin >= startMin && slotMin <= endMin
+        }
+        
+        // Check if date matches day type
+        const matchesDayType = (d: Date, dayType: string) => {
+          const dayOfWeek = d.getDay()
+          if (dayType === 'ALL_DAYS') return true
+          if (dayType === 'WEEKDAY') return dayOfWeek >= 1 && dayOfWeek <= 5
+          if (dayType === 'WEEKEND') return dayOfWeek === 0 || dayOfWeek === 6
+          return false
+        }
+        
+        // Calculate availability for each date
+        const availableDatesResult = dates.map(dateInfo => {
+          const dateObj = new Date(dateInfo.date)
+          let blockedTimes = new Set<string>()
+          
+          // Apply TIME_BLOCK rules
+          const timeBlockRules = (rules || []).filter(r => 
+            r.type === 'TIME_BLOCK' && matchesDayType(dateObj, r.day_type || 'ALL_DAYS')
+          )
+          
+          for (const rule of timeBlockRules) {
+            if (!rule.start_time || !rule.end_time) continue
+            for (const slot of allSlots) {
+              if (isInRange(slot, rule.start_time, rule.end_time)) {
+                blockedTimes.add(slot)
+              }
+            }
+          }
+          
+          // Apply manual blocks
+          const dateBlocks = (manualBlocks || []).filter(b => b.date === dateInfo.date)
+          for (const block of dateBlocks) {
+            blockedTimes.add(block.time)
+          }
+          
+          // Apply bookings
+          const dateBookings = (bookings || []).filter(b => b.date === dateInfo.date)
+          const bookedTimes = new Set(dateBookings.map(b => b.time))
+          
+          // Available = all - blocked - booked
+          const availableSlots = allSlots.filter(slot => 
+            !blockedTimes.has(slot) && !bookedTimes.has(slot)
+          )
+          
+          return {
+            date: dateInfo.date,
+            hasSlots: availableSlots.length > 0
+          }
+        })
+        
+        setAvailableDates(availableDatesResult)
       } catch (err) {
         console.error('Error fetching available dates:', err)
       }
