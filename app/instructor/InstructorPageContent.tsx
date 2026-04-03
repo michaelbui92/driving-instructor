@@ -1197,21 +1197,20 @@ export default function InstructorPage() {
     </div>
   )
 
-  const renderAvailabilityTab = () => {
+  // Separate component for Availability Tab - needed because hooks must be at component root
+  const AvailabilityTab = ({ selectedBlockDate, setSelectedBlockDate, blockedSlots, setBlockedSlots }: any) => {
     const allTimeSlots = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM']
     
     // Fetch rules when date is selected
     const [rules, setRules] = useState<any[]>([])
     
     useEffect(() => {
-      if (selectedBlockDate) {
-        loadRules()
-      }
+      loadRules()
     }, [selectedBlockDate])
     
     const loadRules = async () => {
-      if (!supabase) return
-      const { data } = await supabase.from('availability_rules').select('*').eq('enabled', true)
+      if (!globalSupabase) return
+      const { data } = await globalSupabase.from('availability_rules').select('*').eq('enabled', true)
       setRules(data || [])
     }
     
@@ -1244,28 +1243,26 @@ export default function InstructorPage() {
     const [blockedForDate, setBlockedForDate] = useState<BlockedSlot[]>([])
     
     useEffect(() => {
-      if (selectedBlockDate) {
-        loadBlockedSlots()
-      }
+      loadBlockedSlots()
     }, [selectedBlockDate])
     
     const loadBlockedSlots = async () => {
-      if (!supabase) return
-      const { data } = await supabase
+      if (!globalSupabase || !selectedBlockDate) return
+      const { data } = await globalSupabase
         .from('blocked_slots')
         .select('*')
         .eq('date', selectedBlockDate)
       setBlockedForDate(data || [])
     }
     
-    const blockedTimesSet = new Set(blockedForDate.map(b => b.time))
+    const blockedTimesSet = new Set(blockedForDate.map((b: BlockedSlot) => b.time))
     
     // Check if a slot is blocked by any rule
     const isBlockedByRule = (time: string) => {
       if (!selectedBlockDate) return false
       const dateObj = new Date(selectedBlockDate + 'T00:00:00')
       
-      const timeBlockRules = rules.filter(r => 
+      const timeBlockRules = rules.filter((r: any) => 
         r.type === 'TIME_BLOCK' && matchesDayType(dateObj, r.day_type || 'ALL_DAYS')
       )
       
@@ -1284,13 +1281,13 @@ export default function InstructorPage() {
     // Toggle block for a single time
     const toggleBlock = async (time: string) => {
       if (isManuallyBlocked(time)) {
-        // Unblock - remove from blocked_slots
         await removeBlockedSlotAsync(selectedBlockDate, time)
       } else {
-        // Block - add to blocked_slots
         await addBlockedSlotAsync(selectedBlockDate, time)
       }
       await loadBlockedSlots()
+      const updated = await getBlockedSlotsAsync()
+      setBlockedSlots(updated)
     }
     
     // Block all times for selected date
@@ -1301,17 +1298,20 @@ export default function InstructorPage() {
         }
       }
       await loadBlockedSlots()
+      const updated = await getBlockedSlotsAsync()
+      setBlockedSlots(updated)
     }
     
     // Unblock all times for selected date (including rule-blocked ones)
     const unblockAll = async () => {
-      // First unblock all manually blocked
       for (const time of allTimeSlots) {
         if (isManuallyBlocked(time)) {
           await removeBlockedSlotAsync(selectedBlockDate, time)
         }
       }
       await loadBlockedSlots()
+      const updated = await getBlockedSlotsAsync()
+      setBlockedSlots(updated)
     }
     
     // Get rule name that blocks a time
@@ -1319,7 +1319,7 @@ export default function InstructorPage() {
       if (!selectedBlockDate) return null
       const dateObj = new Date(selectedBlockDate + 'T00:00:00')
       
-      const timeBlockRules = rules.filter(r => 
+      const timeBlockRules = rules.filter((r: any) => 
         r.type === 'TIME_BLOCK' && matchesDayType(dateObj, r.day_type || 'ALL_DAYS')
       )
       
@@ -1379,7 +1379,6 @@ export default function InstructorPage() {
                 const manuallyBlocked = isManuallyBlocked(time)
                 const ruleBlocked = isBlockedByRule(time)
                 const blockingRuleName = getBlockingRuleName(time)
-                const isBlocked = manuallyBlocked || ruleBlocked
                 
                 return (
                   <button
@@ -1429,30 +1428,40 @@ export default function InstructorPage() {
           ) : (
             <div className="space-y-2">
               {Object.entries(
-                blockedSlots.reduce((acc, slot) => {
+                blockedSlots.reduce((acc: any, slot: any) => {
                   if (!acc[slot.date]) acc[slot.date] = []
                   acc[slot.date].push(slot)
                   return acc
-                }, {} as Record<string, typeof blockedSlots>)
-              ).map(([date, slots]) => (
+                }, {})
+              ).map(([date, slots]: [any, any]) => (
                 <div key={date} className="bg-red-50 border border-red-200 rounded-lg p-4">
                   <div className="flex justify-between items-start mb-2">
                     <p className="font-semibold text-red-800">
                       {new Date(date + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })}
                     </p>
                     <button
-                      onClick={() => slots.forEach(s => removeBlockedSlotAsync(s.date, s.time).then(() => getBlockedSlotsAsync().then(setBlockedSlots)))}
+                      onClick={async () => {
+                        for (const s of slots) {
+                          await removeBlockedSlotAsync(s.date, s.time)
+                        }
+                        const updated = await getBlockedSlotsAsync()
+                        setBlockedSlots(updated)
+                      }}
                       className="text-sm text-red-600 hover:text-red-800 underline"
                     >
                       Unblock all
                     </button>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {slots.map((slot, idx) => (
+                    {slots.map((slot: any, idx: number) => (
                       <span key={idx} className="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
                         {slot.time}
                         <button 
-                          onClick={() => removeBlockedSlotAsync(slot.date, slot.time).then(() => getBlockedSlotsAsync().then(setBlockedSlots))} 
+                          onClick={async () => {
+                            await removeBlockedSlotAsync(slot.date, slot.time)
+                            const updated = await getBlockedSlotsAsync()
+                            setBlockedSlots(updated)
+                          }} 
                           className="ml-2 text-red-600 hover:text-red-800 font-bold"
                         >
                           ×
@@ -1466,6 +1475,17 @@ export default function InstructorPage() {
           )}
         </div>
       </div>
+    )
+  }
+
+  const renderAvailabilityTab = () => {
+    return (
+      <AvailabilityTab 
+        selectedBlockDate={selectedBlockDate}
+        setSelectedBlockDate={setSelectedBlockDate}
+        blockedSlots={blockedSlots}
+        setBlockedSlots={setBlockedSlots}
+      />
     )
   }
 
