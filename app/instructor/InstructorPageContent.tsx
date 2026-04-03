@@ -1442,62 +1442,140 @@ export default function InstructorPage() {
           </div>
         )}
 
-        {/* Currently Blocked Slots Summary */}
+        {/* Summary of Manual Blocks & Exceptions */}
         <div>
-          <h3 className="text-lg font-semibold mb-4">Manually Blocked Slots ({blockedSlots.length})</h3>
+          <h3 className="text-lg font-semibold mb-4">Your Overrides</h3>
           {blockedSlots.length === 0 ? (
             <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
               <div className="text-4xl mb-2">✅</div>
-              <p className="text-green-800 font-semibold">No manually blocked slots</p>
-              <p className="text-green-600 text-sm">Rules still apply. Only manually blocked slots are shown here.</p>
+              <p className="text-green-800 font-semibold">No overrides</p>
+              <p className="text-green-600 text-sm">All times follow your rules.</p>
             </div>
           ) : (
-            <div className="space-y-2">
-              {Object.entries(
-                blockedSlots.reduce((acc: any, slot: any) => {
-                  if (!acc[slot.date]) acc[slot.date] = []
-                  acc[slot.date].push(slot)
-                  return acc
-                }, {})
-              ).map(([date, slots]: [any, any]) => (
-                <div key={date} className="bg-red-50 border border-red-200 rounded-lg p-4">
-                  <div className="flex justify-between items-start mb-2">
-                    <p className="font-semibold text-red-800">
-                      {new Date(date + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })}
-                    </p>
-                    <button
-                      onClick={async () => {
-                        for (const s of slots) {
-                          await removeBlockedSlotAsync(s.date, s.time)
-                        }
-                        const updated = await getBlockedSlotsAsync()
-                        setBlockedSlots(updated)
-                      }}
-                      className="text-sm text-red-600 hover:text-red-800 underline"
-                    >
-                      Unblock all
-                    </button>
+            <>
+              {/* Group by type - manual blocks vs exceptions */}
+              {(() => {
+                // Categorize blocked slots
+                const manualBlocksList: any[] = []
+                const exceptionsList: any[] = []
+                
+                blockedSlots.forEach((slot: any) => {
+                  const dateObj = new Date(slot.date + 'T00:00:00')
+                  const isRuleBlocked = (rules || []).some((r: any) => {
+                    if (r.type !== 'TIME_BLOCK') return false
+                    if (!matchesDayType(dateObj, r.day_type || 'ALL_DAYS')) return false
+                    if (!r.start_time || !r.end_time) return false
+                    return isInRange(slot.time, r.start_time, r.end_time)
+                  })
+                  
+                  if (isRuleBlocked) {
+                    exceptionsList.push({ ...slot, ruleName: getBlockingRuleName(slot.time) })
+                  } else {
+                    manualBlocksList.push(slot)
+                  }
+                })
+                
+                return (
+                  <div className="space-y-4">
+                    {/* Manual Blocks - slots you blocked that aren't blocked by rules */}
+                    {manualBlocksList.length > 0 && (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                        <div className="flex justify-between items-center mb-3">
+                          <h4 className="font-semibold text-red-800">
+                            🔴 Manual Blocks ({manualBlocksList.length})
+                          </h4>
+                          <button
+                            onClick={async () => {
+                              for (const s of manualBlocksList) {
+                                await removeBlockedSlotAsync(s.date, s.time)
+                              }
+                              const updated = await getBlockedSlotsAsync()
+                              setBlockedSlots(updated)
+                            }}
+                            className="text-sm text-red-600 hover:text-red-800 underline"
+                          >
+                            Remove all
+                          </button>
+                        </div>
+                        {Object.entries(
+                          manualBlocksList.reduce((acc: any, slot: any) => {
+                            if (!acc[slot.date]) acc[slot.date] = []
+                            acc[slot.date].push(slot)
+                            return acc
+                          }, {})
+                        ).map(([date, slots]: [any, any]) => (
+                          <div key={date} className="mb-2">
+                            <p className="text-sm font-medium text-red-700 mb-1">
+                              {new Date(date + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })}
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {slots.map((slot: any, idx: number) => (
+                                <span key={idx} className="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
+                                  {slot.time}
+                                  <button 
+                                    onClick={async () => {
+                                      await removeBlockedSlotAsync(slot.date, slot.time)
+                                      const updated = await getBlockedSlotsAsync()
+                                      setBlockedSlots(updated)
+                                    }} 
+                                    className="ml-2 text-red-600 hover:text-red-800 font-bold"
+                                  >
+                                    ×
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* Exceptions - slots you opened that are blocked by rules */}
+                    {exceptionsList.length > 0 && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                        <div className="flex justify-between items-center mb-3">
+                          <h4 className="font-semibold text-blue-800">
+                            🔵 Exceptions ({exceptionsList.length})
+                          </h4>
+                          <p className="text-xs text-blue-600">Students can book these despite rules</p>
+                        </div>
+                        {Object.entries(
+                          exceptionsList.reduce((acc: any, slot: any) => {
+                            if (!acc[slot.date]) acc[slot.date] = []
+                            acc[slot.date].push(slot)
+                            return acc
+                          }, {})
+                        ).map(([date, slots]: [any, any]) => (
+                          <div key={date} className="mb-2">
+                            <p className="text-sm font-medium text-blue-700 mb-1">
+                              {new Date(date + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })}
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {slots.map((slot: any, idx: number) => (
+                                <span key={idx} className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                                  {slot.time}
+                                  <span className="ml-1 text-xs text-blue-500">({slot.ruleName})</span>
+                                  <button 
+                                    onClick={async () => {
+                                      await removeBlockedSlotAsync(slot.date, slot.time)
+                                      const updated = await getBlockedSlotsAsync()
+                                      setBlockedSlots(updated)
+                                    }} 
+                                    className="ml-2 text-blue-600 hover:text-blue-800 font-bold"
+                                  >
+                                    ×
+                                  </button>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <div className="flex flex-wrap gap-2">
-                    {slots.map((slot: any, idx: number) => (
-                      <span key={idx} className="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
-                        {slot.time}
-                        <button 
-                          onClick={async () => {
-                            await removeBlockedSlotAsync(slot.date, slot.time)
-                            const updated = await getBlockedSlotsAsync()
-                            setBlockedSlots(updated)
-                          }} 
-                          className="ml-2 text-red-600 hover:text-red-800 font-bold"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+                )
+              })()}
+            </>
           )}
         </div>
       </div>
