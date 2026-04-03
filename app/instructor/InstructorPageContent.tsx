@@ -1197,220 +1197,167 @@ export default function InstructorPage() {
     </div>
   )
 
-  const renderAvailabilityTab = () => (
-    <div>
-      <h2 className="text-2xl font-bold mb-6">Manage Your Availability</h2>
-      <p className="text-gray-600 mb-6">
-        Students can only book slots that you have not blocked. Use bulk blocking to quickly set your availability, then fine-tune individual days.
-      </p>
-
-      {/* Bulk Blocking Section */}
-      <div className="bg-purple-50 border border-purple-200 rounded-xl p-6 mb-8">
-        <h3 className="text-lg font-semibold mb-4">⚡ Quick Block</h3>
-        <p className="text-sm text-gray-600 mb-4">
-          Block multiple slots at once. This will block all slots EXCEPT 6pm, 7pm, and 8pm.
+  const renderAvailabilityTab = () => {
+    const allTimeSlots = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM']
+    
+    // Get blocked slots for selected date
+    const blockedForDate = blockedSlots.filter(b => b.date === selectedBlockDate)
+    const blockedTimesSet = new Set(blockedForDate.map(b => b.time))
+    
+    // Toggle block for a single time
+    const toggleBlock = async (time: string) => {
+      if (blockedTimesSet.has(time)) {
+        // Unblock
+        await removeBlockedSlotAsync(selectedBlockDate, time)
+      } else {
+        // Block
+        await addBlockedSlotAsync(selectedBlockDate, time)
+      }
+      const updated = await getBlockedSlotsAsync()
+      setBlockedSlots(updated)
+    }
+    
+    // Block all times for selected date
+    const blockAll = async () => {
+      for (const time of allTimeSlots) {
+        if (!blockedTimesSet.has(time)) {
+          await addBlockedSlotAsync(selectedBlockDate, time)
+        }
+      }
+      const updated = await getBlockedSlotsAsync()
+      setBlockedSlots(updated)
+    }
+    
+    // Unblock all times for selected date
+    const unblockAll = async () => {
+      for (const time of allTimeSlots) {
+        if (blockedTimesSet.has(time)) {
+          await removeBlockedSlotAsync(selectedBlockDate, time)
+        }
+      }
+      const updated = await getBlockedSlotsAsync()
+      setBlockedSlots(updated)
+    }
+    
+    return (
+      <div>
+        <h2 className="text-2xl font-bold mb-6">Manage Your Availability</h2>
+        <p className="text-gray-600 mb-6">
+          Block or unblock time slots for specific dates. Students cannot book blocked slots.
         </p>
-        
-        <div className="grid md:grid-cols-4 gap-4 mb-4">
-          <button
-            onClick={() => { setBulkMode('weekdays'); handleBulkBlock() }}
-            className="px-4 py-3 bg-white border-2 border-purple-300 rounded-lg hover:border-purple-500 transition text-left"
-          >
-            <span className="font-semibold block">All Weekdays</span>
-            <span className="text-xs text-gray-500">Block 9am-5pm (keep 6-8pm)</span>
-          </button>
-          <button
-            onClick={() => { setBulkMode('weekends'); handleBulkBlock() }}
-            className="px-4 py-3 bg-white border-2 border-purple-300 rounded-lg hover:border-purple-500 transition text-left"
-          >
-            <span className="font-semibold block">All Weekends</span>
-            <span className="text-xs text-gray-500">Block 8am-5pm (keep 6-8pm)</span>
-          </button>
-          <div className="px-4 py-3 bg-white border-2 border-purple-300 rounded-lg">
-            <span className="font-semibold block mb-2">Date Range</span>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="date"
-                value={bulkStartDate}
-                onChange={(e) => setBulkStartDate(e.target.value)}
-                className="text-sm px-2 py-1 border rounded w-full"
-                min={today}
-              />
-              <input
-                type="date"
-                value={bulkEndDate}
-                onChange={(e) => setBulkEndDate(e.target.value)}
-                className="text-sm px-2 py-1 border rounded w-full"
-                min={bulkStartDate || today}
-              />
-            </div>
-            <button
-              onClick={() => { setBulkMode('daterange'); handleBulkBlock() }}
-              disabled={!bulkStartDate || !bulkEndDate}
-              className="w-full text-xs px-3 py-1 bg-purple-600 text-white rounded hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-            >
-              Apply
-            </button>
-          </div>
-          <button
-            onClick={async () => {
-              if (confirm('This will unblock ALL slots. Continue?')) {
-                try {
-                  await Promise.all(
-                    blockedSlots.map(b => removeBlockedSlotAsync(b.date, b.time))
-                  )
-                  const updatedSlots = await getBlockedSlotsAsync()
-                  setBlockedSlots(updatedSlots)
-                  alert('All slots unblocked!')
-                } catch (error) {
-                  console.error('Error clearing blocked slots:', error)
-                  alert('Error clearing blocked slots. Please try again.')
-                }
-              }
-            }}
-            className="px-4 py-3 bg-red-50 border-2 border-red-300 rounded-lg hover:border-red-500 transition text-left"
-          >
-            <span className="font-semibold text-red-700 block">Unblock All</span>
-            <span className="text-xs text-red-500">Reset to all available</span>
-          </button>
-        </div>
-      </div>
 
-      {/* Individual Day Blocking */}
-      <div className="bg-gray-50 rounded-xl p-6 mb-8">
-        <h3 className="text-lg font-semibold mb-4">Block Slots for Specific Day</h3>
-        <div className="grid md:grid-cols-2 gap-4 mb-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Select Date</label>
-            <input
-              type="date"
-              value={selectedBlockDate}
-              onChange={(e) => { setSelectedBlockDate(e.target.value); setSelectedBlockTimes([]) }}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-              min={today}
-            />
-          </div>
-          {selectedBlockDate && (
-            <div>
-              <div className="flex justify-between items-center mb-2">
-                <label className="block text-sm font-medium text-gray-700">Select Times to Block</label>
+        {/* Date Picker */}
+        <div className="bg-gray-50 rounded-xl p-6 mb-8">
+          <h3 className="text-lg font-semibold mb-4">Select Date</h3>
+          <input
+            type="date"
+            value={selectedBlockDate}
+            onChange={(e) => setSelectedBlockDate(e.target.value)}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-lg"
+            min={today}
+          />
+        </div>
+
+        {/* Time Slots Grid - Only show when date is selected */}
+        {selectedBlockDate && (
+          <div className="bg-gray-50 rounded-xl p-6 mb-8">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold">
+                Time Slots for {new Date(selectedBlockDate + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </h3>
+              <div className="flex gap-2">
                 <button
-                  onClick={() => {
-                    const available = getTimeSlotsForDate(selectedBlockDate).filter(t => !isSlotBlocked(selectedBlockDate, t) && !isSlotBlockedByRule(selectedBlockDate, t))
-                    setSelectedBlockTimes(available)
-                  }}
-                  className="text-xs text-primary hover:underline"
+                  onClick={blockAll}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 font-semibold text-sm"
                 >
-                  Select all available
+                  Block All
+                </button>
+                <button
+                  onClick={unblockAll}
+                  className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 font-semibold text-sm"
+                >
+                  Unblock All
                 </button>
               </div>
-              <div className="grid grid-cols-3 gap-2 max-h-40 overflow-y-auto">
-                {getTimeSlotsForDate(selectedBlockDate).map(time => {
-                  const isManuallyBlocked = isSlotBlocked(selectedBlockDate, time)
-                  const isRuleBlocked = isSlotBlockedByRule(selectedBlockDate, time)
-                  
-                  return (
-                    <label
-                      key={time}
-                      className={`flex items-center p-2 border rounded cursor-pointer ${
-                        isManuallyBlocked
-                          ? 'bg-red-100 border-red-300 text-red-700'
-                          : isRuleBlocked
-                          ? 'bg-gray-200 border-gray-400 text-gray-500 cursor-not-allowed'
-                          : 'bg-white hover:bg-gray-100'
-                      }`}
+            </div>
+            
+            <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {allTimeSlots.map(time => {
+                const isBlocked = blockedTimesSet.has(time)
+                return (
+                  <button
+                    key={time}
+                    onClick={() => toggleBlock(time)}
+                    className={`p-4 rounded-lg border-2 font-semibold transition ${
+                      isBlocked
+                        ? 'bg-red-100 border-red-300 text-red-700 hover:bg-red-200'
+                        : 'bg-green-100 border-green-300 text-green-700 hover:bg-green-200'
+                    }`}
+                  >
+                    <div className="text-lg">{time}</div>
+                    <div className="text-xs mt-1">{isBlocked ? '🔴 Blocked' : '🟢 Available'}</div>
+                  </button>
+                )
+              })}
+            </div>
+            
+            <p className="text-sm text-gray-500 mt-4">
+              {blockedTimesSet.size} of {allTimeSlots.length} slots blocked
+            </p>
+          </div>
+        )}
+
+        {/* Currently Blocked Slots Summary */}
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Blocked Slots ({blockedSlots.length})</h3>
+          {blockedSlots.length === 0 ? (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+              <div className="text-4xl mb-2">✅</div>
+              <p className="text-green-800 font-semibold">No blocked slots</p>
+              <p className="text-green-600 text-sm">All time slots are available for booking</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {Object.entries(
+                blockedSlots.reduce((acc, slot) => {
+                  if (!acc[slot.date]) acc[slot.date] = []
+                  acc[slot.date].push(slot)
+                  return acc
+                }, {} as Record<string, typeof blockedSlots>)
+              ).map(([date, slots]) => (
+                <div key={date} className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <div className="flex justify-between items-start mb-2">
+                    <p className="font-semibold text-red-800">
+                      {new Date(date + 'T00:00:00').toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })}
+                    </p>
+                    <button
+                      onClick={() => slots.forEach(s => removeBlockedSlotAsync(s.date, s.time).then(() => getBlockedSlotsAsync().then(setBlockedSlots)))}
+                      className="text-sm text-red-600 hover:text-red-800 underline"
                     >
-                      <input
-                        type="checkbox"
-                        checked={selectedBlockTimes.includes(time)}
-                        disabled={isManuallyBlocked || isRuleBlocked}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setSelectedBlockTimes([...selectedBlockTimes, time])
-                          } else {
-                            setSelectedBlockTimes(selectedBlockTimes.filter(t => t !== time))
-                          }
-                        }}
-                        className="mr-2"
-                      />
-                      <span className="text-sm">{time}</span>
-                      {isRuleBlocked && <span className="text-xs ml-1">(rule)</span>}
-                    </label>
-                  )
-                })}
-              </div>
-              <p className="text-xs text-gray-500 mt-2">
-                Grayed out times are blocked by availability rules and cannot be manually overridden.
-              </p>
+                      Unblock all
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {slots.map((slot, idx) => (
+                      <span key={idx} className="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
+                        {slot.time}
+                        <button 
+                          onClick={() => removeBlockedSlotAsync(slot.date, slot.time).then(() => getBlockedSlotsAsync().then(setBlockedSlots))} 
+                          className="ml-2 text-red-600 hover:text-red-800 font-bold"
+                        >
+                          ×
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </div>
-        <div className="flex gap-3">
-          <button
-            onClick={handleBlockSlot}
-            disabled={!selectedBlockDate || selectedBlockTimes.length === 0}
-            className={`px-6 py-2 rounded-lg font-semibold transition ${
-              selectedBlockDate && selectedBlockTimes.length > 0
-                ? 'bg-red-500 text-white hover:bg-red-600'
-                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-            }`}
-          >
-            Block {selectedBlockTimes.length > 0 ? `${selectedBlockTimes.length} Slot(s)` : 'Selected'}
-          </button>
-          {selectedBlockTimes.length > 0 && (
-            <button
-              onClick={() => setSelectedBlockTimes([])}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800"
-            >
-              Clear Selection
-            </button>
-          )}
-        </div>
       </div>
-
-      {/* Currently Blocked Slots */}
-      <div>
-        <h3 className="text-lg font-semibold mb-4">Currently Blocked ({blockedSlots.length})</h3>
-        {blockedSlots.length === 0 ? (
-          <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
-            <div className="text-4xl mb-2">✅</div>
-            <p className="text-green-800 font-semibold">No blocked slots</p>
-            <p className="text-green-600 text-sm">All time slots are available for booking</p>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            {Object.entries(
-              blockedSlots.reduce((acc, slot) => {
-                if (!acc[slot.date]) acc[slot.date] = []
-                acc[slot.date].push(slot)
-                return acc
-              }, {} as Record<string, BlockedSlot[]>)
-            ).map(([date, slots]) => (
-              <div key={date} className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <p className="font-semibold text-red-800">{formatDate(date)}</p>
-                  <button
-                    onClick={() => slots.forEach(s => handleUnblockSlot(s.date, s.time))}
-                    className="text-sm text-red-600 hover:text-red-800 underline"
-                  >
-                    Unblock all
-                  </button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {slots.map((slot, idx) => (
-                    <span key={idx} className="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm">
-                      {slot.time}
-                      <button onClick={() => handleUnblockSlot(slot.date, slot.time)} className="ml-2 text-red-600 hover:text-red-800 font-bold">×</button>
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  )
+    )
+  }
 
   const renderCalendarTab = () => {
     // Use state for month/year navigation
