@@ -1200,50 +1200,141 @@ export default function InstructorPage() {
   const renderAvailabilityTab = () => {
     const allTimeSlots = ['8:00 AM', '9:00 AM', '10:00 AM', '11:00 AM', '12:00 PM', '1:00 PM', '2:00 PM', '3:00 PM', '4:00 PM', '5:00 PM', '6:00 PM', '7:00 PM', '8:00 PM']
     
-    // Get blocked slots for selected date
-    const blockedForDate = blockedSlots.filter(b => b.date === selectedBlockDate)
+    // Fetch rules when date is selected
+    const [rules, setRules] = useState<any[]>([])
+    
+    useEffect(() => {
+      if (selectedBlockDate) {
+        loadRules()
+      }
+    }, [selectedBlockDate])
+    
+    const loadRules = async () => {
+      const { data } = await supabase.from('availability_rules').select('*').eq('enabled', true)
+      setRules(data || [])
+    }
+    
+    // Helper functions for rule checking
+    const slotToMinutes = (slot: string) => {
+      const [time, period] = slot.split(' ')
+      let [hours, minutes] = time.split(':').map(Number)
+      if (period === 'PM' && hours !== 12) hours += 12
+      if (period === 'AM' && hours === 12) hours = 0
+      return hours * 60 + minutes
+    }
+    
+    const isInRange = (slot: string, start: string, end: string) => {
+      const startParts = start.split(':')
+      const endParts = end.split(':')
+      const startMin = parseInt(startParts[0]) * 60 + parseInt(startParts[1])
+      const endMin = parseInt(endParts[0]) * 60 + parseInt(endParts[1])
+      return slotToMinutes(slot) >= startMin && slotToMinutes(slot) <= endMin
+    }
+    
+    const matchesDayType = (date: Date, dayType: string) => {
+      const dayOfWeek = date.getDay()
+      if (dayType === 'ALL_DAYS') return true
+      if (dayType === 'WEEKDAY') return dayOfWeek >= 1 && dayOfWeek <= 5
+      if (dayType === 'WEEKEND') return dayOfWeek === 0 || dayOfWeek === 6
+      return false
+    }
+    
+    // Get blocked slots for selected date from Supabase
+    const [blockedForDate, setBlockedForDate] = useState<BlockedSlot[]>([])
+    
+    useEffect(() => {
+      if (selectedBlockDate) {
+        loadBlockedSlots()
+      }
+    }, [selectedBlockDate])
+    
+    const loadBlockedSlots = async () => {
+      const { data } = await supabase
+        .from('blocked_slots')
+        .select('*')
+        .eq('date', selectedBlockDate)
+      setBlockedForDate(data || [])
+    }
+    
     const blockedTimesSet = new Set(blockedForDate.map(b => b.time))
+    
+    // Check if a slot is blocked by any rule
+    const isBlockedByRule = (time: string) => {
+      if (!selectedBlockDate) return false
+      const dateObj = new Date(selectedBlockDate + 'T00:00:00')
+      
+      const timeBlockRules = rules.filter(r => 
+        r.type === 'TIME_BLOCK' && matchesDayType(dateObj, r.day_type || 'ALL_DAYS')
+      )
+      
+      for (const rule of timeBlockRules) {
+        if (!rule.start_time || !rule.end_time) continue
+        if (isInRange(time, rule.start_time, rule.end_time)) {
+          return true
+        }
+      }
+      return false
+    }
+    
+    // Check if a slot is manually blocked
+    const isManuallyBlocked = (time: string) => blockedTimesSet.has(time)
     
     // Toggle block for a single time
     const toggleBlock = async (time: string) => {
-      if (blockedTimesSet.has(time)) {
-        // Unblock
+      if (isManuallyBlocked(time)) {
+        // Unblock - remove from blocked_slots
         await removeBlockedSlotAsync(selectedBlockDate, time)
       } else {
-        // Block
+        // Block - add to blocked_slots
         await addBlockedSlotAsync(selectedBlockDate, time)
       }
-      const updated = await getBlockedSlotsAsync()
-      setBlockedSlots(updated)
+      await loadBlockedSlots()
     }
     
     // Block all times for selected date
     const blockAll = async () => {
       for (const time of allTimeSlots) {
-        if (!blockedTimesSet.has(time)) {
+        if (!isManuallyBlocked(time)) {
           await addBlockedSlotAsync(selectedBlockDate, time)
         }
       }
-      const updated = await getBlockedSlotsAsync()
-      setBlockedSlots(updated)
+      await loadBlockedSlots()
     }
     
-    // Unblock all times for selected date
+    // Unblock all times for selected date (including rule-blocked ones)
     const unblockAll = async () => {
+      // First unblock all manually blocked
       for (const time of allTimeSlots) {
-        if (blockedTimesSet.has(time)) {
+        if (isManuallyBlocked(time)) {
           await removeBlockedSlotAsync(selectedBlockDate, time)
         }
       }
-      const updated = await getBlockedSlotsAsync()
-      setBlockedSlots(updated)
+      await loadBlockedSlots()
+    }
+    
+    // Get rule name that blocks a time
+    const getBlockingRuleName = (time: string): string | null => {
+      if (!selectedBlockDate) return null
+      const dateObj = new Date(selectedBlockDate + 'T00:00:00')
+      
+      const timeBlockRules = rules.filter(r => 
+        r.type === 'TIME_BLOCK' && matchesDayType(dateObj, r.day_type || 'ALL_DAYS')
+      )
+      
+      for (const rule of timeBlockRules) {
+        if (!rule.start_time || !rule.end_time) continue
+        if (isInRange(time, rule.start_time, rule.end_time)) {
+          return rule.name
+        }
+      }
+      return null
     }
     
     return (
       <div>
         <h2 className="text-2xl font-bold mb-6">Manage Your Availability</h2>
         <p className="text-gray-600 mb-6">
-          Block or unblock time slots for specific dates. Students cannot book blocked slots.
+          View and override your availability rules. You can unblock times blocked by rules for specific days.
         </p>
 
         {/* Date Picker */}
@@ -1283,38 +1374,55 @@ export default function InstructorPage() {
             
             <div className="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {allTimeSlots.map(time => {
-                const isBlocked = blockedTimesSet.has(time)
+                const manuallyBlocked = isManuallyBlocked(time)
+                const ruleBlocked = isBlockedByRule(time)
+                const blockingRuleName = getBlockingRuleName(time)
+                const isBlocked = manuallyBlocked || ruleBlocked
+                
                 return (
                   <button
                     key={time}
                     onClick={() => toggleBlock(time)}
                     className={`p-4 rounded-lg border-2 font-semibold transition ${
-                      isBlocked
+                      manuallyBlocked
                         ? 'bg-red-100 border-red-300 text-red-700 hover:bg-red-200'
+                        : ruleBlocked
+                        ? 'bg-orange-100 border-orange-300 text-orange-700 hover:bg-orange-200'
                         : 'bg-green-100 border-green-300 text-green-700 hover:bg-green-200'
                     }`}
                   >
                     <div className="text-lg">{time}</div>
-                    <div className="text-xs mt-1">{isBlocked ? '🔴 Blocked' : '🟢 Available'}</div>
+                    <div className="text-xs mt-1">
+                      {manuallyBlocked ? '🔴 Manual Block' : 
+                       ruleBlocked ? `⚠️ By rule: ${blockingRuleName}` : 
+                       '🟢 Available'}
+                    </div>
                   </button>
                 )
               })}
             </div>
             
-            <p className="text-sm text-gray-500 mt-4">
-              {blockedTimesSet.size} of {allTimeSlots.length} slots blocked
-            </p>
+            <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm">
+              <p className="text-blue-800">
+                <strong>How it works:</strong>
+              </p>
+              <ul className="text-blue-700 mt-1">
+                <li>🟢 <strong>Available</strong> - Students can book</li>
+                <li>⚠️ <strong>Blocked by rule</strong> - Click to manually unblock for this day</li>
+                <li>🔴 <strong>Manual Block</strong> - Manually blocked, click to unblock</li>
+              </ul>
+            </div>
           </div>
         )}
 
         {/* Currently Blocked Slots Summary */}
         <div>
-          <h3 className="text-lg font-semibold mb-4">Blocked Slots ({blockedSlots.length})</h3>
+          <h3 className="text-lg font-semibold mb-4">Manually Blocked Slots ({blockedSlots.length})</h3>
           {blockedSlots.length === 0 ? (
             <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
               <div className="text-4xl mb-2">✅</div>
-              <p className="text-green-800 font-semibold">No blocked slots</p>
-              <p className="text-green-600 text-sm">All time slots are available for booking</p>
+              <p className="text-green-800 font-semibold">No manually blocked slots</p>
+              <p className="text-green-600 text-sm">Rules still apply. Only manually blocked slots are shown here.</p>
             </div>
           ) : (
             <div className="space-y-2">
