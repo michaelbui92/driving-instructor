@@ -1278,22 +1278,47 @@ export default function InstructorPage() {
     // Check if a slot is manually blocked
     const isManuallyBlocked = (time: string) => blockedTimesSet.has(time)
     
-    // Toggle block for a single time
-    const toggleBlock = async (time: string) => {
-      if (isManuallyBlocked(time)) {
-        await removeBlockedSlotAsync(selectedBlockDate, time)
-      } else {
-        await addBlockedSlotAsync(selectedBlockDate, time)
+    // Determine slot status:
+    // - isException: slot is in blocked_slots but IS blocked by rule → this means it's an EXCEPTION (available despite rule)
+    // - isBlocked: slot is blocked (manually blocked OR blocked by rule without exception)
+    // - isAvailable: slot is not blocked
+    const getSlotStatus = (time: string): 'available' | 'blocked' | 'exception' => {
+      const ruleBlocks = isBlockedByRule(time)
+      const manuallyBlocked = isManuallyBlocked(time)
+      
+      if (manuallyBlocked && ruleBlocks) {
+        return 'exception' // In blocked_slots AND blocked by rule = exception (available)
       }
+      if (manuallyBlocked || ruleBlocks) {
+        return 'blocked' // Either manually blocked OR blocked by rule (without exception)
+      }
+      return 'available' // Not blocked at all
+    }
+    
+    // Toggle slot - different actions based on current status
+    const toggleSlot = async (time: string) => {
+      const status = getSlotStatus(time)
+      
+      if (status === 'available') {
+        // Currently available - block it
+        await addBlockedSlotAsync(selectedBlockDate, time)
+      } else if (status === 'blocked') {
+        // Currently blocked - unblock it (add to blocked_slots as exception if it's a rule block)
+        await addBlockedSlotAsync(selectedBlockDate, time)
+      } else if (status === 'exception') {
+        // Currently exception - remove the exception (remove from blocked_slots, rule will block it again)
+        await removeBlockedSlotAsync(selectedBlockDate, time)
+      }
+      
       await loadBlockedSlots()
       const updated = await getBlockedSlotsAsync()
       setBlockedSlots(updated)
     }
     
-    // Block all times for selected date
+    // Block all available times
     const blockAll = async () => {
       for (const time of allTimeSlots) {
-        if (!isManuallyBlocked(time)) {
+        if (getSlotStatus(time) === 'available') {
           await addBlockedSlotAsync(selectedBlockDate, time)
         }
       }
@@ -1302,10 +1327,10 @@ export default function InstructorPage() {
       setBlockedSlots(updated)
     }
     
-    // Unblock all times for selected date (including rule-blocked ones)
+    // Unblock all times (remove all manual blocks/exceptions)
     const unblockAll = async () => {
       for (const time of allTimeSlots) {
-        if (isManuallyBlocked(time)) {
+        if (getSlotStatus(time) !== 'available') {
           await removeBlockedSlotAsync(selectedBlockDate, time)
         }
       }
@@ -1383,19 +1408,19 @@ export default function InstructorPage() {
                 return (
                   <button
                     key={time}
-                    onClick={() => toggleBlock(time)}
+                    onClick={() => toggleSlot(time)}
                     className={`p-4 rounded-lg border-2 font-semibold transition ${
-                      manuallyBlocked
+                      getSlotStatus(time) === 'blocked'
                         ? 'bg-red-100 border-red-300 text-red-700 hover:bg-red-200'
-                        : ruleBlocked
-                        ? 'bg-orange-100 border-orange-300 text-orange-700 hover:bg-orange-200'
+                        : getSlotStatus(time) === 'exception'
+                        ? 'bg-blue-100 border-blue-300 text-blue-700 hover:bg-blue-200'
                         : 'bg-green-100 border-green-300 text-green-700 hover:bg-green-200'
                     }`}
                   >
                     <div className="text-lg">{time}</div>
                     <div className="text-xs mt-1">
-                      {manuallyBlocked ? '🔴 Manual Block' : 
-                       ruleBlocked ? `⚠️ By rule: ${blockingRuleName}` : 
+                      {getSlotStatus(time) === 'blocked' ? '🔴 Blocked' : 
+                       getSlotStatus(time) === 'exception' ? '🔵 Exception' : 
                        '🟢 Available'}
                     </div>
                   </button>
@@ -1403,15 +1428,16 @@ export default function InstructorPage() {
               })}
             </div>
             
-            <div className="mt-4 p-3 bg-blue-50 rounded-lg text-sm">
-              <p className="text-blue-800">
-                <strong>How it works:</strong>
+            <div className="mt-4 p-3 bg-gray-100 rounded-lg text-sm">
+              <p className="text-gray-700 font-medium mb-2">Click to toggle:</p>
+              <div className="grid grid-cols-2 gap-1 text-gray-600">
+                <span>🟢 <strong>Available</strong> → Click to Block</span>
+                <span>🔴 <strong>Blocked</strong> → Click to Unblock</span>
+                <span>🔵 <strong>Exception</strong> → Click to Remove Exception</span>
+              </div>
+              <p className="text-gray-500 text-xs mt-2">
+                Exception = You manually opened a time that was blocked by a rule
               </p>
-              <ul className="text-blue-700 mt-1">
-                <li>🟢 <strong>Available</strong> - Students can book</li>
-                <li>⚠️ <strong>Blocked by rule</strong> - Click to manually unblock for this day</li>
-                <li>🔴 <strong>Manual Block</strong> - Manually blocked, click to unblock</li>
-              </ul>
             </div>
           </div>
         )}
