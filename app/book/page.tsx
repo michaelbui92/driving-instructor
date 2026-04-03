@@ -139,7 +139,8 @@ export default function BookPage() {
 
   const fetchAvailableSlots = async (date: string) => {
     try {
-      const res = await fetch(`/api/availability?date=${date}`)
+      // Add timestamp to bust any caching
+      const res = await fetch(`/api/availability?date=${date}&_=${Date.now()}`)
       if (res.ok) {
         const data = await res.json()
         // Convert time strings to TimeSlot objects
@@ -178,10 +179,11 @@ export default function BookPage() {
     }
     setAvailableDates(dates)
 
-    // Then fetch actual availability from API
+    // Then fetch actual availability from API (with cache busting)
     async function fetchAvailableDates() {
       try {
-        const res = await fetch('/api/availability-dates')
+        // Add timestamp to bust any caching
+        const res = await fetch(`/api/availability-dates?_=${Date.now()}`)
         if (res.ok) {
           const data = await res.json()
           if (data.availableDates) {
