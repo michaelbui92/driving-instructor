@@ -1210,6 +1210,7 @@ export default function InstructorPage() {
     }, [selectedBlockDate])
     
     const loadRules = async () => {
+      if (!supabase) return
       const { data } = await supabase.from('availability_rules').select('*').eq('enabled', true)
       setRules(data || [])
     }
@@ -1249,6 +1250,7 @@ export default function InstructorPage() {
     }, [selectedBlockDate])
     
     const loadBlockedSlots = async () => {
+      if (!supabase) return
       const { data } = await supabase
         .from('blocked_slots')
         .select('*')
