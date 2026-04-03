@@ -193,7 +193,7 @@ export default function BookPage() {
       const blockedTimes = new Set<string>()
       const bookedTimes = new Set<string>((bookings || []).map(b => b.time))
       
-      // Apply TIME_BLOCK rules
+      // First, apply TIME_BLOCK rules - block all times that rules cover
       const timeBlockRules = (rules || []).filter(r => 
         r.type === 'TIME_BLOCK' && matchesDayType(dateObj, r.day_type || 'ALL_DAYS')
       )
@@ -207,10 +207,19 @@ export default function BookPage() {
         }
       }
       
-      // Apply manual blocks
+      // Then handle blocked_slots entries:
+      // - If time was blocked by a rule → it's an EXCEPTION → REMOVE from blocked (make available)
+      // - If time was NOT blocked by a rule → it's a MANUAL block → ADD to blocked
       for (const block of (manualBlocks || [])) {
-        blockedTimes.add(block.time)
+        if (blockedTimes.has(block.time)) {
+          // Was blocked by rule, now exception - REMOVE from blocked
+          blockedTimes.delete(block.time)
+        } else {
+          // Was not blocked by rule - this is a manual block - ADD to blocked
+          blockedTimes.add(block.time)
+        }
       }
+      
       
       // Calculate available slots
       const available = allSlots.filter(slot => 
@@ -305,7 +314,7 @@ export default function BookPage() {
           const dateObj = new Date(dateInfo.date)
           let blockedTimes = new Set<string>()
           
-          // Apply TIME_BLOCK rules
+          // First, apply TIME_BLOCK rules - block all times that rules cover
           const timeBlockRules = (rules || []).filter(r => 
             r.type === 'TIME_BLOCK' && matchesDayType(dateObj, r.day_type || 'ALL_DAYS')
           )
@@ -319,10 +328,16 @@ export default function BookPage() {
             }
           }
           
-          // Apply manual blocks
+          // Then handle blocked_slots entries for this date:
+          // - If time was blocked by a rule → it's an EXCEPTION → REMOVE from blocked (make available)
+          // - If time was NOT blocked by a rule → it's a MANUAL block → ADD to blocked
           const dateBlocks = (manualBlocks || []).filter(b => b.date === dateInfo.date)
           for (const block of dateBlocks) {
-            blockedTimes.add(block.time)
+            if (blockedTimes.has(block.time)) {
+              blockedTimes.delete(block.time)
+            } else {
+              blockedTimes.add(block.time)
+            }
           }
           
           // Apply bookings
