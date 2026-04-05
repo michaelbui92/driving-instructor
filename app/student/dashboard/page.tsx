@@ -18,6 +18,8 @@ type BookingType = {
   time: string
   lesson_type: string
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed'
+  notes?: string
+  instructor_notes?: string
   created_at: string
 }
 
@@ -27,6 +29,7 @@ export default function StudentDashboardPage() {
   const [activeTab, setActiveTab] = useState<'upcoming' | 'completed' | 'cancelled'>('upcoming')
   const [reschedulingBooking, setReschedulingBooking] = useState<BookingType | null>(null)
   const [selectedNewDate, setSelectedNewDate] = useState<string>('')
+  const [selectedNewTime, setSelectedNewTime] = useState<string>('')
   const [dateHasNoSlots, setDateHasNoSlots] = useState<boolean>(false)
   const [actionLoading, setActionLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
@@ -160,6 +163,7 @@ export default function StudentDashboardPage() {
   const handleReschedule = (booking: BookingType) => {
     setReschedulingBooking(booking)
     setSelectedNewDate(booking.date)
+    setSelectedNewTime(booking.time)
     // Convert to Booking format expected by getAvailableSlots
     const bookingsForCheck = bookings.map(b => ({
       id: b.id,
@@ -178,19 +182,11 @@ export default function StudentDashboardPage() {
   }
 
   const saveReschedule = async () => {
-    const newDateSelect = document.getElementById('newDate') as HTMLSelectElement
-    const newTimeSelect = document.getElementById('newTime') as HTMLSelectElement
-    
-    const newDate = newDateSelect?.value || ''
-    const newTime = newTimeSelect?.value || ''
+    const newDate = selectedNewDate
+    const newTime = selectedNewTime
     
     if (!newDate || !newTime) {
       alert('Please select date and time')
-      return
-    }
-
-    if (!newTimeSelect) {
-      alert('No available time slots for this date. Please select a different date.')
       return
     }
 
@@ -393,6 +389,23 @@ export default function StudentDashboardPage() {
           </div>
         </div>
 
+        {/* Booking Cadence Nudge */}
+        {(() => {
+          const completed = bookings.filter((b) => b.status === 'completed').sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+          if (completed.length === 0) return null
+          const lastLessonDate = completed[0]?.date
+          if (!lastLessonDate) return null
+          const daysSince = Math.floor((new Date().getTime() - new Date(lastLessonDate).getTime()) / (1000 * 60 * 60 * 24))
+          if (daysSince < 7) return null
+          return (
+            <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm">
+              <p className="text-amber-800">
+                💡 Your last lesson was <strong>{daysSince} days ago</strong>. Regular lessons help you build muscle memory and progress faster — most students book weekly.
+              </p>
+            </div>
+          )
+        })()}
+
         {/* Tabs */}
         <div className="bg-white rounded-xl shadow-lg">
           <div className="border-b">
@@ -475,6 +488,15 @@ export default function StudentDashboardPage() {
                                 ? 'bg-red-100 text-red-700'
                                 : 'bg-blue-100 text-blue-700'
                             }`}
+                            title={
+                              booking.status === 'pending'
+                                ? 'Awaiting instructor confirmation'
+                                : booking.status === 'confirmed'
+                                ? 'Instructor confirmed — lesson is going ahead'
+                                : booking.status === 'completed'
+                                ? 'Lesson completed'
+                                : 'Lesson cancelled'
+                            }
                           >
                             {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                           </span>
@@ -489,6 +511,12 @@ export default function StudentDashboardPage() {
                           <p className="text-gray-500 text-sm mt-1">
                             📍 {booking.address}
                           </p>
+                        )}
+                        {booking.instructor_notes && (
+                          <div className="mt-2 text-sm bg-blue-50 border border-blue-200 rounded p-2">
+                            <span className="font-medium text-blue-800">Instructor notes:</span>
+                            <p className="text-blue-700 mt-1">{booking.instructor_notes}</p>
+                          </div>
                         )}
                       </div>
 
@@ -595,7 +623,8 @@ export default function StudentDashboardPage() {
                     <select
                       id="newTime"
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-                      defaultValue={reschedulingBooking.time}
+                      value={selectedNewTime}
+                      onChange={(e) => setSelectedNewTime(e.target.value)}
                     >
                       {availableTimes.map(time => (
                         <option key={time} value={time}>
@@ -616,7 +645,11 @@ export default function StudentDashboardPage() {
 
             <div className="flex space-x-3 mt-6">
               <button
-                onClick={() => setReschedulingBooking(null)}
+                onClick={() => {
+                  setReschedulingBooking(null)
+                  setSelectedNewDate('')
+                  setSelectedNewTime('')
+                }}
                 className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
               >
                 Cancel

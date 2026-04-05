@@ -63,6 +63,8 @@ export async function GET(request: NextRequest) {
       rescheduleHistory: b.reschedule_history || [],
       packageId: b.package_id || null,
       claimCode: b.claim_code || null,
+      notes: b.notes || '',
+      instructor_notes: b.instructor_notes || '',
     }))
     
     const response = NextResponse.json({ bookings })

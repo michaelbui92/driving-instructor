@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
       lessonType = 'single', // Default
       lessonName,
       price,
+      notes = '',
     } = body
     
     // ONLY require date and time - everything else has defaults
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
           time: time,
           lesson_type: lessonType,
           status: 'pending',
+          notes: notes || null,
         },
       ])
       .select()

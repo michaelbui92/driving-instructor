@@ -13,6 +13,7 @@ type BookingForm = {
   email: string
   phone: string
   address: string
+  notes: string
   lessonType: string
   date: string
   time: string
@@ -48,6 +49,7 @@ export default function BookPage() {
     email: '',
     phone: '',
     address: '',
+    notes: '',
     lessonType: 'single',
     date: '',
     time: ''
@@ -440,6 +442,7 @@ export default function BookPage() {
           email: form.email,
           phone: form.phone,
           address: form.address,
+          notes: form.notes,
           date: form.date,
           time: form.time,
           lesson_type: form.lessonType,
@@ -742,6 +745,19 @@ export default function BookPage() {
                     onChange={(e) => setForm({ ...form, address: e.target.value })}
                     placeholder="Your address for pickup"
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Notes for instructor (optional)
+                  </label>
+                  <textarea
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                    placeholder="e.g. Just failed a test, need to focus on reverse parking..."
+                    value={form.notes}
+                    onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                    rows={3}
                   />
                 </div>
               </div>

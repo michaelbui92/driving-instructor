@@ -101,6 +101,8 @@ export default function InstructorPage() {
   const [selectedBlockDate, setSelectedBlockDate] = useState<string>('')
   const [selectedBlockTimes, setSelectedBlockTimes] = useState<string[]>([])
   const [showArchived, setShowArchived] = useState(false)
+  const [instructorNotes, setInstructorNotes] = useState('')
+  const [notesSaving, setNotesSaving] = useState(false)
   
   // Bulk blocking state
   const [bulkMode, setBulkMode] = useState<'none' | 'weekdays' | 'weekends' | 'daterange'>('none')
@@ -217,6 +219,13 @@ export default function InstructorPage() {
       setSupabaseStatus(`Error: ${error}`)
     }
   }
+
+  // Sync instructor notes when selected booking changes
+  useEffect(() => {
+    if (selectedBooking) {
+      setInstructorNotes(selectedBooking.instructor_notes || '')
+    }
+  }, [selectedBooking])
 
   // Load bookings on mount and set up real-time subscription
   useEffect(() => {
@@ -360,6 +369,32 @@ export default function InstructorPage() {
       await loadBookings()
     } finally {
       setActionLoading(false)
+    }
+  }
+
+  // UPDATE INSTRUCTOR NOTES
+  const saveInstructorNotes = async (bookingId: string) => {
+    if (!supabase) return
+    setNotesSaving(true)
+    try {
+      const { error } = await supabase
+        .from('bookings_new')
+        .update({ instructor_notes: instructorNotes })
+        .eq('id', bookingId)
+
+      if (error) throw new Error(error.message)
+
+      // Update local state
+      setBookings(prev => prev.map(b =>
+        b.id === bookingId ? { ...b, instructor_notes: instructorNotes } : b
+      ))
+      setSelectedBooking(prev => prev ? { ...prev, instructor_notes: instructorNotes } : null)
+      alert('Notes saved!')
+    } catch (error: any) {
+      console.error('Error saving instructor notes:', error)
+      alert('Failed to save notes. Please try again.')
+    } finally {
+      setNotesSaving(false)
     }
   }
 
@@ -2396,6 +2431,28 @@ export default function InstructorPage() {
                   <div><p className="text-sm text-gray-600 mb-1">Booked On</p><p className="font-semibold">{new Date(selectedBooking.createdAt).toLocaleDateString()}</p></div>
                 </div>
                 
+                {/* Instructor Notes */}
+                <div className="border-t pt-6">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    📝 Notes for student
+                  </label>
+                  <p className="text-xs text-gray-500 mb-2">These notes are visible to the student after the lesson is completed.</p>
+                  <textarea
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                    placeholder="e.g. Great progress on lane changes! Focus on mirror checks next lesson..."
+                    value={instructorNotes}
+                    onChange={(e) => setInstructorNotes(e.target.value)}
+                    rows={3}
+                  />
+                  <button
+                    onClick={() => saveInstructorNotes(selectedBooking.id)}
+                    disabled={notesSaving}
+                    className="mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm disabled:opacity-50"
+                  >
+                    {notesSaving ? 'Saving...' : 'Save Notes'}
+                  </button>
+                </div>
+
                 {/* Reschedule History */}
                 {selectedBooking.originalDate && (
                   <div className="border-t pt-6">

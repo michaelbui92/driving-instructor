@@ -238,7 +238,7 @@ export async function getStudentBookings(studentEmail: string) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )
   const { data, error } = await supabase
-    .from('bookings')
+    .from('bookings_new')
     .select('*')
     .eq('email', studentEmail)
     .order('date', { ascending: false })

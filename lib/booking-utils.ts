@@ -234,6 +234,7 @@ export interface Booking {
   phone: string
   address?: string // Optional address field
   notes?: string // Optional notes field
+  instructor_notes?: string // Instructor feedback visible to student
   lessonType: string
   lessonSlots?: LessonSlot[] // For package bookings
   date: string

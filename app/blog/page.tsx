@@ -6,6 +6,15 @@ import { useState } from 'react'
 const blogPosts = [
   {
     id: 1,
+    title: "Why You Should Never Overtake a Turning Truck",
+    excerpt: "Trucks and long vehicles swing wider than you think when turning. Here's exactly why overtaking a turning truck is one of the most dangerous things you can do.",
+    date: "April 5, 2026",
+    readTime: "5 min read",
+    slug: "turning-long-vehicles",
+    category: "Safety"
+  },
+  {
+    id: 2,
     title: "5 Essential Mirror Checks Every Driver Should Master",
     excerpt: "Proper mirror checks are the foundation of safe driving. Learn how to check your mirrors correctly without taking your eyes off the road.",
     date: "March 15, 2026",

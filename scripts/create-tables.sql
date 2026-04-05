@@ -7,7 +7,9 @@ CREATE TABLE IF NOT EXISTS bookings (
   date DATE NOT NULL,
   time TIME NOT NULL,
   lesson_type TEXT NOT NULL,
-  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'cancelled')),
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'cancelled', 'completed')),
+  notes TEXT,
+  instructor_notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
