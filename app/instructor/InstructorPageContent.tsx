@@ -30,7 +30,7 @@ import {
   removeBlockedSlotAsync
 } from '@/lib/booking-utils'
 
-type TabType = 'upcoming' | 'all' | 'rules' | 'availability' | 'calendar' | 'create-booking'
+type TabType = 'bookings' | 'schedule' | 'calendar'
 
 interface InstructorProfile {
   id: string
@@ -94,7 +94,7 @@ interface SupabaseBookingRecord {
 
 export default function InstructorPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
-  const [selectedTab, setSelectedTab] = useState<TabType>('upcoming')
+  const [selectedTab, setSelectedTab] = useState<TabType>('bookings')
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null)
   const [actionLoading, setActionLoading] = useState(false) // Prevents rapid actions
   const [blockedSlots, setBlockedSlots] = useState<BlockedSlot[]>([])
@@ -102,6 +102,7 @@ export default function InstructorPage() {
   const [selectedBlockTimes, setSelectedBlockTimes] = useState<string[]>([])
   const [showArchived, setShowArchived] = useState(false)
   const [instructorNotes, setInstructorNotes] = useState('')
+  const [bookingsView, setBookingsView] = useState<'upcoming' | 'all'>('upcoming')
   const [notesSaving, setNotesSaving] = useState(false)
   
   // Bulk blocking state
@@ -322,17 +323,16 @@ export default function InstructorPage() {
   const archivedBookings = bookings.filter(b => b.archived).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
   const getFilteredBookings = () => {
-    if (selectedTab === 'upcoming') {
-      // Include today's bookings alongside future bookings
+    if (bookingsView === 'upcoming') {
       return [...todayBookings, ...upcomingBookings]
     }
-    if (selectedTab === 'all') {
+    if (bookingsView === 'all') {
       if (emailFilter.trim() === '') return allBookings
       const filterLower = emailFilter.toLowerCase()
-      return allBookings.filter(b => 
+      return allBookings.filter(b =>
         b.email.toLowerCase().includes(filterLower) ||
         b.studentName.toLowerCase().includes(filterLower) ||
-        b.phone.includes(emailFilter) // Also search by phone number
+        b.phone.includes(emailFilter)
       )
     }
     return []
@@ -537,7 +537,7 @@ export default function InstructorPage() {
       await loadBookings()
       
       // Switch to upcoming tab
-      setSelectedTab('upcoming')
+      setSelectedTab('bookings')
     } catch (error: any) {
       console.error('Error creating booking:', error)
       alert(`Error creating booking: ${error.message}`)
@@ -2050,46 +2050,36 @@ export default function InstructorPage() {
               </button>
             )}
           </div>
-          <div className="grid md:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-6 gap-3 md:gap-4">
             <div>
-              <p className="text-sm text-gray-600 mb-1">Date</p>
-              <p className="font-semibold">{formatDate(booking.date)}</p>
-              {isReschedule && booking.originalDate && (
-                <p className="text-xs text-orange-600 mt-1">
-                  {booking.originalDate !== booking.date ? (
-                    <>Originally booked for {formatDate(booking.originalDate)}</>
-                  ) : (
-                    <>Rescheduled to same date</>
-                  )}
+              <p className="text-xs md:text-sm text-gray-500 mb-1">Date</p>
+              <p className="font-semibold text-sm md:text-base">{formatDate(booking.date)}</p>
+              {isReschedule && booking.originalDate && booking.originalDate !== booking.date && (
+                <p className="text-xs text-orange-600 mt-1 hidden md:block">
+                  Was {formatDate(booking.originalDate)}
                 </p>
               )}
             </div>
             <div>
-              <p className="text-sm text-gray-600 mb-1">Time</p>
-              <p className="font-semibold text-primary">{booking.time}</p>
+              <p className="text-xs md:text-sm text-gray-500 mb-1">Time</p>
+              <p className="font-semibold text-primary text-sm md:text-base">{booking.time}</p>
             </div>
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Student</p>
-              <p className="font-semibold">
+            <div className="col-span-2">
+              <p className="text-xs md:text-sm text-gray-500 mb-1">Student</p>
+              <p className="font-semibold text-sm md:text-base truncate">
                 {emailFilter ? highlightSearchTerm(booking.studentName, emailFilter) : booking.studentName}
               </p>
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-500 text-xs hidden md:block">
                 {emailFilter ? highlightSearchTerm(booking.email, emailFilter) : booking.email}
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-600 mb-1">Phone</p>
-              <p className="font-semibold">
-                {emailFilter ? highlightSearchTerm(booking.phone, emailFilter) : booking.phone}
-              </p>
+              <p className="text-xs md:text-sm text-gray-500 mb-1">Lesson</p>
+              <p className="font-semibold text-sm">{getLessonTypeName(booking.lessonType)}</p>
+              <p className="text-primary font-bold text-sm">${booking.price}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-600 mb-1">Lesson Type</p>
-              <p className="font-semibold">{getLessonTypeName(booking.lessonType)}</p>
-              <p className="text-primary font-bold">${booking.price}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600 mb-1">Status</p>
+              <p className="text-xs md:text-sm text-gray-500 mb-1">Status</p>
               <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                 booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800'
                 : booking.status === 'confirmed' ? 'bg-green-100 text-green-800'
@@ -2101,23 +2091,11 @@ export default function InstructorPage() {
               {booking.status === 'pending' && (
                 <button
                   onClick={(e) => { e.stopPropagation(); updateBookingStatus(booking.id, 'confirmed') }}
-                  className="block mt-1 text-primary hover:text-secondary text-sm font-semibold"
+                  className="block mt-1 text-primary hover:text-secondary text-xs font-semibold"
                 >
                   Confirm
                 </button>
               )}
-              <button
-                onClick={(e) => { 
-                  e.stopPropagation(); 
-                  if (confirm(`Delete booking for ${booking.studentName} on ${formatDate(booking.date)}?`)) {
-                    deleteBooking(booking.id);
-                  }
-                }}
-                className="block mt-2 text-red-600 hover:text-red-800 text-xs font-semibold"
-                title="Delete booking permanently"
-              >
-                🗑️ Delete
-              </button>
             </div>
           </div>
           {/* Reschedule info */}
@@ -2139,7 +2117,7 @@ export default function InstructorPage() {
             </div>
           )}
           <div className="flex items-end mt-4">
-            {selectedTab === 'all' && (
+            {bookingsView === 'all' && !booking.archived && (
               <button
                 onClick={(e) => { e.stopPropagation(); archiveBooking(booking.id) }}
                 className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition font-semibold"
@@ -2170,12 +2148,20 @@ export default function InstructorPage() {
             <h1 className="text-4xl font-bold mb-2">Instructor Portal</h1>
             <p className="text-gray-600">Manage your schedule and student bookings</p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition font-semibold"
-          >
-            Logout
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => { setSelectedTab('bookings'); setBookingsView('upcoming') }}
+              className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold"
+            >
+              ➕ New Booking
+            </button>
+            <button
+              onClick={handleLogout}
+              className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition font-semibold"
+            >
+              Logout
+            </button>
+          </div>
         </div>
 
         {/* Pending Bookings Notification */}
@@ -2252,117 +2238,122 @@ export default function InstructorPage() {
         )}
 
         {/* Stats Cards */}
-        <div className="grid md:grid-cols-1 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
           <div className="bg-white rounded-xl p-6 shadow-lg">
             <div className="text-3xl mb-2">🗓️</div>
             <div className="text-3xl font-bold text-blue-600">{todayBookings.length + upcomingBookings.length}</div>
             <p className="text-gray-600">Today & Upcoming</p>
           </div>
+          <div className="bg-white rounded-xl p-6 shadow-lg">
+            <div className="text-3xl mb-2">📋</div>
+            <div className="text-3xl font-bold text-green-600">{allBookings.length}</div>
+            <p className="text-gray-600">Total Bookings</p>
+          </div>
+          <div className="bg-white rounded-xl p-6 shadow-lg col-span-2 md:col-span-1">
+            <div className="text-3xl mb-2">⚠️</div>
+            <div className="text-3xl font-bold text-yellow-600">{bookings.filter(b => b.status === 'pending').length}</div>
+            <p className="text-gray-600">Pending</p>
+          </div>
         </div>
 
         <div className="bg-white rounded-xl shadow-lg mb-8">
           <div className="border-b">
-            <div className="flex">
+            <div className="flex overflow-x-auto scrollbar-hide">
               <button
-                className={`flex-1 px-6 py-4 font-semibold transition ${selectedTab === 'upcoming' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
-                onClick={() => setSelectedTab('upcoming')}
-              >Upcoming ({todayBookings.length + upcomingBookings.length})</button>
+                className={`shrink-0 px-6 py-4 font-semibold transition whitespace-nowrap ${selectedTab === 'bookings' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
+                onClick={() => { setSelectedTab('bookings'); setBookingsView('upcoming') }}
+              >📅 Bookings</button>
               <button
-                className={`flex-1 px-6 py-4 font-semibold transition ${selectedTab === 'all' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
-                onClick={() => setSelectedTab('all')}
-              >All ({allBookings.length})</button>
+                className={`shrink-0 px-6 py-4 font-semibold transition whitespace-nowrap ${selectedTab === 'schedule' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
+                onClick={() => setSelectedTab('schedule')}
+              >📋 Schedule</button>
               <button
-                className={`flex-1 px-6 py-4 font-semibold transition ${selectedTab === 'rules' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
-                onClick={() => setSelectedTab('rules')}
-              >📋 Rules ({rules.filter(r => r.enabled).length})</button>
-              <button
-                className={`flex-1 px-6 py-4 font-semibold transition ${selectedTab === 'availability' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
-                onClick={() => setSelectedTab('availability')}
-              >🚫 Availability</button>
-              <button
-                className={`flex-1 px-6 py-4 font-semibold transition ${selectedTab === 'calendar' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
+                className={`shrink-0 px-6 py-4 font-semibold transition whitespace-nowrap ${selectedTab === 'calendar' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
                 onClick={() => setSelectedTab('calendar')}
               >📅 Calendar</button>
-              <button
-                className={`flex-1 px-6 py-4 font-semibold transition ${selectedTab === 'create-booking' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
-                onClick={() => setSelectedTab('create-booking')}
-              >➕ New Booking</button>
             </div>
           </div>
           <div className="p-6">
-            {selectedTab === 'create-booking' ? renderCreateBookingTab() : selectedTab === 'availability' ? renderAvailabilityTab() : selectedTab === 'rules' ? renderRulesTab() : selectedTab === 'calendar' ? renderCalendarTab() : (
+            {selectedTab === 'schedule' ? (
               <>
-                {selectedTab === 'all' && (
-                  <div className="mb-4">
-                    <div className="flex flex-col md:flex-row md:items-center gap-2">
-                      <input
-                        type="text"
-                        value={emailFilter}
-                        onChange={(e) => setEmailFilter(e.target.value)}
-                        placeholder="Search by email, name, or phone..."
-                        className="px-4 py-2 border rounded-lg w-full md:w-80"
-                      />
-                      {emailFilter && (
-                        <button
-                          onClick={() => setEmailFilter('')}
-                          className="px-4 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition"
-                        >
-                          Clear
-                        </button>
-                      )}
-                    </div>
-                    {emailFilter && (
-                      <p className="text-sm text-gray-600 mt-1">
-                        Found {getFilteredBookings().length} booking{getFilteredBookings().length !== 1 ? 's' : ''} matching "{emailFilter}"
-                      </p>
-                    )}
+                {renderRulesTab()}
+                <div className="my-8 border-t" />
+                {renderAvailabilityTab()}
+              </>
+            ) : selectedTab === 'calendar' ? renderCalendarTab() : (
+              <>
+                {/* Bookings sub-toggle + search */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
+                  <div className="flex bg-gray-100 rounded-lg p-1 shrink-0">
+                    <button
+                      onClick={() => setBookingsView('upcoming')}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition ${bookingsView === 'upcoming' ? 'bg-white shadow text-primary' : 'text-gray-600 hover:text-gray-800'}`}
+                    >
+                      Upcoming ({todayBookings.length + upcomingBookings.length})
+                    </button>
+                    <button
+                      onClick={() => setBookingsView('all')}
+                      className={`px-4 py-2 rounded-md text-sm font-medium transition ${bookingsView === 'all' ? 'bg-white shadow text-primary' : 'text-gray-600 hover:text-gray-800'}`}
+                    >
+                      All ({allBookings.length})
+                    </button>
                   </div>
+                  <input
+                    type="text"
+                    value={emailFilter}
+                    onChange={(e) => setEmailFilter(e.target.value)}
+                    placeholder="Search by name, email or phone..."
+                    className="px-4 py-2 border rounded-lg w-full sm:w-80 text-sm"
+                  />
+                  {emailFilter && (
+                    <button
+                      onClick={() => setEmailFilter('')}
+                      className="px-3 py-2 text-sm bg-gray-100 hover:bg-gray-200 rounded-lg transition shrink-0"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                {emailFilter && (
+                  <p className="text-sm text-gray-600 mb-3 -mt-2">
+                    Found {getFilteredBookings().length} result{getFilteredBookings().length !== 1 ? 's' : ''} for "{emailFilter}"
+                  </p>
                 )}
                 {renderBookingList()}
-                {selectedTab === 'all' && archivedBookings.length > 0 && (
+                {bookingsView === 'all' && archivedBookings.length > 0 && (
                   <div className="mt-8 border-t pt-6">
                     <button
                       onClick={() => setShowArchived(!showArchived)}
                       className="flex items-center gap-2 text-lg font-semibold text-gray-700 hover:text-gray-900 mb-4"
                     >
-                      {showArchived ? 'Show Archived ▲' : 'Show Archived ▼'}
-                      <span className="text-sm font-normal text-gray-500">({archivedBookings.length})</span>
+                      {showArchived ? '▲' : '▼'} Archived ({archivedBookings.length})
                     </button>
                     {showArchived && (
                       <div className="space-y-3">
                         {archivedBookings.map((booking) => (
                           <div
                             key={booking.id}
-                            className="border rounded-lg p-6 bg-gray-50 opacity-75 hover:opacity-100 transition"
+                            className="border rounded-lg p-4 md:p-6 bg-gray-50 opacity-75 hover:opacity-100 transition"
                           >
-                            <div className="grid md:grid-cols-5 gap-4">
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                               <div>
-                                <p className="text-sm text-gray-600 mb-1">Date & Time</p>
+                                <p className="text-xs text-gray-500 mb-1">Date & Time</p>
                                 <p className="font-semibold text-gray-700">{formatDate(booking.date)}</p>
-                                <p className="text-gray-500">{booking.time}</p>
+                                <p className="text-gray-500 text-sm">{booking.time}</p>
                               </div>
                               <div>
-                                <p className="text-sm text-gray-600 mb-1">Student</p>
-                                <p className="font-semibold text-gray-700">
+                                <p className="text-xs text-gray-500 mb-1">Student</p>
+                                <p className="font-semibold text-gray-700 text-sm">
                                   {emailFilter ? highlightSearchTerm(booking.studentName, emailFilter) : booking.studentName}
                                 </p>
-                                <p className="text-gray-500 text-sm">
-                                  {emailFilter ? highlightSearchTerm(booking.email, emailFilter) : booking.email}
-                                </p>
                               </div>
                               <div>
-                                <p className="text-sm text-gray-600 mb-1">Phone</p>
-                                <p className="font-semibold text-gray-700">
-                                  {emailFilter ? highlightSearchTerm(booking.phone, emailFilter) : booking.phone}
-                                </p>
+                                <p className="text-xs text-gray-500 mb-1">Lesson</p>
+                                <p className="font-semibold text-gray-700 text-sm">{getLessonTypeName(booking.lessonType)}</p>
+                                <p className="text-gray-600 font-bold text-sm">${booking.price}</p>
                               </div>
                               <div>
-                                <p className="text-sm text-gray-600 mb-1">Lesson Type</p>
-                                <p className="font-semibold text-gray-700">{getLessonTypeName(booking.lessonType)}</p>
-                                <p className="text-gray-600 font-bold">${booking.price}</p>
-                              </div>
-                              <div className="flex flex-col">
-                                <p className="text-sm text-gray-600 mb-1">Status</p>
+                                <p className="text-xs text-gray-500 mb-1">Status</p>
                                 <span className={`inline-block px-2 py-1 rounded text-xs font-semibold ${
                                   booking.status === 'pending' ? 'bg-yellow-100 text-yellow-800'
                                   : booking.status === 'confirmed' ? 'bg-green-100 text-green-800'
@@ -2371,19 +2362,21 @@ export default function InstructorPage() {
                                 }`}>
                                   {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                                 </span>
+                              </div>
+                              <div className="flex flex-col gap-1">
                                 <button
                                   onClick={() => archiveBooking(booking.id)}
-                                  className="mt-2 px-4 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition font-semibold text-sm"
+                                  className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition font-semibold text-xs"
                                 >
                                   Unarchive
                                 </button>
                                 <button
-                                  onClick={() => { 
+                                  onClick={() => {
                                     if (confirm(`Permanently delete archived booking for ${booking.studentName}?`)) {
                                       deleteBooking(booking.id);
                                     }
                                   }}
-                                  className="mt-2 px-4 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition font-semibold text-sm"
+                                  className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 transition font-semibold text-xs"
                                 >
                                   🗑️ Delete
                                 </button>
