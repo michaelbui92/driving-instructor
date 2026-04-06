@@ -54,6 +54,8 @@ export async function POST(
     const { id: bookingId } = await params
     const { status } = await request.json()
 
+    console.log(`[Status Update] Booking ${bookingId} -> status: ${status}`)
+
     if (!status || !['pending', 'confirmed', 'cancelled', 'completed'].includes(status)) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
     }
@@ -76,6 +78,8 @@ export async function POST(
     const studentName = booking.student_name || 'Student'
     const bookingDate = booking.date
     const bookingTime = booking.time
+
+    console.log(`[Status Update] Student email: ${studentEmail}, name: ${studentName}`)
 
     // Update the status
     const result = await db
@@ -115,16 +119,13 @@ Best regards,
 Drive With Bui`
       }
 
-      // Send email asynchronously (don't block the response)
-      sendEmail(studentEmail, emailSubject, emailBody)
-        .then(result => {
-          if (!result.success) {
-            console.warn(`Failed to send status email to ${studentEmail}:`, result.error)
-          }
-        })
-        .catch(err => {
-          console.error('Email send error:', err)
-        })
+      console.log(`[Status Update] Sending ${status} email to: ${studentEmail}`)
+
+      // Send email and wait for result
+      const emailResult = await sendEmail(studentEmail, emailSubject, emailBody)
+      console.log(`[Status Update] Email result:`, emailResult)
+    } else {
+      console.log(`[Status Update] No email sent - studentEmail: ${studentEmail}, status: ${status}`)
     }
 
     return NextResponse.json({ success: true, booking: result.data?.[0] || result.data })

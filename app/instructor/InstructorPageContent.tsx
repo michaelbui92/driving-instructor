@@ -344,6 +344,8 @@ export default function InstructorPage() {
     setActionLoading(true)
     
     try {
+      console.log(`[Client] Updating booking ${bookingId} to status: ${newStatus}`)
+      
       // OPTIMISTIC UPDATE: Update local state immediately for instant feedback
       setBookings(prev => prev.map(b => 
         b.id === bookingId ? { ...b, status: newStatus } : b
@@ -356,11 +358,13 @@ export default function InstructorPage() {
         body: JSON.stringify({ status: newStatus })
       })
 
+      const data = await response.json()
+      console.log(`[Client] API response:`, response.status, data)
+
       if (!response.ok) {
-        const error = await response.json()
         // Rollback on error
         await loadBookings()
-        throw new Error(error.error || 'Failed to update status')
+        throw new Error(data.error || 'Failed to update status')
       }
 
       alert(`Booking status updated to: ${newStatus}`)
