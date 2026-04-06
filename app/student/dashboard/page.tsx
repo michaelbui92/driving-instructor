@@ -6,7 +6,7 @@ import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 import { supabase } from '@/lib/supabase'
 import { formatDate, getAvailableSlots, getLessonPrice } from '@/lib/booking-utils'
-import { sendBookingCancellationEmail, sendBookingRescheduleEmail } from '@/lib/booking-email'
+import { sendBookingCancellationEmail } from '@/lib/booking-email'
 
 type BookingType = {
   id: string
@@ -201,21 +201,20 @@ export default function StudentDashboardPage() {
 
       if (error) throw error
 
-      // Send reschedule email
-      const emailResult = await sendBookingRescheduleEmail({
-        studentName: reschedulingBooking.student_name,
-        email: reschedulingBooking.email,
-        oldDate: reschedulingBooking.date,
-        oldTime: reschedulingBooking.time,
-        newDate,
-        newTime,
-        lessonType: reschedulingBooking.lesson_type as 'single' | 'casual'
+      // Send reschedule email via server-side API route
+      await fetch('/api/email/reschedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentName: reschedulingBooking.student_name,
+          email: reschedulingBooking.email,
+          oldDate: reschedulingBooking.date,
+          oldTime: reschedulingBooking.time,
+          newDate,
+          newTime,
+          lessonType: reschedulingBooking.lesson_type
+        })
       })
-
-      if (!emailResult.success) {
-        console.warn('Failed to send reschedule email:', emailResult.error)
-        // Continue anyway - booking was rescheduled successfully
-      }
 
       setBookings((prev) =>
         prev.map((b) =>
