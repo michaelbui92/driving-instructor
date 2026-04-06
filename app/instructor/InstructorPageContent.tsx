@@ -540,7 +540,8 @@ export default function InstructorPage() {
       await loadBookings()
       
       // Switch to upcoming tab
-      setSelectedTab('upcoming')
+      setSelectedTab('bookings')
+      setBookingsView('upcoming')
     } catch (error: any) {
       console.error('Error creating booking:', error)
       alert(`Error creating booking: ${error.message}`)
