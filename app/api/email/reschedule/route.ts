@@ -54,12 +54,6 @@ You have requested to reschedule your booking! ⏳
 Your reschedule request has been submitted and is pending confirmation from your instructor.
 You'll receive another email once your instructor confirms the new time.
 
-📱 **Need to make further changes?**
-You can view or manage your booking by logging into your student portal:
-https://drivewithbui.com/student/dashboard
-
-If you have any questions or need to cancel this request, please reply to this email.
-
 — Michael
 Drive with Bui
           `.trim(),

@@ -59,13 +59,6 @@ You'll receive another email once your instructor confirms your lesson.
 📍 **Location:**
 Pickup from your specified address${address ? ` (${address})` : ''}. Please be ready 5 minutes before your scheduled time.
 
-📱 **Need to make changes?**
-You can view, reschedule, or cancel your booking by logging into your student portal:
-https://drivewithbui.com/student/dashboard
-
-❓ **Questions?**
-If you have any questions or need to contact your instructor, please reply to this email.
-
 We look forward to helping you become a confident, safe driver!
 
 — Michael
