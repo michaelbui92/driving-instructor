@@ -109,12 +109,15 @@ export async function sendBookingCancellationEmail(
     lessonType: 'single' | 'casual'
   }
 ): Promise<{ success: boolean; error?: string }> {
+  console.log('[Cancellation Email] Starting...', booking)
   try {
     const apiKey = process.env.NEXT_PUBLIC_AGENTMAIL_API_KEY
     if (!apiKey) {
-      console.error('AgentMail API key not configured')
+      console.error('[Cancellation Email] API key missing!')
       return { success: false, error: 'Email service not configured' }
     }
+
+    console.log('[Cancellation Email] Sending to:', booking.email)
 
     // Format date nicely
     const dateObj = new Date(booking.date)
@@ -161,15 +164,18 @@ Drive with Bui
       }
     )
 
+    console.log('[Cancellation Email] Response status:', response.status)
+
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Failed to send cancellation email:', errorText)
+      console.error('[Cancellation Email] Failed:', response.status, errorText)
       return { success: false, error: 'Failed to send cancellation email' }
     }
 
+    console.log('[Cancellation Email] Success!')
     return { success: true }
   } catch (err) {
-    console.error('Unexpected cancellation email error:', err)
+    console.error('[Cancellation Email] Unexpected error:', err)
     return { success: false, error: 'Failed to send cancellation email' }
   }
 }
