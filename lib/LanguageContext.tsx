@@ -35,13 +35,16 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     return t(key, language)
   }
 
-  // Prevent hydration mismatch
-  if (!mounted) {
-    return <>{children}</>
+  // Always provide context, even during SSR
+  // This prevents "useLanguage must be used within LanguageProvider" errors
+  const contextValue = {
+    language,
+    setLanguage,
+    t: translate
   }
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t: translate }}>
+    <LanguageContext.Provider value={contextValue}>
       {children}
     </LanguageContext.Provider>
   )
@@ -49,15 +52,8 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
 export function useLanguage() {
   const context = useContext(LanguageContext)
-  
-  // During SSR/static generation, return a default context
   if (!context) {
-    return {
-      language: 'en' as const,
-      setLanguage: () => {},
-      t: (key: TranslationKey) => t(key, 'en')
-    }
+    throw new Error('useLanguage must be used within LanguageProvider')
   }
-  
   return context
 }
