@@ -6,6 +6,7 @@ import Image from 'next/image'
 import Navbar from '@/components/Navbar'
 import { supabase } from '@/lib/supabase'
 import { formatDate, generateTimeSlots, getAvailableSlots, type TimeSlot } from '@/lib/booking-utils'
+import { useLanguage } from '@/lib/LanguageContext'
 
 type BookingForm = {
   studentName: string
@@ -42,6 +43,7 @@ const LESSON_TYPES = [
 ]
 
 export default function BookPage() {
+  const { t } = useLanguage()
   const [step, setStep] = useState<Step>(1)
   const [form, setForm] = useState<BookingForm>({
     studentName: '',
@@ -546,9 +548,9 @@ export default function BookPage() {
             ))}
           </div>
           <div className="flex justify-between mt-2 text-sm text-gray-600 max-w-xl mx-auto">
-            <span className={step >= 1 ? 'text-primary font-medium' : ''}>Lesson Type</span>
-            <span className={step >= 2 ? 'text-primary font-medium' : ''}>Date & Time</span>
-            <span className={step >= 3 ? 'text-primary font-medium' : ''}>Your Details</span>
+            <span className={step >= 1 ? 'text-primary font-medium' : ''}>{t('lessonType')}</span>
+            <span className={step >= 2 ? 'text-primary font-medium' : ''}>{t('selectDate')}</span>
+            <span className={step >= 3 ? 'text-primary font-medium' : ''}>{t('yourDetails')}</span>
           </div>
         </div>
       </div>
@@ -621,7 +623,7 @@ export default function BookPage() {
         {/* Step 2: Date & Time with Calendar Picker */}
         {step === 2 && (
           <div>
-            <h2 className="text-3xl font-bold mb-6 text-center">Select Date & Time</h2>
+            <h2 className="text-3xl font-bold mb-6 text-center">{t('selectDate')} & {t('selectTime')}</h2>
             
             {/* Date Selection - Calendar Style */}
             <div className="mb-8">
@@ -737,12 +739,12 @@ export default function BookPage() {
         {/* Step 3: Your Details */}
         {step === 3 && (
           <div>
-            <h2 className="text-3xl font-bold mb-6 text-center">Your Details</h2>
+            <h2 className="text-3xl font-bold mb-6 text-center">{t('yourDetails')}</h2>
             
             <div className="bg-white rounded-2xl shadow-lg p-8 mb-6">
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('fullName')} *</label>
                   <input
                     type="text"
                     value={form.studentName}
@@ -753,7 +755,7 @@ export default function BookPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('email')} *</label>
                   <input
                     type="email"
                     value={form.email}
@@ -765,7 +767,7 @@ export default function BookPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('phone')} *</label>
                   <input
                     type="tel"
                     value={form.phone}
@@ -776,7 +778,7 @@ export default function BookPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Address</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">{t('address')}</label>
                   <input
                     type="text"
                     value={form.address}
@@ -788,7 +790,7 @@ export default function BookPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Notes for instructor (optional)
+                    {t('notes')}
                   </label>
                   <textarea
                     className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
@@ -850,7 +852,7 @@ export default function BookPage() {
                 disabled={loading || !form.studentName || !form.email || !form.phone}
                 className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Submitting...' : 'Confirm Booking'}
+                {loading ? t('loading') : t('confirmBooking')}
               </button>
             </div>
           </div>
@@ -873,7 +875,7 @@ export default function BookPage() {
                 disabled={otpLoading}
                 className="w-full py-3 bg-primary text-white rounded-xl font-semibold hover:bg-secondary transition disabled:opacity-50"
               >
-                {otpLoading ? 'Sending...' : 'Send Login Code'}
+                {otpLoading ? t('loading') : 'Send Login Code'}
               </button>
             ) : (
               <div className="space-y-4">
@@ -900,7 +902,7 @@ export default function BookPage() {
                   disabled={otpLoading || otpCode.length < 6}
                   className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition disabled:opacity-50"
                 >
-                  {otpLoading ? 'Verifying...' : 'Verify & View Dashboard'}
+                  {otpLoading ? t('loading') : t('verify')}
                 </button>
                 
                 <button
