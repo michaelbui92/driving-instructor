@@ -3,10 +3,8 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
-import { useLanguage } from '@/lib/LanguageContext'
 
 export default function ContactPage() {
-  const { t } = useLanguage()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -66,7 +64,7 @@ export default function ContactPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
           <div className="text-center">
             <h1 className="text-5xl md:text-6xl font-bold mb-6" data-aos="fade-up">
-              {t('getInTouch')}
+              Get in Touch
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8" data-aos="fade-up" data-aos-delay="100">
               Have questions about driving lessons? Ready to book? I'm here to help!
@@ -98,7 +96,7 @@ export default function ContactPage() {
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    {t('name')} *
+                    Your Name *
                   </label>
                   <input
                     type="text"
@@ -148,7 +146,7 @@ export default function ContactPage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('message')} *
+                  Message *
                 </label>
                 <textarea
                   name="message"
@@ -166,7 +164,7 @@ export default function ContactPage() {
                 disabled={loading}
                 className="w-full px-6 py-4 bg-primary text-white font-semibold rounded-lg hover:bg-secondary transition disabled:opacity-50"
               >
-                {loading ? t('loading') : t('sendMessage')}
+                {loading ? 'Sending...' : 'Send Message'}
               </button>
             </form>
           </div>

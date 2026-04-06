@@ -6,10 +6,8 @@ import Image from 'next/image'
 import Navbar from '@/components/Navbar'
 import DynamicHeadline from '@/components/DynamicHeadline'
 import StudentUpcomingLessons from '@/components/StudentUpcomingLessons'
-import { useLanguage } from '@/lib/LanguageContext'
 
 export default function Home() {
-  const { t } = useLanguage()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userEmail, setUserEmail] = useState('')
 
@@ -67,13 +65,13 @@ export default function Home() {
                 href="/book"
                 className="px-8 py-4 bg-primary text-white text-lg font-semibold rounded-xl hover:bg-secondary transition shadow-lg shimmer-btn"
               >
-                {t('bookNow')}
+                Book a Lesson
               </Link>
               <Link
                 href="/about"
                 className="px-8 py-4 bg-white text-primary text-lg font-semibold rounded-xl hover:bg-gray-50 transition shadow-lg border-2 border-primary"
               >
-                {t('about')}
+                Learn More
               </Link>
             </div>
           </div>
@@ -145,9 +143,9 @@ export default function Home() {
             {/* Single Lesson */}
             <div className="bg-white rounded-2xl shadow-xl p-8" data-aos="fade-up" data-aos-delay="200">
               <div className="text-center">
-                <h3 className="text-2xl font-bold mb-2">{t('singleLesson')}</h3>
+                <h3 className="text-2xl font-bold mb-2">Single Lesson</h3>
                 <div className="text-5xl font-bold text-primary mb-2">$55</div>
-                <p className="text-gray-500 mb-6">{t('perLesson')}</p>
+                <p className="text-gray-500 mb-6">per 60-minute lesson</p>
                 
                 <div className="space-y-3 mb-8 text-left">
                   <div className="flex items-start gap-3">
@@ -168,7 +166,7 @@ export default function Home() {
                   href="/book"
                   className="block w-full px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-secondary transition text-center"
                 >
-                  {t('bookNow')}
+                  Book Now
                 </Link>
               </div>
             </div>
@@ -180,9 +178,9 @@ export default function Home() {
               </div>
               
               <div className="text-center">
-                <h3 className="text-2xl font-bold mb-2">{t('casualDriving')}</h3>
+                <h3 className="text-2xl font-bold mb-2">Casual Driving</h3>
                 <div className="text-5xl font-bold text-gray-800 mb-2">$45</div>
-                <p className="text-gray-500 mb-6">{t('perLesson')}</p>
+                <p className="text-gray-500 mb-6">per 60-minute lesson</p>
                 
                 <div className="space-y-3 mb-8 text-left">
                   <div className="flex items-start gap-3">
@@ -203,7 +201,7 @@ export default function Home() {
                   href="/book"
                   className="block w-full px-6 py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition text-center"
                 >
-                  {t('bookNow')}
+                  Book Now
                 </Link>
               </div>
             </div>

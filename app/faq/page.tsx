@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
-import { useLanguage } from '@/lib/LanguageContext'
 
 type FAQItem = {
   question: string
@@ -97,7 +96,6 @@ const faqData: FAQItem[] = [
 const categories = ["All", "Getting Started", "Lessons & Pricing", "Booking & Cancellations", "Service Area", "The Car", "Teaching Approach", "Payment", "Special Requirements", "Driving Test"]
 
 export default function FAQPage() {
-  const { t } = useLanguage()
   const [activeCategory, setActiveCategory] = useState("All")
   const [openIndex, setOpenIndex] = useState<number | null>(0)
 
@@ -118,7 +116,7 @@ export default function FAQPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
           <div className="text-center">
             <h1 className="text-5xl md:text-6xl font-bold mb-6" data-aos="fade-up">
-              {t('frequentlyAsked')}
+              Frequently Asked Questions
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8" data-aos="fade-up" data-aos-delay="100">
               Everything you need to know about learning to drive with me.

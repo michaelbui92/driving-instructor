@@ -1,7 +1,6 @@
 'use client'
 
 import { AuthProvider } from '@/components/AuthProvider'
-import { LanguageProvider } from '@/lib/LanguageContext'
 
 export default function ClientLayout({
   children,
@@ -10,9 +9,7 @@ export default function ClientLayout({
 }) {
   return (
     <AuthProvider>
-      <LanguageProvider>
-        {children}
-      </LanguageProvider>
+      {children}
     </AuthProvider>
   )
 }
