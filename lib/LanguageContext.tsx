@@ -49,8 +49,15 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
 export function useLanguage() {
   const context = useContext(LanguageContext)
+  
+  // During SSR/static generation, return a default context
   if (!context) {
-    throw new Error('useLanguage must be used within LanguageProvider')
+    return {
+      language: 'en' as const,
+      setLanguage: () => {},
+      t: (key: TranslationKey) => t(key, 'en')
+    }
   }
+  
   return context
 }
