@@ -492,14 +492,9 @@ export default function InstructorPage() {
     fetchAvailableTimes(date)
   }
 
-  // Create booking handler using DIRECT Supabase query (replacing API route)
+  // Create booking handler using API route (auto-confirms and sends email)
   const handleCreateBooking = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    if (!supabase) {
-      alert('Database connection not available. Please refresh the page.')
-      return
-    }
     
     if (!bookingForm.studentName || !bookingForm.date || !bookingForm.time) {
       alert('Please fill in student name, date, and time')
@@ -509,24 +504,26 @@ export default function InstructorPage() {
     setCreatingBooking(true)
     
     try {
-      // DIRECT Supabase insert (matching test booking page pattern)
-      const { error } = await supabase
-        .from('bookings_new')
-        .insert([{
-          student_name: bookingForm.studentName,
-          email: bookingForm.email || 'guest@example.com',
+      const response = await fetch('/api/instructor/bookings/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          studentName: bookingForm.studentName,
+          email: bookingForm.email,
           phone: bookingForm.phone,
           date: bookingForm.date,
           time: bookingForm.time,
-          lesson_type: bookingForm.lessonType,
-          status: 'pending'
-        }])
+          lessonType: bookingForm.lessonType
+        })
+      })
 
-      if (error) {
-        throw new Error(error.message || 'Failed to create booking')
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create booking')
       }
 
-      alert(`Booking created successfully for ${bookingForm.studentName} on ${formatDate(bookingForm.date)} at ${bookingForm.time}`)
+      alert(data.message || `Booking created and confirmed for ${bookingForm.studentName} on ${formatDate(bookingForm.date)} at ${bookingForm.time}`)
       
       // Reset form
       setBookingForm({
@@ -539,11 +536,11 @@ export default function InstructorPage() {
       })
       setAvailableTimes([])
       
-      // Refresh bookings list (real-time subscription will also handle this)
+      // Refresh bookings list
       await loadBookings()
       
       // Switch to upcoming tab
-      setSelectedTab('bookings')
+      setSelectedTab('upcoming')
     } catch (error: any) {
       console.error('Error creating booking:', error)
       alert(`Error creating booking: ${error.message}`)
