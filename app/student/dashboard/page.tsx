@@ -7,6 +7,7 @@ import Navbar from '@/components/Navbar'
 import { supabase } from '@/lib/supabase'
 import { formatDate, getAvailableSlots, getLessonPrice } from '@/lib/booking-utils'
 import { sendBookingCancellationEmail } from '@/lib/booking-email'
+import { useLanguage } from '@/lib/LanguageContext'
 
 type BookingType = {
   id: string
@@ -24,6 +25,7 @@ type BookingType = {
 }
 
 export default function StudentDashboardPage() {
+  const { t } = useLanguage()
   const [bookings, setBookings] = useState<BookingType[]>([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'upcoming' | 'completed' | 'cancelled'>('upcoming')
@@ -417,7 +419,7 @@ export default function StudentDashboardPage() {
                     : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
-                Upcoming ({bookings.filter((b) => b.status === 'pending' || b.status === 'confirmed').length})
+                {t('upcoming')} ({bookings.filter((b) => b.status === 'pending' || b.status === 'confirmed').length})
               </button>
               <button
                 onClick={() => setActiveTab('completed')}
@@ -427,7 +429,7 @@ export default function StudentDashboardPage() {
                     : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
-                Completed ({bookings.filter((b) => b.status === 'completed').length})
+                {t('completed')} ({bookings.filter((b) => b.status === 'completed').length})
               </button>
               <button
                 onClick={() => setActiveTab('cancelled')}
@@ -437,7 +439,7 @@ export default function StudentDashboardPage() {
                     : 'text-gray-600 hover:text-gray-800'
                 }`}
               >
-                Cancelled ({bookings.filter((b) => b.status === 'cancelled').length})
+                {t('cancelled')} ({bookings.filter((b) => b.status === 'cancelled').length})
               </button>
             </div>
           </div>
@@ -454,12 +456,12 @@ export default function StudentDashboardPage() {
                 </h3>
                 {activeTab === 'upcoming' && (
                   <>
-                    <p className="text-gray-600 mb-6">Book your first lesson to get started</p>
+                    <p className="text-gray-600 mb-6">{t('bookFirst')}</p>
                     <Link
                       href="/book"
                       className="inline-block px-6 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition"
                     >
-                      Book Now
+                      {t('bookNow')}
                     </Link>
                   </>
                 )}
@@ -525,14 +527,14 @@ export default function StudentDashboardPage() {
                             onClick={() => handleReschedule(booking)}
                             className="px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition font-medium"
                           >
-                            Reschedule
+                            {t('reschedule')}
                           </button>
                           <button
                             onClick={() => handleCancel(booking.id)}
                             disabled={actionLoading}
                             className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-medium disabled:opacity-50"
                           >
-                            Cancel
+                            {t('cancel')}
                           </button>
                         </div>
                       )}
@@ -550,7 +552,7 @@ export default function StudentDashboardPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-bold">Reschedule Booking</h2>
+              <h2 className="text-2xl font-bold">{t('reschedule')}</h2>
               <button
                 onClick={() => setReschedulingBooking(null)}
                 className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -651,7 +653,7 @@ export default function StudentDashboardPage() {
                 }}
                 className="flex-1 px-4 py-2 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 onClick={saveReschedule}
@@ -662,7 +664,7 @@ export default function StudentDashboardPage() {
                     : 'bg-primary text-white hover:bg-secondary'
                 }`}
               >
-                {dateHasNoSlots ? 'No Slots' : 'Save Changes'}
+                {dateHasNoSlots ? 'No Slots' : t('saveChanges')}
               </button>
             </div>
           </div>

@@ -3,8 +3,10 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import Navbar from '@/components/Navbar'
+import { useLanguage } from '@/lib/LanguageContext'
 
 export default function AboutPage() {
+  const { t } = useLanguage()
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Navbar />
@@ -14,7 +16,7 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
           <div className="text-center">
             <h1 className="text-5xl md:text-6xl font-bold mb-6" data-aos="fade-up">
-              Meet Your Driving Instructor
+              {t('aboutTitle')}
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8" data-aos="fade-up" data-aos-delay="100">
               Professional, patient, and passionate about helping you become a confident, safe driver.
@@ -261,7 +263,7 @@ export default function AboutPage() {
             href="/book"
             className="inline-block px-8 py-4 bg-primary text-white text-lg font-semibold rounded-xl hover:bg-secondary transition shadow-lg"
           >
-            Book Your First Lesson
+            {t('bookNow')}
           </Link>
           <p className="mt-4 text-gray-600">
             Ready to start your driving journey? Book online in just 2 minutes.
