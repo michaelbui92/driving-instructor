@@ -663,11 +663,12 @@ export async function addRuleAsync(rule: Omit<AvailabilityRule, 'id' | 'createdA
       type: rule.type,
       priority: rule.priority,
       day_type: rule.dayType,
-      start_time: rule.startTime,
-      end_time: rule.endTime,
-      max_bookings: rule.maxBookings,
-      repeat_type: rule.repeatType,
-      enabled: rule.enabled,
+      // Explicitly convert undefined to null for nullable columns
+      start_time: rule.startTime ?? null,
+      end_time: rule.endTime ?? null,
+      max_bookings: rule.maxBookings ?? null,
+      repeat_type: rule.repeatType ?? null,
+      enabled: rule.enabled ?? true,
       created_at: new Date().toISOString()
     }
     

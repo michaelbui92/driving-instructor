@@ -94,12 +94,14 @@ export function login(pin: string): boolean {
 }
 
 /**
- * Create authentication session (24 hours)
+ * Create authentication session (8 hours)
+ * Admin sessions expire after 8 hours for security.
+ * This prevents indefinite access if browser is left open.
  */
 function createAuthSession(): void {
   if (typeof window === 'undefined') return;
   
-  const expiresAt = Date.now() + (24 * 60 * 60 * 1000); // 24 hours
+  const expiresAt = Date.now() + (8 * 60 * 60 * 1000); // 8 hours
   localStorage.setItem(AUTH_KEY, JSON.stringify({ expiresAt }));
   // Dispatch custom event to notify auth state change
   window.dispatchEvent(new Event('auth-change'));
