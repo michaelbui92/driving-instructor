@@ -338,7 +338,7 @@ export default function InstructorPage() {
     return []
   }
 
-  // UPDATE BOOKING STATUS using DIRECT Supabase query (replacing API route)
+  // UPDATE BOOKING STATUS using API route (sends emails for confirm/cancel)
   const updateBookingStatus = async (bookingId: string, newStatus: Booking['status']) => {
     if (actionLoading || !supabase) return // Prevent rapid actions
     setActionLoading(true)
@@ -349,16 +349,18 @@ export default function InstructorPage() {
         b.id === bookingId ? { ...b, status: newStatus } : b
       ))
       
-      // DIRECT Supabase query (matching test booking page pattern)
-      const { error } = await supabase
-        .from('bookings_new')
-        .update({ status: newStatus })
-        .eq('id', bookingId)
+      // Call API route which handles emails
+      const response = await fetch(`/api/instructor/bookings/${bookingId}/status`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus })
+      })
 
-      if (error) {
+      if (!response.ok) {
+        const error = await response.json()
         // Rollback on error
         await loadBookings()
-        throw new Error(error.message || 'Failed to update status')
+        throw new Error(error.error || 'Failed to update status')
       }
 
       alert(`Booking status updated to: ${newStatus}`)
