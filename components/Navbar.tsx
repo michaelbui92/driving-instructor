@@ -140,7 +140,7 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
             <Link href="/faq" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">FAQ</Link>
             <Link href="/contact" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">Contact</Link>
             <div className="flex items-center gap-2 ml-2">
-              <LanguageToggle />
+              {/* <LanguageToggle /> */}
               {/* Student - show email if logged in */}
               {isLoggedIn ? (
                 <div className="relative" ref={dropdownRef}>
