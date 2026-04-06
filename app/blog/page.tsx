@@ -50,24 +50,6 @@ const blogPosts = [
     category: "Test Preparation"
   },
   {
-    id: 5,
-    title: "Dealing with Roundabouts: A Beginner's Guide",
-    excerpt: "Roundabouts can be intimidating for new drivers. Learn the rules and techniques to navigate them with confidence.",
-    date: "February 20, 2026",
-    readTime: "5 min read",
-    slug: "roundabouts-guide",
-    category: "Skills"
-  },
-  {
-    id: 6,
-    title: "Tips for Driving in Sydney Traffic",
-    excerpt: "Sydney traffic can be challenging. Here are practical tips for staying calm and safe during peak hour.",
-    date: "February 15, 2026",
-    readTime: "4 min read",
-    slug: "sydney-traffic-tips",
-    category: "City Driving"
-  },
-  {
     id: 7,
     title: "Merging Lanes Safely: A Step-by-Step Guide",
     excerpt: "Lane merging is one of the trickiest maneuvers for new drivers. Master the technique with this comprehensive guide.",
