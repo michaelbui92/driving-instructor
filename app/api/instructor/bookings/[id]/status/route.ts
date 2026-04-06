@@ -12,8 +12,12 @@ async function sendEmail(to: string, subject: string, body: string): Promise<{ s
     }
 
     // Use AgentMail API to send email
-    // The inbox_id is the sender's email address
-    const endpoint = `https://api.agentmail.to/v0/inboxes/${encodeURIComponent(to)}/messages/send`
+    // The inbox_id is the sender's email address (drivewithbui@agentmail.to)
+    // We send TO the student, FROM our inbox
+    const inboxId = 'drivewithbui@agentmail.to'
+    const endpoint = `https://api.agentmail.to/v0/inboxes/${encodeURIComponent(inboxId)}/messages/send`
+    
+    console.log(`Sending email via AgentMail: from=${inboxId} to=${to}`)
     
     const response = await fetch(endpoint, {
       method: 'POST',
