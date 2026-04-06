@@ -195,7 +195,22 @@ export default function BookPage() {
       const blockedTimes = new Set<string>()
       const bookedTimes = new Set<string>((bookings || []).map(b => b.time))
       
-      // First, apply TIME_BLOCK rules - block all times that rules cover
+      // FIRST: Check MAX_BOOKING rules - if day limit reached, no slots available
+      const maxBookingRules = (rules || []).filter(r => 
+        r.type === 'MAX_BOOKING' && matchesDayType(dateObj, r.day_type || 'ALL_DAYS')
+      )
+      
+      for (const rule of maxBookingRules) {
+        if (rule.max_bookings !== undefined && rule.max_bookings !== null) {
+          if ((bookings || []).length >= rule.max_bookings) {
+            // Day is at max capacity - no slots available
+            setAvailableSlots([])
+            return
+          }
+        }
+      }
+      
+      // Second, apply TIME_BLOCK rules - block all times that rules cover
       const timeBlockRules = (rules || []).filter(r => 
         r.type === 'TIME_BLOCK' && matchesDayType(dateObj, r.day_type || 'ALL_DAYS')
       )
@@ -316,7 +331,28 @@ export default function BookPage() {
           const dateObj = new Date(dateInfo.date)
           let blockedTimes = new Set<string>()
           
-          // First, apply TIME_BLOCK rules - block all times that rules cover
+          // First, get bookings for this date (needed for MAX_BOOKING check)
+          const dateBookings = (bookings || []).filter(b => b.date === dateInfo.date)
+          
+          // FIRST: Check MAX_BOOKING rules - if day limit reached, date has no availability
+          const maxBookingRules = (rules || []).filter(r => 
+            r.type === 'MAX_BOOKING' && matchesDayType(dateObj, r.day_type || 'ALL_DAYS')
+          )
+          
+          for (const rule of maxBookingRules) {
+            if (rule.max_bookings !== undefined && rule.max_bookings !== null) {
+              if (dateBookings.length >= rule.max_bookings) {
+                // Day is at max capacity - no slots available
+                return {
+                  date: dateInfo.date,
+                  hasSlots: false,
+                  dayFullyBooked: true
+                }
+              }
+            }
+          }
+          
+          // Second, apply TIME_BLOCK rules - block all times that rules cover
           const timeBlockRules = (rules || []).filter(r => 
             r.type === 'TIME_BLOCK' && matchesDayType(dateObj, r.day_type || 'ALL_DAYS')
           )
@@ -343,7 +379,6 @@ export default function BookPage() {
           }
           
           // Apply bookings
-          const dateBookings = (bookings || []).filter(b => b.date === dateInfo.date)
           const bookedTimes = new Set(dateBookings.map(b => b.time))
           
           // Available = all - blocked - booked
