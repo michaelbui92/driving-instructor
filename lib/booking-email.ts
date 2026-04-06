@@ -12,12 +12,15 @@ export async function sendBookingConfirmationEmail(
     address?: string
   }
 ): Promise<{ success: boolean; error?: string }> {
+  console.log('[Booking Confirm Email] Starting...', booking)
   try {
     const apiKey = process.env.NEXT_PUBLIC_AGENTMAIL_API_KEY
     if (!apiKey) {
-      console.error('AgentMail API key not configured')
+      console.error('[Booking Confirm Email] API key missing!')
       return { success: false, error: 'Email service not configured' }
     }
+
+    console.log('[Booking Confirm Email] Sending to:', booking.email)
 
     // Format date nicely
     const dateObj = new Date(booking.date)
@@ -80,15 +83,18 @@ Drive with Bui
       }
     )
 
+    console.log('[Booking Confirm Email] Response status:', response.status)
+
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Failed to send booking confirmation email:', errorText)
+      console.error('[Booking Confirm Email] Failed:', response.status, errorText)
       return { success: false, error: 'Failed to send confirmation email' }
     }
 
+    console.log('[Booking Confirm Email] Success!')
     return { success: true }
   } catch (err) {
-    console.error('Unexpected booking email error:', err)
+    console.error('[Booking Confirm Email] Unexpected error:', err)
     return { success: false, error: 'Failed to send confirmation email' }
   }
 }
@@ -180,12 +186,15 @@ export async function sendBookingRescheduleEmail(
     lessonType: 'single' | 'casual'
   }
 ): Promise<{ success: boolean; error?: string }> {
+  console.log('[Reschedule Email] Starting...', booking)
   try {
     const apiKey = process.env.NEXT_PUBLIC_AGENTMAIL_API_KEY
     if (!apiKey) {
-      console.error('AgentMail API key not configured')
+      console.error('[Reschedule Email] API key missing!')
       return { success: false, error: 'Email service not configured' }
     }
+
+    console.log('[Reschedule Email] API key found, sending to:', booking.email)
 
     // Format dates nicely
     const formatDate = (dateStr: string) => {
@@ -240,15 +249,18 @@ Drive with Bui
       }
     )
 
+    console.log('[Reschedule Email] Response status:', response.status)
+
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('Failed to send reschedule email:', errorText)
+      console.error('[Reschedule Email] Failed:', response.status, errorText)
       return { success: false, error: 'Failed to send reschedule email' }
     }
 
+    console.log('[Reschedule Email] Success!')
     return { success: true }
   } catch (err) {
-    console.error('Unexpected reschedule email error:', err)
+    console.error('[Reschedule Email] Unexpected error:', err)
     return { success: false, error: 'Failed to send reschedule email' }
   }
 }
