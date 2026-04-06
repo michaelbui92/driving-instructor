@@ -44,11 +44,11 @@ export async function sendBookingConfirmationEmail(
         },
         body: JSON.stringify({
           to: [booking.email],
-          subject: `✅ Your Driving Lesson Booking Confirmation`,
+          subject: `📋 Thanks for your booking — Pending Confirmation`,
           text: `
 Hi ${booking.studentName},
 
-Your driving lesson has been booked successfully!
+Thanks for your booking! 🎉
 
 📅 **Booking Details:**
 - Date: ${formattedDate}
@@ -56,6 +56,10 @@ Your driving lesson has been booked successfully!
 - Lesson Type: ${lessonTypeDisplay}
 - Price: $${booking.price}
 ${booking.address ? `- Pickup Address: ${booking.address}\n` : ''}
+
+⏳ **What's Next?**
+Your booking has been submitted and is pending confirmation from your instructor.
+You'll receive another email once your instructor confirms your lesson.
 
 📍 **Location:**
 Pickup from your specified address${booking.address ? ` (${booking.address})` : ''}. Please be ready 5 minutes before your scheduled time.
@@ -65,7 +69,7 @@ You can view, reschedule, or cancel your booking by logging into your student po
 https://drivewithbui.com/student/dashboard
 
 ❓ **Questions?**
-If you have any questions or need to contact your instructor, please reply to this email or visit our contact page.
+If you have any questions or need to contact your instructor, please reply to this email.
 
 We look forward to helping you become a confident, safe driver!
 
@@ -164,7 +168,7 @@ Drive with Bui
   }
 }
 
-// Send booking reschedule email
+// Send booking reschedule request email (pending confirmation)
 export async function sendBookingRescheduleEmail(
   booking: {
     studentName: string
@@ -204,31 +208,30 @@ export async function sendBookingRescheduleEmail(
         },
         body: JSON.stringify({
           to: [booking.email],
-          subject: `🔄 Your Driving Lesson Has Been Rescheduled`,
+          subject: `🔄 Reschedule Request Submitted — Awaiting Confirmation`,
           text: `
 Hi ${booking.studentName},
 
-Your driving lesson has been rescheduled successfully!
+You have requested to reschedule your booking! ⏳
 
 📅 **Original Booking:**
 - Date: ${formatDate(booking.oldDate)}
 - Time: ${booking.oldTime}
 
-📅 **New Booking:**
+📅 **Requested New Time:**
 - Date: ${formatDate(booking.newDate)}
 - Time: ${booking.newTime}
 - Lesson Type: ${booking.lessonType === 'single' ? 'Single Lesson' : 'Casual Driving'}
 
-📍 **Location:**
-Pickup from your specified address. Please be ready 5 minutes before your scheduled time.
+⏳ **What's Next?**
+Your reschedule request has been submitted and is pending confirmation from your instructor.
+You'll receive another email once your instructor confirms the new time.
 
 📱 **Need to make further changes?**
 You can view or manage your booking by logging into your student portal:
 https://drivewithbui.com/student/dashboard
 
-If you have any questions, please reply to this email.
-
-See you at your lesson!
+If you have any questions or need to cancel this request, please reply to this email.
 
 — Michael
 Drive with Bui
