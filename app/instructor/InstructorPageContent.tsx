@@ -367,7 +367,7 @@ export default function InstructorPage() {
         throw new Error(data.error || 'Failed to update status')
       }
 
-      alert(`Booking status updated to: ${newStatus}`)
+
     } catch (error: any) {
       console.error('Error updating booking status:', error)
       alert('Error updating booking status. Please try again.')
