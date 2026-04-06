@@ -14,12 +14,13 @@ async function sendEmail(to: string, subject: string, body: string): Promise<{ s
     // Use AgentMail API to send email
     // The inbox_id is the sender's email address (drivewithbui@agentmail.to)
     // We send TO the student, FROM our inbox
+    // Note: @ must NOT be encoded in URL path - use literal string like OTP route
     const inboxId = 'drivewithbui@agentmail.to'
-    const endpoint = `https://api.agentmail.to/v0/inboxes/${encodeURIComponent(inboxId)}/messages/send`
+    const url = `https://api.agentmail.to/v0/inboxes/${inboxId}/messages/send`
     
     console.log(`Sending email via AgentMail: from=${inboxId} to=${to}`)
     
-    const response = await fetch(endpoint, {
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
