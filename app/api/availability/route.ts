@@ -82,7 +82,32 @@ export async function GET(request: NextRequest) {
     // Start with all slots available
     let blockedSlots = new Set<string>()
     
-    // 1. Apply TIME_BLOCK rules
+    // 1. FIRST: Check MAX_BOOKING rules - if day limit reached, block ALL slots
+    const maxBookingRules = (rules || []).filter(r => 
+      r.type === 'MAX_BOOKING' && matchesDayType(dateObj, r.day_type || 'ALL_DAYS')
+    )
+    
+    for (const rule of maxBookingRules) {
+      if (rule.max_bookings !== undefined && rule.max_bookings !== null) {
+        const existingBookingsCount = (bookings || []).length
+        if (existingBookingsCount >= rule.max_bookings) {
+          // Day is fully booked - return empty availability
+          return NextResponse.json({
+            date,
+            dayOfWeek: isWeekend ? 'weekend' : 'weekday',
+            availableSlots: [],
+            blockedSlots: ALL_SLOTS,
+            bookedSlots: (bookings || []).map(b => b.time),
+            rules: rules || [],
+            dayFullyBooked: true,
+            maxBookings: rule.max_bookings,
+            currentBookings: existingBookingsCount
+          })
+        }
+      }
+    }
+    
+    // 2. Apply TIME_BLOCK rules
     const timeBlockRules = (rules || []).filter(r => 
       r.type === 'TIME_BLOCK' && matchesDayType(dateObj, r.day_type || 'ALL_DAYS')
     )
@@ -97,15 +122,15 @@ export async function GET(request: NextRequest) {
       }
     }
     
-    // 2. Apply manual blocks (override rules)
+    // 3. Apply manual blocks (override rules)
     for (const block of (manualBlocks || [])) {
       blockedSlots.add(block.time)
     }
     
-    // 3. Apply booked slots
+    // 4. Apply booked slots
     const bookedSlots = new Set((bookings || []).map(b => b.time))
     
-    // 4. Calculate available
+    // 5. Calculate available
     const availableSlots = ALL_SLOTS.filter(slot => 
       !blockedSlots.has(slot) && !bookedSlots.has(slot)
     )

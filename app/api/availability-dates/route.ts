@@ -84,7 +84,30 @@ export async function GET(request: NextRequest) {
       // Start with all slots available
       let blockedSlots = new Set<string>()
       
-      // 1. Apply TIME_BLOCK rules (instructor sets these to block times)
+      // 1. FIRST: Check MAX_BOOKING rules - if day limit reached, date has no availability
+      const maxBookingRules = (rules || []).filter(r => 
+        r.type === 'MAX_BOOKING' && matchesDayType(date, r.day_type || 'ALL_DAYS')
+      )
+      
+      const dateBookings = (bookings || []).filter(b => b.date === dateStr)
+      
+      for (const rule of maxBookingRules) {
+        if (rule.max_bookings !== undefined && rule.max_bookings !== null) {
+          if (dateBookings.length >= rule.max_bookings) {
+            // Day is fully booked
+            return {
+              date: dateStr,
+              hasSlots: false,
+              availableCount: 0,
+              dayFullyBooked: true,
+              maxBookings: rule.max_bookings,
+              currentBookings: dateBookings.length
+            }
+          }
+        }
+      }
+      
+      // 2. Apply TIME_BLOCK rules (instructor sets these to block times)
       const timeBlockRules = (rules || []).filter(r => 
         r.type === 'TIME_BLOCK' && matchesDayType(date, r.day_type || 'ALL_DAYS')
       )
@@ -99,17 +122,16 @@ export async function GET(request: NextRequest) {
         }
       }
       
-      // 2. Apply manual blocks from blocked_slots table (always override rules)
+      // 3. Apply manual blocks from blocked_slots table (always override rules)
       const dateManualBlocks = (manualBlocks || []).filter(b => b.date === dateStr)
       for (const block of dateManualBlocks) {
         blockedSlots.add(block.time)
       }
       
-      // 3. Apply already booked slots
-      const dateBookings = (bookings || []).filter(b => b.date === dateStr)
+      // 4. Apply already booked slots
       const bookedSlots = new Set(dateBookings.map(b => b.time))
       
-      // 4. Calculate available slots = all - blocked - booked
+      // 5. Calculate available slots = all - blocked - booked
       const availableSlots = ALL_SLOTS.filter(slot => 
         !blockedSlots.has(slot) && !bookedSlots.has(slot)
       )
