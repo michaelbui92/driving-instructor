@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getAuthStatus, isAuthenticated } from '@/lib/auth';
+import { getAuthStatus } from '@/lib/auth';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -33,8 +33,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   useEffect(() => {
     // Check auth status on mount and when window gains focus
-    const checkAuth = () => {
-      const status = getAuthStatus();
+    const checkAuth = async () => {
+      const status = await getAuthStatus();
       setAuthState({
         ...status,
         isLoading: false,

@@ -12,20 +12,27 @@ export default function InstructorLoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [pinSet, setPinSet] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [checkingPin, setCheckingPin] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
     // Check if PIN is already set
-    setPinSet(hasPinSet());
+    const checkPinSet = async () => {
+      const hasPin = await hasPinSet();
+      setPinSet(hasPin);
+      setCheckingPin(false);
+    };
+    checkPinSet();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
     try {
-      if (login(pin)) {
+      const success = await login(pin);
+      if (success) {
         // Successful login - redirect to instructor portal
         router.push('/instructor');
       } else {
@@ -38,14 +45,25 @@ export default function InstructorLoginPage() {
     }
   };
 
-  const handleResetPin = () => {
-    resetPin();
+  const handleResetPin = async () => {
+    await resetPin();
     setPinSet(false);
     setShowResetConfirm(false);
     setPin('');
     setError('');
     alert('PIN has been reset. Please set a new PIN.');
   };
+
+  if (checkingPin) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Checking PIN status...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100">
