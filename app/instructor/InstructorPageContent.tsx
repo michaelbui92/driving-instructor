@@ -29,6 +29,8 @@ import {
   addBlockedSlotAsync,
   removeBlockedSlotAsync
 } from '@/lib/booking-utils'
+import { authenticatedFetch } from '@/lib/instructor-api'
+import { toast } from '@/components/Toast'
 
 type TabType = 'bookings' | 'schedule' | 'calendar'
 
@@ -169,7 +171,6 @@ export default function InstructorPage() {
   const supabase = (() => {
     if (typeof window === 'undefined') return null
     if (!supabaseUrl || !supabaseKey) {
-      console.error('Missing Supabase environment variables')
       return null
     }
     return globalSupabase
@@ -260,14 +261,12 @@ export default function InstructorPage() {
         .on(
           'postgres_changes',
           { event: '*', schema: 'public', table: 'bookings_new' },
-          (payload) => {
-            console.log('Real-time update received:', payload)
+          () => {
             // Reload bookings on any change
             loadBookings()
           }
         )
         .subscribe((status) => {
-          console.log('Subscription status:', status)
           if (status === 'SUBSCRIBED') {
             setSupabaseStatus(prev => prev.includes('✅') ? '✅ Connected (subscribed)' : prev)
           }
@@ -344,22 +343,19 @@ export default function InstructorPage() {
     setActionLoading(true)
     
     try {
-      console.log(`[Client] Updating booking ${bookingId} to status: ${newStatus}`)
-      
       // OPTIMISTIC UPDATE: Update local state immediately for instant feedback
       setBookings(prev => prev.map(b => 
         b.id === bookingId ? { ...b, status: newStatus } : b
       ))
       
       // Call API route which handles emails
-      const response = await fetch(`/api/instructor/bookings/${bookingId}/status`, {
+      const response = await authenticatedFetch(`/api/instructor/bookings/${bookingId}/status`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })
       })
 
       const data = await response.json()
-      console.log(`[Client] API response:`, response.status, data)
 
       if (!response.ok) {
         // Rollback on error
@@ -367,10 +363,10 @@ export default function InstructorPage() {
         throw new Error(data.error || 'Failed to update status')
       }
 
+      toast('success', `Booking status updated to ${newStatus}`)
 
     } catch (error: any) {
-      console.error('Error updating booking status:', error)
-      alert('Error updating booking status. Please try again.')
+      toast('error', 'Error updating booking status. Please try again.')
       // Reload to ensure sync
       await loadBookings()
     } finally {
@@ -395,10 +391,9 @@ export default function InstructorPage() {
         b.id === bookingId ? { ...b, instructor_notes: instructorNotes } : b
       ))
       setSelectedBooking(prev => prev ? { ...prev, instructor_notes: instructorNotes } : null)
-      alert('Notes saved!')
+      toast('success', 'Notes saved!')
     } catch (error: any) {
-      console.error('Error saving instructor notes:', error)
-      alert('Failed to save notes. Please try again.')
+      toast('error', 'Failed to save notes. Please try again.')
     } finally {
       setNotesSaving(false)
     }
@@ -431,12 +426,11 @@ export default function InstructorPage() {
         throw new Error(error.message || 'Failed to delete booking')
       }
 
-      alert('Booking deleted successfully')
+      toast('success', 'Booking deleted successfully')
     } catch (error: any) {
-      console.error('Error deleting booking:', error)
       // ROLLBACK on error - restore previous state
       setBookings(previousBookings)
-      alert(`Error deleting booking: ${error.message}. Please try again.`)
+      toast('error', `Error deleting booking: ${error.message}. Please try again.`)
     } finally {
       setActionLoading(false)
     }
@@ -463,10 +457,9 @@ export default function InstructorPage() {
         b.id === bookingId ? { ...b, archived: !b.archived } : b
       )
       setBookings(updatedBookings)
-      alert(booking.archived ? 'Booking unarchived successfully' : 'Booking archived successfully')
+      toast('success', booking.archived ? 'Booking unarchived successfully' : 'Booking archived successfully')
     } catch (error) {
-      console.error('Error archiving booking:', error)
-      alert('Error archiving booking. Please try again.')
+      toast('error', 'Error archiving booking. Please try again.')
     }
   }
 
@@ -497,14 +490,14 @@ export default function InstructorPage() {
     e.preventDefault()
     
     if (!bookingForm.studentName || !bookingForm.date || !bookingForm.time) {
-      alert('Please fill in student name, date, and time')
+      toast('warning', 'Please fill in student name, date, and time')
       return
     }
 
     setCreatingBooking(true)
     
     try {
-      const response = await fetch('/api/instructor/bookings/create', {
+      const response = await authenticatedFetch('/api/instructor/bookings/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -523,7 +516,7 @@ export default function InstructorPage() {
         throw new Error(data.error || 'Failed to create booking')
       }
 
-      alert(data.message || `Booking created and confirmed for ${bookingForm.studentName} on ${formatDate(bookingForm.date)} at ${bookingForm.time}`)
+      toast('success', data.message || `Booking created and confirmed for ${bookingForm.studentName} on ${formatDate(bookingForm.date)} at ${bookingForm.time}`)
       
       // Reset form
       setBookingForm({
@@ -543,8 +536,7 @@ export default function InstructorPage() {
       setSelectedTab('bookings')
       setBookingsView('upcoming')
     } catch (error: any) {
-      console.error('Error creating booking:', error)
-      alert(`Error creating booking: ${error.message}`)
+      toast('error', `Error creating booking: ${error.message}`)
     } finally {
       setCreatingBooking(false)
     }
@@ -552,7 +544,7 @@ export default function InstructorPage() {
 
   const handleBlockSlot = async () => {
     if (!selectedBlockDate || selectedBlockTimes.length === 0) {
-      alert('Please select a date and at least one time slot to block')
+      toast('warning', 'Please select a date and at least one time slot to block')
       return
     }
     try {
@@ -563,10 +555,9 @@ export default function InstructorPage() {
       const updatedSlots = await getBlockedSlotsAsync()
       setBlockedSlots(updatedSlots)
       setSelectedBlockTimes([])
-      alert(`Blocked ${selectedBlockTimes.length} time slot(s) successfully`)
+      toast('success', `Blocked ${selectedBlockTimes.length} time slot(s) successfully`)
     } catch (error) {
-      console.error('Error blocking slots:', error)
-      alert('Error blocking slots. Please try again.')
+      toast('error', 'Error blocking slots. Please try again.')
     }
   }
 
@@ -575,9 +566,9 @@ export default function InstructorPage() {
       await removeBlockedSlotAsync(date, time)
       const updatedSlots = await getBlockedSlotsAsync()
       setBlockedSlots(updatedSlots)
+      toast('success', 'Slot unblocked successfully')
     } catch (error) {
-      console.error('Error unblocking slot:', error)
-      alert('Error unblocking slot. Please try again.')
+      toast('error', 'Error unblocking slot. Please try again.')
     }
   }
 
@@ -617,7 +608,7 @@ export default function InstructorPage() {
         })
       } else if (bulkMode === 'daterange') {
         if (!bulkStartDate || !bulkEndDate) {
-          alert('Please select start and end dates')
+          toast('warning', 'Please select start and end dates')
           return
         }
         // Block all slots in range EXCEPT 6pm, 7pm, 8pm
@@ -636,11 +627,10 @@ export default function InstructorPage() {
       await Promise.all(blockPromises)
       const updatedSlots = await getBlockedSlotsAsync()
       setBlockedSlots(updatedSlots)
-      alert(`Blocked ${blockedCount} time slot(s). Remaining slots: 6pm, 7pm, 8pm.`)
+      toast('success', `Blocked ${blockedCount} time slot(s). Remaining slots: 6pm, 7pm, 8pm.`)
       setBulkMode('none')
     } catch (error) {
-      console.error('Error in bulk block:', error)
-      alert('Error blocking slots. Please try again.')
+      toast('error', 'Error blocking slots. Please try again.')
     }
   }
 
@@ -670,24 +660,24 @@ export default function InstructorPage() {
     try {
       // Validation
       if (!ruleForm.name.trim()) {
-        alert('Please enter a rule name')
+        toast('warning', 'Please enter a rule name')
         return
       }
 
       if (ruleForm.priority < 1 || ruleForm.priority > 100) {
-        alert('Priority must be between 1 and 100')
+        toast('warning', 'Priority must be between 1 and 100')
         return
       }
 
       if ((ruleForm.type === RuleType.TIME_BLOCK || ruleForm.type === RuleType.EXCEPTION)) {
         if (!ruleForm.startTime || !ruleForm.endTime) {
-          alert('Please enter both start and end times for this rule type')
+          toast('warning', 'Please enter both start and end times for this rule type')
           return
         }
       }
 
       if (ruleForm.type === RuleType.MAX_BOOKING && ruleForm.maxBookings < 1) {
-        alert('Max bookings must be at least 1')
+        toast('warning', 'Max bookings must be at least 1')
         return
       }
 
@@ -704,19 +694,15 @@ export default function InstructorPage() {
         enabled: true
       }
 
-      console.log('Creating rule:', newRule)
       const ruleId = await addRuleAsync(newRule)
-      console.log('Rule created with ID:', ruleId)
       const updatedRules = await getRulesAsync()
       setRules(updatedRules)
       setShowRuleForm(false)
       resetRuleForm()
-      alert('Rule created successfully!')
+      toast('success', 'Rule created successfully!')
     } catch (error: any) {
-      console.error('Error creating rule:', error)
-      // Show more detailed error info
       const errorMessage = error?.message || error?.details || JSON.stringify(error)
-      alert(`Error creating rule: ${errorMessage}\n\nPlease check browser console for details.`)
+      toast('error', `Error creating rule: ${errorMessage}`)
     }
   }
 
@@ -724,24 +710,24 @@ export default function InstructorPage() {
     try {
       // Validation (same as create)
       if (!ruleForm.name.trim()) {
-        alert('Please enter a rule name')
+        toast('warning', 'Please enter a rule name')
         return
       }
 
       if (ruleForm.priority < 1 || ruleForm.priority > 100) {
-        alert('Priority must be between 1 and 100')
+        toast('warning', 'Priority must be between 1 and 100')
         return
       }
 
       if ((ruleForm.type === RuleType.TIME_BLOCK || ruleForm.type === RuleType.EXCEPTION)) {
         if (!ruleForm.startTime || !ruleForm.endTime) {
-          alert('Please enter both start and end times for this rule type')
+          toast('warning', 'Please enter both start and end times for this rule type')
           return
         }
       }
 
       if (ruleForm.type === RuleType.MAX_BOOKING && ruleForm.maxBookings < 1) {
-        alert('Max bookings must be at least 1')
+        toast('warning', 'Max bookings must be at least 1')
         return
       }
 
@@ -761,10 +747,9 @@ export default function InstructorPage() {
       setShowRuleForm(false)
       setEditingRule(null)
       resetRuleForm()
-      alert('Rule updated successfully!')
+      toast('success', 'Rule updated successfully!')
     } catch (error) {
-      console.error('Error updating rule:', error)
-      alert('Error updating rule. Please try again.')
+      toast('error', 'Error updating rule. Please try again.')
     }
   }
 
@@ -774,10 +759,9 @@ export default function InstructorPage() {
         await deleteRuleAsync(id)
         const updatedRules = await getRulesAsync()
         setRules(updatedRules)
-        alert('Rule deleted successfully!')
+        toast('success', 'Rule deleted successfully!')
       } catch (error) {
-        console.error('Error deleting rule:', error)
-        alert('Error deleting rule. Please try again.')
+        toast('error', 'Error deleting rule. Please try again.')
       }
     }
   }
@@ -806,10 +790,9 @@ export default function InstructorPage() {
         ...profileForm
       })
       setEditingProfile(false)
-      alert('Profile updated successfully!')
+      toast('success', 'Profile updated successfully!')
     } catch (error) {
-      console.error('Error saving profile:', error)
-      alert('Error saving profile. Please try again.')
+      toast('error', 'Error saving profile. Please try again.')
     }
     setSavingProfile(false)
   }
@@ -820,8 +803,7 @@ export default function InstructorPage() {
       const updatedRules = await getRulesAsync()
       setRules(updatedRules)
     } catch (error) {
-      console.error('Error toggling rule:', error)
-      alert('Error toggling rule. Please try again.')
+      toast('error', 'Error toggling rule. Please try again.')
     }
   }
 

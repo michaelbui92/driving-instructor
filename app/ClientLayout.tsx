@@ -1,6 +1,7 @@
 'use client'
 
 import { AuthProvider } from '@/components/AuthProvider'
+import { ToastProvider } from '@/components/Toast'
 
 export default function ClientLayout({
   children,
@@ -9,7 +10,9 @@ export default function ClientLayout({
 }) {
   return (
     <AuthProvider>
-      {children}
+      <ToastProvider>
+        {children}
+      </ToastProvider>
     </AuthProvider>
   )
 }

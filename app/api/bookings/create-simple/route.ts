@@ -1,38 +1,56 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { sanitizeString, MAX_LENGTHS, isValidDate, isValidTime } from '@/lib/api-auth'
 
 // SIMPLE: Create booking with minimal requirements
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    console.log('📦 Simple booking creation:', body)
     
-    // Extract with defaults
-    const {
-      studentName = '',
-      email = 'guest@example.com',
-      phone = '',
-      date,
-      time,
-      lessonType = 'single',
-    } = body
+    // Sanitize and validate date/time (required fields)
+    const date = sanitizeString(body.date, MAX_LENGTHS.date)
+    const time = sanitizeString(body.time, MAX_LENGTHS.time)
     
-    // ONLY require date and time
     if (!date || !time) {
       return NextResponse.json({ 
         error: 'Date and time are required',
-        received: { date: !!date, time: !!time }
+        received: { hasDate: !!date, hasTime: !!time }
       }, { status: 400 })
     }
     
-    // Use admin client
-    const adminClient = createClient(
+    if (!isValidDate(date)) {
+      return NextResponse.json({ 
+        error: 'Invalid date format (use YYYY-MM-DD)' 
+      }, { status: 400 })
+    }
+    
+    if (!isValidTime(time)) {
+      return NextResponse.json({ 
+        error: 'Invalid time format' 
+      }, { status: 400 })
+    }
+    
+    // Sanitize optional fields
+    const studentName = sanitizeString(body.studentName, MAX_LENGTHS.studentName)
+    const email = sanitizeString(body.email, MAX_LENGTHS.email).toLowerCase() || 'guest@example.com'
+    const phone = sanitizeString(body.phone, MAX_LENGTHS.phone)
+    const lessonType = sanitizeString(body.lessonType, MAX_LENGTHS.lessonType) || 'single'
+    
+    // Validate lesson type
+    const validLessonTypes = ['single', 'casual', 'test', 'package']
+    if (!validLessonTypes.includes(lessonType)) {
+      return NextResponse.json({ 
+        error: 'Invalid lesson type' 
+      }, { status: 400 })
+    }
+    
+    const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
     
     // Create booking
-    const { data, error } = await adminClient
+    const { data, error } = await supabase
       .from('bookings_new')
       .insert([
         {
@@ -48,23 +66,20 @@ export async function POST(request: NextRequest) {
       .select()
     
     if (error) {
-      console.error('❌ Booking creation error:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
     
-    console.log('✅ Booking created:', { id: data[0]?.id })
-    
-    // Generate claim code for email notification (not stored in DB)
+    // Generate claim code for email notification
     const claimCode = Math.floor(100000 + Math.random() * 900000).toString()
     
     return NextResponse.json({ 
       success: true, 
       booking: data[0],
-      claimCode, // For email notification only
+      claimCode,
       message: 'Booking created successfully'
     })
-  } catch (error: any) {
-    console.error('Booking creation error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }

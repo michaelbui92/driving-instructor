@@ -2,6 +2,9 @@ User-agent: *
 Allow: /
 Disallow: /api/
 Disallow: /_next/
+Disallow: /test-booking/
+Disallow: /instructor/
+Disallow: /student/
 Disallow: /*.json$
 Disallow: /*.js$
 

@@ -7,6 +7,9 @@ import Navbar from '@/components/Navbar'
 import { supabase } from '@/lib/supabase'
 import { formatDate, getAvailableSlots, getLessonPrice } from '@/lib/booking-utils'
 import { sendBookingCancellationEmail } from '@/lib/booking-email'
+import ErrorBoundary from '@/components/ErrorBoundary'
+import { DashboardSkeleton, StatsSkeleton, BookingListSkeleton } from '@/components/Skeletons'
+import { toast } from '@/components/Toast'
 
 type BookingType = {
   id: string
@@ -70,7 +73,6 @@ export default function StudentDashboardPage() {
           table: 'bookings_new'
         },
         () => {
-          console.log('Real-time booking change detected')
           loadDashboard()
         }
       )
@@ -86,8 +88,6 @@ export default function StudentDashboardPage() {
     if (!userEmail) return
     
     try {
-      console.log('📊 Loading bookings for:', userEmail)
-      
       const { data, error } = await supabase
         .from('bookings_new')
         .select('*')
@@ -95,14 +95,11 @@ export default function StudentDashboardPage() {
         .order('date', { ascending: false })
 
       if (error) {
-        console.error('Error loading bookings:', error)
         throw error
       }
 
-      console.log('✅ Loaded bookings:', data?.length || 0)
       setBookings(data || [])
     } catch (err) {
-      console.error('Dashboard load error:', err)
       setMessage({ type: 'error', text: 'Failed to load bookings' })
       setBookings([])
     } finally {
@@ -145,7 +142,6 @@ export default function StudentDashboardPage() {
       })
 
       if (!emailResult.success) {
-        console.warn('Failed to send cancellation email:', emailResult.error)
         // Continue anyway - booking was cancelled successfully
       }
 
@@ -153,8 +149,10 @@ export default function StudentDashboardPage() {
         prev.map((b) => (b.id === bookingId ? { ...b, status: 'cancelled' as const } : b))
       )
       setMessage({ type: 'success', text: 'Booking cancelled successfully' })
+      toast('success', 'Booking cancelled successfully')
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Failed to cancel' })
+      toast('error', err.message || 'Failed to cancel booking')
     } finally {
       setActionLoading(false)
     }
@@ -186,7 +184,7 @@ export default function StudentDashboardPage() {
     const newTime = selectedNewTime
     
     if (!newDate || !newTime) {
-      alert('Please select date and time')
+      toast('warning', 'Please select date and time')
       return
     }
 
@@ -224,8 +222,10 @@ export default function StudentDashboardPage() {
       setReschedulingBooking(null)
       setSelectedNewDate('')
       setMessage({ type: 'success', text: 'Booking rescheduled! Awaiting instructor confirmation.' })
+      toast('success', 'Booking rescheduled! Awaiting instructor confirmation.')
     } catch (err: any) {
       setMessage({ type: 'error', text: err.message || 'Failed to reschedule' })
+      toast('error', err.message || 'Failed to reschedule')
     } finally {
       setActionLoading(false)
     }
@@ -312,9 +312,7 @@ export default function StudentDashboardPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
         <Navbar />
-        <div className="max-w-6xl mx-auto px-4 py-16 text-center">
-          <p className="text-gray-500">Loading...</p>
-        </div>
+        <DashboardSkeleton />
       </div>
     )
   }
@@ -335,7 +333,8 @@ export default function StudentDashboardPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Navbar showLocation={false} />
 
-      <div className="max-w-6xl mx-auto px-4 py-12">
+      <ErrorBoundary section="Student Dashboard">
+        <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="mb-8 flex flex-col md:flex-row items-start md:items-center gap-6">
           <div className="flex-1">
@@ -544,11 +543,13 @@ export default function StudentDashboardPage() {
           </div>
         </div>
       </div>
+      </ErrorBoundary>
 
       {/* Reschedule Modal */}
       {reschedulingBooking && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <ErrorBoundary section="Reschedule Modal">
+            <div className="bg-white rounded-xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold">Reschedule Booking</h2>
               <button
@@ -666,6 +667,7 @@ export default function StudentDashboardPage() {
               </button>
             </div>
           </div>
+          </ErrorBoundary>
         </div>
       )}
     </div>

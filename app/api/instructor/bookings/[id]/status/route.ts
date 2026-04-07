@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDBClient } from '@/lib/db-client'
+import { createClient } from '@supabase/supabase-js'
+import { validateApiKey, unauthorizedResponse } from '@/lib/api-auth'
+
+export const dynamic = 'force-dynamic'
 
 // Email sending function using AgentMail
 async function sendEmail(to: string, subject: string, body: string): Promise<{ success: boolean; error?: string }> {
@@ -7,18 +10,11 @@ async function sendEmail(to: string, subject: string, body: string): Promise<{ s
     const apiKey = process.env.NEXT_PUBLIC_AGENTMAIL_API_KEY
     
     if (!apiKey) {
-      console.warn('AgentMail API key not configured, skipping email')
       return { success: false, error: 'Email service not configured' }
     }
 
-    // Use AgentMail API to send email
-    // The inbox_id is the sender's email address (drivewithbui@agentmail.to)
-    // We send TO the student, FROM our inbox
-    // Note: @ must NOT be encoded in URL path - use literal string like OTP route
     const inboxId = 'drivewithbui@agentmail.to'
     const url = `https://api.agentmail.to/v0/inboxes/${inboxId}/messages/send`
-    
-    console.log(`Sending email via AgentMail: from=${inboxId} to=${to}`)
     
     const response = await fetch(url, {
       method: 'POST',
@@ -34,15 +30,12 @@ async function sendEmail(to: string, subject: string, body: string): Promise<{ s
     })
 
     if (response.ok) {
-      console.log(`✅ Email sent successfully to ${to}`)
       return { success: true }
     } else {
       const errorText = await response.text()
-      console.error(`AgentMail API error:`, response.status, errorText)
       return { success: false, error: `Failed to send email: ${response.status}` }
     }
   } catch (error) {
-    console.error('Error sending email:', error)
     return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
   }
 }
@@ -52,16 +45,30 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // Validate API key
+    if (!validateApiKey(request)) {
+      return unauthorizedResponse()
+    }
+
     const { id: bookingId } = await params
-    const { status } = await request.json()
+    const body = await request.json()
+    const { status } = body
 
-    console.log(`[Status Update] Booking ${bookingId} -> status: ${status}`)
-
-    if (!status || !['pending', 'confirmed', 'cancelled', 'completed'].includes(status)) {
+    // Validate status
+    const validStatuses = ['pending', 'confirmed', 'cancelled', 'completed']
+    if (!status || !validStatuses.includes(status)) {
       return NextResponse.json({ error: 'Invalid status' }, { status: 400 })
     }
 
-    const db = getDBClient()
+    // Validate booking ID format
+    if (!bookingId || typeof bookingId !== 'string' || bookingId.length > 100) {
+      return NextResponse.json({ error: 'Invalid booking ID' }, { status: 400 })
+    }
+
+    const db = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
 
     // First, fetch the booking to get student email before updating
     const { data: booking, error: fetchError } = await db
@@ -71,7 +78,6 @@ export async function POST(
       .single()
 
     if (fetchError || !booking) {
-      console.error('Error fetching booking:', fetchError)
       return NextResponse.json({ error: 'Booking not found' }, { status: 404 })
     }
 
@@ -80,8 +86,6 @@ export async function POST(
     const bookingDate = booking.date
     const bookingTime = booking.time
 
-    console.log(`[Status Update] Student email: ${studentEmail}, name: ${studentName}`)
-
     // Update the status
     const result = await db
       .from('bookings_new')
@@ -89,8 +93,7 @@ export async function POST(
       .eq('id', bookingId)
 
     if (result.error) {
-      console.error('Error updating booking status:', result.error)
-      return NextResponse.json({ error: result.error }, { status: 500 })
+      return NextResponse.json({ error: result.error.message }, { status: 500 })
     }
 
     // Send email notification based on new status
@@ -120,18 +123,13 @@ Best regards,
 Drive With Bui`
       }
 
-      console.log(`[Status Update] Sending ${status} email to: ${studentEmail}`)
-
-      // Send email and wait for result
-      const emailResult = await sendEmail(studentEmail, emailSubject, emailBody)
-      console.log(`[Status Update] Email result:`, emailResult)
-    } else {
-      console.log(`[Status Update] No email sent - studentEmail: ${studentEmail}, status: ${status}`)
+      // Send email asynchronously
+      await sendEmail(studentEmail, emailSubject, emailBody)
     }
 
     return NextResponse.json({ success: true, booking: result.data?.[0] || result.data })
-  } catch (error: any) {
-    console.error('Booking status update error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }

@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { validateApiKey, unauthorizedResponse, sanitizeBookingInput, validateBookingInput } from '@/lib/api-auth'
 
 // Email sending function
 async function sendEmail(to: string, subject: string, body: string): Promise<void> {
   const apiKey = process.env.NEXT_PUBLIC_AGENTMAIL_API_KEY
   if (!apiKey) {
-    console.error('AgentMail API key not configured')
     return
   }
 
   try {
-    const response = await fetch(
+    await fetch(
       `https://api.agentmail.to/v0/inboxes/drivewithbui@agentmail.to/messages/send`,
       {
         method: 'POST',
@@ -25,25 +25,28 @@ async function sendEmail(to: string, subject: string, body: string): Promise<voi
         }),
       }
     )
-
-    if (response.ok) {
-      console.log(`✅ Booking confirmation email sent to ${to}`)
-    } else {
-      const errorText = await response.text()
-      console.error(`Failed to send booking email:`, response.status, errorText)
-    }
-  } catch (error) {
-    console.error('Error sending booking email:', error)
+  } catch {
+    // Email failures are non-critical
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { studentName, email, phone, date, time, lessonType } = await request.json()
+    // Validate API key
+    if (!validateApiKey(request)) {
+      return unauthorizedResponse()
+    }
 
-    if (!studentName || !date || !time) {
+    const body = await request.json()
+    
+    // Sanitize input
+    const sanitized = sanitizeBookingInput(body)
+    
+    // Validate required fields
+    const errors = validateBookingInput(sanitized)
+    if (errors.length > 0) {
       return NextResponse.json(
-        { error: 'Student name, date, and time are required' },
+        { error: errors.join(', ') },
         { status: 400 }
       )
     }
@@ -57,19 +60,20 @@ export async function POST(request: NextRequest) {
     const { data: booking, error } = await supabase
       .from('bookings_new')
       .insert([{
-        student_name: studentName,
-        email: email || 'guest@example.com',
-        phone: phone || '',
-        date,
-        time,
-        lesson_type: lessonType || 'single',
-        status: 'confirmed' // Auto-confirm
+        student_name: sanitized.studentName,
+        email: sanitized.email,
+        phone: sanitized.phone,
+        date: sanitized.date,
+        time: sanitized.time,
+        lesson_type: sanitized.lessonType,
+        status: 'confirmed',
+        address: sanitized.address,
+        notes: sanitized.notes,
       }])
       .select()
       .single()
 
     if (error) {
-      console.error('Error creating booking:', error)
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
@@ -84,21 +88,24 @@ export async function POST(request: NextRequest) {
       })
     }
 
-    const lessonName = lessonType === 'single' ? 'Single Lesson ($55)' : 
-                      lessonType === 'casual' ? 'Casual Driving ($45)' :
-                      lessonType === 'test' ? 'Driving Test ($75)' : 'Lesson'
+    const lessonNames: Record<string, string> = {
+      single: 'Single Lesson ($55)',
+      casual: 'Casual Driving ($45)',
+      test: 'Driving Test ($75)',
+    }
+    const lessonName = lessonNames[sanitized.lessonType] || 'Lesson'
 
-    const emailSubject = `✅ Booking Confirmed: ${formatDate(date)} at ${time}`
+    const emailSubject = `✅ Booking Confirmed: ${formatDate(sanitized.date)} at ${sanitized.time}`
     const emailBody = `
-Great news, ${studentName}!
+Great news, ${sanitized.studentName}!
 
 Your driving lesson has been confirmed by your instructor!
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 LESSON DETAILS:
-📅 Date: ${formatDate(date)}
-🕕 Time: ${time}
+📅 Date: ${formatDate(sanitized.date)}
+🕕 Time: ${sanitized.time}
 🚗 Lesson Type: ${lessonName}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -127,9 +134,9 @@ Drive With Bui
 Website: drivewithbui.com
     `.trim()
 
-    // Send email asynchronously (don't block response)
-    if (email) {
-      sendEmail(email, emailSubject, emailBody)
+    // Send email asynchronously
+    if (sanitized.email) {
+      sendEmail(sanitized.email, emailSubject, emailBody)
     }
 
     return NextResponse.json({ 
@@ -137,8 +144,8 @@ Website: drivewithbui.com
       booking,
       message: 'Booking created and confirmed! Student has been notified.'
     })
-  } catch (error: any) {
-    console.error('Instructor booking creation error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({ error: errorMessage }, { status: 500 })
   }
 }

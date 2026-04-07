@@ -6,6 +6,9 @@ import Image from 'next/image'
 import Navbar from '@/components/Navbar'
 import { supabase } from '@/lib/supabase'
 import { formatDate, generateTimeSlots, getAvailableSlots, type TimeSlot } from '@/lib/booking-utils'
+import { BookingPageSkeleton, TimeSlotSkeleton } from '@/components/Skeletons'
+import ErrorBoundary from '@/components/ErrorBoundary'
+import { toast } from '@/components/Toast'
 
 type BookingForm = {
   studentName: string
@@ -54,6 +57,8 @@ export default function BookPage() {
     time: ''
   })
   const [loading, setLoading] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
+  const [slotsLoading, setSlotsLoading] = useState(false)
   const [error, setError] = useState('')
   const [availableSlots, setAvailableSlots] = useState<TimeSlot[]>([])
   const [existingBookings, setExistingBookings] = useState<any[]>([])
@@ -109,8 +114,8 @@ export default function BookPage() {
       } else {
         setForm(prev => ({ ...prev, email }))
       }
-    } catch (err) {
-      console.error('Error loading student details:', err)
+    } catch {
+      // Silent fail for student details
     }
   }
 
@@ -124,8 +129,10 @@ export default function BookPage() {
           .in('status', ['pending', 'confirmed'])
         
         setExistingBookings(data || [])
-      } catch (err) {
-        console.error('Error loading bookings:', err)
+      } catch {
+        // Silent fail for bookings
+      } finally {
+        setInitialLoading(false)
       }
     }
     loadBookings()
@@ -139,6 +146,7 @@ export default function BookPage() {
   }, [form.date])
 
   const fetchAvailableSlots = async (date: string) => {
+    setSlotsLoading(true)
     try {
       // Get all rules from Supabase directly
       const { data: rules } = await supabase
@@ -252,9 +260,10 @@ export default function BookPage() {
       }))
       
       setAvailableSlots(slots)
-    } catch (err) {
-      console.error('Error fetching availability:', err)
+    } catch {
       setAvailableSlots([])
+    } finally {
+      setSlotsLoading(false)
     }
   }
 
@@ -462,6 +471,7 @@ export default function BookPage() {
   const handleSubmit = async () => {
     if (!form.studentName || !form.email || !form.phone || !form.date || !form.time) {
       setError('Please fill in all fields')
+      toast('warning', 'Please fill in all required fields')
       return
     }
 
@@ -504,20 +514,22 @@ export default function BookPage() {
       })
 
       if (!emailResponse.ok) {
-        console.warn('Failed to send booking confirmation email')
         // Continue anyway - booking was created successfully
       }
 
       // Check if logged in
       if (isLoggedIn) {
         // Already logged in - redirect to dashboard
+        toast('success', 'Booking created successfully!')
         window.location.href = '/student/dashboard'
       } else {
         // Not logged in - show email verification modal
+        toast('success', 'Booking created! Check your email for confirmation.')
         setShowVerifyModal(true)
       }
     } catch (err: any) {
       setError(err.message || 'Failed to create booking')
+      toast('error', err.message || 'Failed to create booking')
     } finally {
       setLoading(false)
     }
@@ -525,6 +537,16 @@ export default function BookPage() {
 
   const getLessonInfo = (id: string) => LESSON_TYPES.find(l => l.id === id) || LESSON_TYPES[0]
   const selectedLesson = getLessonInfo(form.lessonType)
+
+  // Show skeleton while loading initial data
+  if (initialLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <Navbar showLocation={false} />
+        <BookingPageSkeleton />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -677,7 +699,9 @@ export default function BookPage() {
                 <h3 className="text-lg font-semibold mb-4">
                   Available Times for {formatDate(form.date)}
                 </h3>
-                {availableSlots.length === 0 ? (
+                {slotsLoading ? (
+                  <TimeSlotSkeleton count={8} />
+                ) : availableSlots.length === 0 ? (
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-800">
                     No available slots for this date. Please select another date.
                   </div>
