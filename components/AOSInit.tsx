@@ -5,10 +5,13 @@ import AOS from 'aos'
 
 export default function AOSInit() {
   useEffect(() => {
-    // Disable AOS on touch devices to prevent scroll jank
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+    // Only disable AOS on pure touch devices (phones) — not laptops with touch screens
+    // '(hover: none)' means the device doesn't support hover (i.e., a phone, not a touchscreen laptop)
+    const isPureTouchDevice = typeof window !== 'undefined' &&
+      window.matchMedia('(hover: none)').matches &&
+      window.matchMedia('(pointer: coarse)').matches
 
-    if (!isTouchDevice) {
+    if (!isPureTouchDevice) {
       AOS.init({
         duration: 800,
         easing: 'ease-out-cubic',
