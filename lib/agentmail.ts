@@ -26,7 +26,7 @@ interface SendEmailResponse {
  */
 export async function sendEmail(params: SendEmailParams): Promise<SendEmailResponse> {
   try {
-    const apiKey = process.env.NEXT_PUBLIC_AGENTMAIL_API_KEY
+    const apiKey = process.env.AGENTMAIL_API_KEY
     
     if (!apiKey) {
       console.error('AgentMail API key is not configured')

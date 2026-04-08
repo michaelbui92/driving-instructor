@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
     const { student_name, email, date, time, lesson_type } = booking
 
     // Send confirmation email via AgentMail
-    const apiKey = process.env.NEXT_PUBLIC_AGENTMAIL_API_KEY
+    const apiKey = process.env.AGENTMAIL_API_KEY
     if (!apiKey) {
       console.error('AgentMail API key not configured')
       return NextResponse.json(

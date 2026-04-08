@@ -4,7 +4,7 @@ import { validateApiKey, unauthorizedResponse, sanitizeBookingInput, validateBoo
 
 // Email sending function
 async function sendEmail(to: string, subject: string, body: string): Promise<void> {
-  const apiKey = process.env.NEXT_PUBLIC_AGENTMAIL_API_KEY
+  const apiKey = process.env.AGENTMAIL_API_KEY
   if (!apiKey) {
     return
   }

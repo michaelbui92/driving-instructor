@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic'
 // Email sending function using AgentMail
 async function sendEmail(to: string, subject: string, body: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const apiKey = process.env.NEXT_PUBLIC_AGENTMAIL_API_KEY
+    const apiKey = process.env.AGENTMAIL_API_KEY
     
     if (!apiKey) {
       return { success: false, error: 'Email service not configured' }

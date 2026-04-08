@@ -14,7 +14,7 @@ export async function sendBookingConfirmationEmail(
 ): Promise<{ success: boolean; error?: string }> {
   console.log('[Booking Confirm Email] Starting...', booking)
   try {
-    const apiKey = process.env.NEXT_PUBLIC_AGENTMAIL_API_KEY
+    const apiKey = process.env.AGENTMAIL_API_KEY
     if (!apiKey) {
       console.error('[Booking Confirm Email] API key missing!')
       return { success: false, error: 'Email service not configured' }
@@ -111,7 +111,7 @@ export async function sendBookingCancellationEmail(
 ): Promise<{ success: boolean; error?: string }> {
   console.log('[Cancellation Email] Starting...', booking)
   try {
-    const apiKey = process.env.NEXT_PUBLIC_AGENTMAIL_API_KEY
+    const apiKey = process.env.AGENTMAIL_API_KEY
     if (!apiKey) {
       console.error('[Cancellation Email] API key missing!')
       return { success: false, error: 'Email service not configured' }
@@ -194,7 +194,7 @@ export async function sendBookingRescheduleEmail(
 ): Promise<{ success: boolean; error?: string }> {
   console.log('[Reschedule Email] Starting...', booking)
   try {
-    const apiKey = process.env.NEXT_PUBLIC_AGENTMAIL_API_KEY
+    const apiKey = process.env.AGENTMAIL_API_KEY
     if (!apiKey) {
       console.error('[Reschedule Email] API key missing!')
       return { success: false, error: 'Email service not configured' }

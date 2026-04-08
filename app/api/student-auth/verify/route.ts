@@ -1,9 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { verifyLoginCodeAndSignIn } from '@/lib/student-auth'
+import { checkRateLimit, getClientIP } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
   try {
     const { email, code } = await request.json()
+    const ip = getClientIP(request)
+    const rateKey = `verify:${ip}:${email}`
+
+    // Check rate limit (max 5 failed attempts per 15 minutes)
+    const { allowed, retryAfterMs } = checkRateLimit(rateKey, 5, 15 * 60 * 1000, 30 * 1000)
+    if (!allowed) {
+      return NextResponse.json(
+        { error: 'Too many failed attempts. Please wait 30 seconds and try again.' },
+        { 
+          status: 429,
+          headers: { 'Retry-After': String(Math.ceil((retryAfterMs || 30000) / 1000)) }
+        }
+      )
+    }
 
     if (!email || !code) {
       return NextResponse.json(
