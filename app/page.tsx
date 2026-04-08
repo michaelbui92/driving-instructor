@@ -6,6 +6,7 @@ import Image from 'next/image'
 import Navbar from '@/components/Navbar'
 import DynamicHeadline from '@/components/DynamicHeadline'
 import StudentUpcomingLessons from '@/components/StudentUpcomingLessons'
+import ErrorBoundary from '@/components/ErrorBoundary'
 
 export default function Home() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -75,7 +76,7 @@ export default function Home() {
               </Link>
             </div>
           </div>
-          <div className="flex-1 relative w-full min-w-0" data-aos="fade-left">
+          <div className="w-full" data-aos="fade-left">
             <div className="relative w-full h-64 md:h-96">
               <Image
                 src="/images/mascot-hero.png"
@@ -90,7 +91,9 @@ export default function Home() {
       </section>
 
       {/* Student Upcoming Lessons Section */}
-      <StudentUpcomingLessons isLoggedIn={isLoggedIn} userEmail={userEmail} />
+      <ErrorBoundary>
+        <StudentUpcomingLessons isLoggedIn={isLoggedIn} userEmail={userEmail} />
+      </ErrorBoundary>
 
       {/* Why Choose Drive With Bui? */}
       <section className="bg-white py-16" id="why-choose">

@@ -30,6 +30,15 @@ export default function StudentUpcomingLessons({ isLoggedIn, userEmail }: Studen
       return
     }
 
+    // Guard: ensure supabase client is properly configured
+    if (!supabase.supabaseUrl || !supabase.supabaseKey || 
+        supabase.supabaseUrl === 'https://placeholder.supabase.co' ||
+        !supabase.supabaseUrl.startsWith('https://')) {
+      console.warn('Supabase client not configured, skipping lesson fetch')
+      setLoading(false)
+      return
+    }
+
     try {
       const today = new Date().toISOString().split('T')[0]
       
