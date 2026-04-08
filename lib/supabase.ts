@@ -4,10 +4,12 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
-// Create client only if credentials are available
+// Only create client if we have real credentials (avoid crashes on mobile with missing env vars)
+const hasValidCredentials = supabaseUrl.startsWith('https://') && supabaseAnonKey.length > 0
+
 export const supabase: SupabaseClient = createClient(
-  supabaseUrl || 'https://placeholder.supabase.co', 
-  supabaseAnonKey || 'placeholder-key'
+  hasValidCredentials ? supabaseUrl : 'https://placeholder.supabase.co',
+  hasValidCredentials ? supabaseAnonKey : 'placeholder-key'
 )
 
 // Types for our tables
