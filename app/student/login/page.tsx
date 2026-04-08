@@ -159,39 +159,6 @@ export default function StudentLoginPage() {
               >
                 {loading ? 'Sending...' : 'Send Login Code'}
               </button>
-              
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={async () => {
-                    if (!email) {
-                      setError('Please enter your email first')
-                      return
-                    }
-                    setError('')
-                    setLoading(true)
-                    
-                    // Skip OTP - just create a mock session for this email
-                    // In production, this would require proper verification
-                    try {
-                      // For now, just set a cookie and redirect
-                      document.cookie = `sb-email=${encodeURIComponent(email)}; path=/; max-age=86400`
-                      document.cookie = 'sb-logged-in=true; path=/; max-age=86400'
-                      
-                      const params = new URLSearchParams(window.location.search)
-                      router.push(params.get('redirect') || '/student/dashboard')
-                    } catch (err) {
-                      setError('Failed to login. Please try again.')
-                    } finally {
-                      setLoading(false)
-                    }
-                  }}
-                  disabled={loading}
-                  className="text-sm text-gray-500 hover:text-gray-700 underline disabled:opacity-50"
-                >
-                  Skip for now (use email without verification)
-                </button>
-              </div>
             </form>
           )}
 
