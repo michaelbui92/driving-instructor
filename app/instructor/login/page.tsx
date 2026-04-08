@@ -4,19 +4,17 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
-import { login, hasPinSet, resetPin } from '@/lib/auth';
+import { login, hasPinSet } from '@/lib/auth';
 
 export default function InstructorLoginPage() {
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [pinSet, setPinSet] = useState(false);
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [checkingPin, setCheckingPin] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    // Check if PIN is already set
     const checkPinSet = async () => {
       const hasPin = await hasPinSet();
       setPinSet(hasPin);
@@ -33,7 +31,6 @@ export default function InstructorLoginPage() {
     try {
       const success = await login(pin);
       if (success) {
-        // Successful login - redirect to instructor portal
         router.push('/instructor');
       } else {
         setError('Invalid PIN. Please try again.');
@@ -43,15 +40,6 @@ export default function InstructorLoginPage() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleResetPin = async () => {
-    await resetPin();
-    setPinSet(false);
-    setShowResetConfirm(false);
-    setPin('');
-    setError('');
-    alert('PIN has been reset. Please set a new PIN.');
   };
 
   if (checkingPin) {
@@ -91,7 +79,6 @@ export default function InstructorLoginPage() {
                 maxLength={6}
                 value={pin}
                 onChange={(e) => {
-                  // Only allow digits
                   const value = e.target.value.replace(/\D/g, '');
                   setPin(value);
                   setError('');
@@ -136,17 +123,6 @@ export default function InstructorLoginPage() {
             </button>
           </form>
 
-          {pinSet && (
-            <div className="mt-6 pt-6 border-t border-gray-200">
-              <button
-                onClick={() => setShowResetConfirm(true)}
-                className="w-full py-2 px-4 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition text-sm font-medium"
-              >
-                Forgot PIN? Reset it here
-              </button>
-            </div>
-          )}
-
           <div className="mt-8 text-center">
             <Link 
               href="/" 
@@ -156,35 +132,7 @@ export default function InstructorLoginPage() {
             </Link>
           </div>
         </div>
-
       </div>
-
-      {/* Reset Confirmation Modal */}
-      {showResetConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full">
-            <h3 className="text-xl font-bold mb-4">Reset PIN</h3>
-            <p className="text-gray-600 mb-6">
-              This will clear your current PIN and require you to set a new one. 
-              You will need to use the new PIN for future logins.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={handleResetPin}
-                className="flex-1 py-2 px-4 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-semibold"
-              >
-                Reset PIN
-              </button>
-              <button
-                onClick={() => setShowResetConfirm(false)}
-                className="flex-1 py-2 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
