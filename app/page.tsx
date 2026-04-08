@@ -75,7 +75,7 @@ export default function Home() {
               </Link>
             </div>
           </div>
-          <div className="flex-1 relative" data-aos="fade-left">
+          <div className="flex-1 relative w-full min-w-0" data-aos="fade-left">
             <div className="relative w-full h-64 md:h-96">
               <Image
                 src="/images/mascot-hero.png"
