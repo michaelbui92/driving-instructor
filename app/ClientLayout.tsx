@@ -2,7 +2,6 @@
 
 import { AuthProvider } from '@/components/AuthProvider'
 import { ToastProvider } from '@/components/Toast'
-import AOSInit from '@/components/AOSInit'
 
 export default function ClientLayout({
   children,
@@ -12,7 +11,6 @@ export default function ClientLayout({
   return (
     <AuthProvider>
       <ToastProvider>
-        <AOSInit />
         {children}
       </ToastProvider>
     </AuthProvider>

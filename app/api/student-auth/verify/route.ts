@@ -8,15 +8,11 @@ export async function POST(request: NextRequest) {
     const ip = getClientIP(request)
     const rateKey = `verify:${ip}:${email}`
 
-    // Check rate limit (max 5 failed attempts per 15 minutes)
     const { allowed, retryAfterMs } = checkRateLimit(rateKey, 5, 15 * 60 * 1000, 30 * 1000)
     if (!allowed) {
       return NextResponse.json(
         { error: 'Too many failed attempts. Please wait 30 seconds and try again.' },
-        { 
-          status: 429,
-          headers: { 'Retry-After': String(Math.ceil((retryAfterMs || 30000) / 1000)) }
-        }
+        { status: 429, headers: { 'Retry-After': String(Math.ceil((retryAfterMs || 30000) / 1000)) } }
       )
     }
 
@@ -27,7 +23,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Verify the code and sign in
     const result = await verifyLoginCodeAndSignIn(email, code)
 
     if (!result.success) {
@@ -37,7 +32,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Create response with session cookie
     const response = NextResponse.json({
       success: true,
       user: {
@@ -46,13 +40,12 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // Set session cookies
     response.cookies.set('sb-access-token', result.session.access_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 60 * 60 * 24 * 7, // 1 week
+      maxAge: 60 * 60 * 24 * 7,
     })
 
     response.cookies.set('sb-refresh-token', result.session.refresh_token, {
@@ -63,7 +56,6 @@ export async function POST(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 7,
     })
 
-    // Set a visible cookie for client-side auth state checking (navbar dropdown)
     response.cookies.set('sb-logged-in', 'true', {
       httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
@@ -72,7 +64,6 @@ export async function POST(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 7,
     })
 
-    // Also set email cookie for navbar display
     response.cookies.set('sb-email', result.session.user.email, {
       httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
