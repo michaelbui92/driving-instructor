@@ -30,11 +30,12 @@ export default function StudentUpcomingLessons({ isLoggedIn, userEmail }: Studen
       return
     }
 
-    // Guard: ensure supabase client is properly configured
-    if (!supabase.supabaseUrl || !supabase.supabaseKey || 
-        supabase.supabaseUrl === 'https://placeholder.supabase.co' ||
-        !supabase.supabaseUrl.startsWith('https://')) {
-      console.warn('Supabase client not configured, skipping lesson fetch')
+    // Guard: ensure supabase env vars are configured (check env directly to avoid TypeScript private property errors)
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    if (!supabaseUrl || 
+        supabaseUrl === 'https://placeholder.supabase.co' ||
+        !supabaseUrl.startsWith('https://')) {
+      console.warn('Supabase not configured, skipping lesson fetch')
       setLoading(false)
       return
     }
