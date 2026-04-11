@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#EF4444"/>
+      <stop offset="100%" style="stop-color:#DC2626"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background with rounded corners -->
+  <rect width="32" height="32" rx="6" fill="url(#bg)"/>
+  
+  <!-- Car body -->
+  <rect x="6" y="12" width="20" height="8" rx="2" fill="#1F2937"/>
+  
+  <!-- Car top/windshield -->
+  <path d="M10 12 L16 6 L22 12" fill="#374151"/>
+  
+  <!-- Wheels -->
+  <circle cx="10" cy="22" r="3" fill="#111827"/>
+  <circle cx="22" cy="22" r="3" fill="#111827"/>
+  
+  <!-- Wheel highlights -->
+  <circle cx="10" cy="22" r="1.5" fill="#6B7280"/>
+  <circle cx="22" cy="22" r="1.5" fill="#6B7280"/>
+  
+  <!-- Headlights -->
+  <circle cx="26" cy="16" r="1.5" fill="#FBBF24"/>
+  <circle cx="6" cy="16" r="1.5" fill="#FBBF24"/>
+  
+  <!-- Side window -->
+  <rect x="11" y="8" width="10" height="4" rx="1" fill="#60A5FA"/>
+</svg>
