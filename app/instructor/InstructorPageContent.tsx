@@ -31,8 +31,9 @@ import {
 } from '@/lib/booking-utils'
 import { authenticatedFetch } from '@/lib/instructor-api'
 import { toast } from '@/components/Toast'
+import InstructorSkillEditor from '@/components/InstructorSkillEditor'
 
-type TabType = 'bookings' | 'schedule' | 'calendar'
+type TabType = 'bookings' | 'schedule' | 'calendar' | 'skills'
 
 interface InstructorProfile {
   id: string
@@ -2257,6 +2258,10 @@ export default function InstructorPage() {
                 className={`shrink-0 px-6 py-4 font-semibold transition whitespace-nowrap ${selectedTab === 'calendar' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
                 onClick={() => setSelectedTab('calendar')}
               >📅 Calendar</button>
+              <button
+                className={`shrink-0 px-6 py-4 font-semibold transition whitespace-nowrap ${selectedTab === 'skills' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
+                onClick={() => setSelectedTab('skills')}
+              >📊 Skills</button>
             </div>
           </div>
           <div className="p-6">
@@ -2266,7 +2271,9 @@ export default function InstructorPage() {
                 <div className="my-8 border-t" />
                 {renderAvailabilityTab()}
               </>
-            ) : selectedTab === 'calendar' ? renderCalendarTab() : (
+            ) : selectedTab === 'calendar' ? renderCalendarTab() : selectedTab === 'skills' ? (
+              <InstructorSkillEditor />
+            ) : (
               <>
                 {/* Bookings sub-toggle + search */}
                 <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">

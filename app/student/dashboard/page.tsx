@@ -10,6 +10,8 @@ import { sendBookingCancellationEmail } from '@/lib/booking-email'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { DashboardSkeleton, StatsSkeleton, BookingListSkeleton } from '@/components/Skeletons'
 import { toast } from '@/components/Toast'
+import SkillOnboarding from '@/components/SkillOnboarding'
+import SkillProgress from '@/components/SkillProgress'
 
 type BookingType = {
   id: string
@@ -28,6 +30,12 @@ type BookingType = {
   created_at: string
 }
 
+type StudentType = {
+  id: string
+  onboarding_completed: boolean
+  onboarding_skipped: boolean
+}
+
 export default function StudentDashboardPage() {
   const [bookings, setBookings] = useState<BookingType[]>([])
   const [loading, setLoading] = useState(true)
@@ -39,6 +47,10 @@ export default function StudentDashboardPage() {
   const [actionLoading, setActionLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [userEmail, setUserEmail] = useState<string>('')
+  const [studentId, setStudentId] = useState<string>('')
+  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [showSkills, setShowSkills] = useState(false)
+  const [student, setStudent] = useState<StudentType | null>(null)
   const router = useRouter()
 
   // Get user email from cookie
@@ -90,19 +102,37 @@ export default function StudentDashboardPage() {
     if (!userEmail) return
     
     try {
-      const { data, error } = await supabase
+      // Load bookings
+      const { data: bookingsData, error: bookingsError } = await supabase
         .from('bookings_new')
         .select('*')
         .eq('email', userEmail)
         .order('date', { ascending: false })
 
-      if (error) {
-        throw error
-      }
+      if (bookingsError) throw bookingsError
 
-      setBookings(data || [])
+      setBookings(bookingsData || [])
+
+      // Load student info for onboarding check
+      const { data: studentData, error: studentError } = await supabase
+        .from('students')
+        .select('id, onboarding_completed, onboarding_skipped')
+        .eq('email', userEmail)
+        .single()
+
+      if (studentError && studentError.code !== 'PGRST116') {
+        console.error('Error loading student:', studentError)
+      } else if (studentData) {
+        setStudentId(studentData.id)
+        setStudent(studentData)
+        
+        // Show onboarding if new student hasn't completed or skipped
+        if (!studentData.onboarding_completed && !studentData.onboarding_skipped) {
+          setShowOnboarding(true)
+        }
+      }
     } catch (err) {
-      setMessage({ type: 'error', text: 'Failed to load bookings' })
+      setMessage({ type: 'error', text: 'Failed to load dashboard' })
       setBookings([])
     } finally {
       setLoading(false)
@@ -335,6 +365,24 @@ export default function StudentDashboardPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Navbar showLocation={false} />
 
+      {/* Skill Onboarding Modal */}
+      {showOnboarding && studentId && userEmail && (
+        <SkillOnboarding
+          studentId={studentId}
+          email={userEmail}
+          onComplete={() => {
+            setShowOnboarding(false)
+            // Reload to update student status
+            loadDashboard()
+          }}
+          onSkip={() => {
+            setShowOnboarding(false)
+            // Reload to update student status
+            loadDashboard()
+          }}
+        />
+      )}
+
       <ErrorBoundary section="Student Dashboard">
         <div className="max-w-6xl mx-auto px-4 py-12">
         {/* Header */}
@@ -405,6 +453,26 @@ export default function StudentDashboardPage() {
             </div>
           )
         })()}
+
+        {/* Skill Progress Section */}
+        {studentId && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-2xl font-bold">My Skill Progress</h2>
+              {!student?.onboarding_completed && !student?.onboarding_skipped && (
+                <button
+                  onClick={() => setShowOnboarding(true)}
+                  className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition text-sm"
+                >
+                  Complete Self-Assessment
+                </button>
+              )}
+            </div>
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <SkillProgress studentId={studentId} readOnly={true} />
+            </div>
+          </div>
+        )}
 
         {/* Tabs */}
         <div className="bg-white rounded-xl shadow-lg">
