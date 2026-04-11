@@ -113,124 +113,114 @@ export default function StudentLoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Navbar />
       
       <div className="max-w-md mx-auto px-4 py-16">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Student Portal
-          </h1>
-          <p className="text-gray-600">
-            {step === 'email'
-              ? 'Enter your email to access your bookings'
-              : 'Enter the login code from your email'}
-          </p>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-lg p-8">
-          {step === 'email' && (
-            <form onSubmit={handleSendOTP} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email Address
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                />
-              </div>
-
-              {error && (
-                <p className="text-red-500 text-sm">{error}</p>
-              )}
-              {success && (
-                <p className="text-green-500 text-sm">{success}</p>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition disabled:opacity-50"
-              >
-                {loading ? 'Sending...' : 'Send Login Code'}
-              </button>
-            </form>
-          )}
-
-          {step === 'otp' && (
-            <form onSubmit={handleVerifyOTP} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Login Code
-                </label>
-                <input
-                  type="text"
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  placeholder="123456"
-                  maxLength={6}
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl text-center text-2xl tracking-widest focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                />
-                <p className="text-sm text-gray-500 mt-2 text-center">
-                  Sent to: {email}
-                </p>
-              </div>
-
-              {error && (
-                <p className="text-red-500 text-sm">{error}</p>
-              )}
-              {success && (
-                <p className="text-green-500 text-sm">{success}</p>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading || otp.length < 6}
-                className="w-full py-3 bg-blue-600 text-white font-semibold rounded-xl hover:bg-blue-700 transition disabled:opacity-50"
-              >
-                {loading ? 'Verifying...' : 'Enter & Login'}
-              </button>
-
-              <div className="text-center space-y-2">
-                <button
-                  type="button"
-                  onClick={handleResend}
-                  disabled={loading}
-                  className="text-sm text-blue-600 hover:text-blue-700 disabled:opacity-50"
-                >
-                  Resend code
-                </button>
-                <span className="text-gray-300 mx-2">|</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setStep('email')
-                    setOtp('')
-                    setError('')
-                    setSuccess('')
-                  }}
-                  className="text-sm text-gray-600 hover:text-gray-700"
-                >
-                  Change email
-                </button>
-              </div>
-            </form>
-          )}
-
-          <div className="mt-6 pt-6 border-t border-gray-100">
-            <p className="text-sm text-gray-500 text-center">
-              New student?{' '}
-              <Link href="/book" className="text-blue-600 hover:underline">
-                Book a lesson
-              </Link>{' '}
-              to get started.
+        {/* Card */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-primary to-secondary p-6 text-center">
+            <div className="text-4xl mb-2">👋</div>
+            <h1 className="text-2xl font-bold text-white mb-1">
+              Welcome Back
+            </h1>
+            <p className="text-blue-100 text-sm">
+              Sign in to view and manage your bookings
             </p>
+          </div>
+          
+          {/* Form */}
+          <div className="p-6">
+            {step === 'email' && (
+              <form onSubmit={handleSendOTP} className="space-y-4">
+                <div>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="your@email.com"
+                    required
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-0 text-center"
+                  />
+                </div>
+
+                {error && (
+                  <div className="bg-red-50 text-red-600 text-sm px-4 py-2 rounded-lg text-center">
+                    {error}
+                  </div>
+                )}
+                {success && (
+                  <div className="bg-green-50 text-green-600 text-sm px-4 py-2 rounded-lg text-center">
+                    {success}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full py-3 bg-primary text-white font-semibold rounded-xl hover:bg-secondary transition disabled:opacity-50"
+                >
+                  {loading ? 'Sending...' : 'Send Login Code'}
+                </button>
+              </form>
+            )}
+
+            {step === 'otp' && (
+              <form onSubmit={handleVerifyOTP} className="space-y-4">
+                <div className="text-center mb-2">
+                  <p className="text-green-600 font-medium">✓ Code sent!</p>
+                  <p className="text-gray-500 text-sm">Check your email (and spam folder)</p>
+                </div>
+
+                <div>
+                  <input
+                    type="text"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="● ● ● ● ● ●"
+                    maxLength={6}
+                    required
+                    className="w-full py-4 border-2 border-gray-200 rounded-xl text-center text-2xl tracking-[0.5em] focus:border-primary focus:ring-0"
+                  />
+                </div>
+
+                {error && (
+                  <div className="bg-red-50 text-red-600 text-sm px-4 py-2 rounded-lg text-center">
+                    {error}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loading || otp.length < 6}
+                  className="w-full py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition disabled:opacity-50"
+                >
+                  {loading ? 'Verifying...' : 'Verify & Login'}
+                </button>
+
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={loading}
+                    className="text-sm text-gray-500 hover:text-gray-700 py-2"
+                  >
+                    Didn't receive it? Resend code
+                  </button>
+                </div>
+              </form>
+            )}
+
+            <div className="mt-6 pt-6 border-t border-gray-100 text-center">
+              <p className="text-sm text-gray-500">
+                New student?{' '}
+                <Link href="/book" className="text-primary font-medium hover:underline">
+                  Book a lesson
+                </Link>{' '}
+                to get started.
+              </p>
+            </div>
           </div>
         </div>
       </div>
