@@ -231,7 +231,28 @@ export default function Home() {
           
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Post 1 */}
-            <Link href="/blog/scanning-hazards" className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition hover-lift group" data-aos="fade-up" data-aos-delay="0">
+            <Link href="/blog/three-second-rule" className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition hover-lift group" data-aos="fade-up" data-aos-delay="0">
+              <div className="bg-gradient-to-br from-blue-100 to-indigo-100 h-40 flex items-center justify-center">
+                <span className="text-5xl group-hover:scale-110 transition">⏱️</span>
+              </div>
+              <div className="p-6">
+                <div className="bg-primary/10 text-primary text-xs font-semibold px-3 py-1 rounded-full inline-block mb-3">
+                  Safety Tips
+                </div>
+                <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition">
+                  The 3-Second Rule: How Much Space Do You Really Need?
+                </h3>
+                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                  Understanding safe stopping distances, rolling stops vs abrupt braking, and progressive braking technique.
+                </p>
+                <span className="text-primary text-sm font-semibold group-hover:underline">
+                  Read more →
+                </span>
+              </div>
+            </Link>
+
+            {/* Post 2 */}
+            <Link href="/blog/scanning-hazards" className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition hover-lift group" data-aos="fade-up" data-aos-delay="100">
               <div className="bg-gradient-to-br from-amber-100 to-orange-100 h-40 flex items-center justify-center">
                 <span className="text-5xl group-hover:scale-110 transition">👁️</span>
               </div>
