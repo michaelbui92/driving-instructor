@@ -871,128 +871,198 @@ export default function BookPage() {
         {/* Step 3: Your Details */}
         {step === 3 && (
           <div>
-            <h2 className="text-3xl font-bold mb-6 text-center">Your Details</h2>
-            
-            <div className="bg-white rounded-2xl shadow-lg p-8 mb-6">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
-                  <input
-                    type="text"
-                    value={form.studentName}
-                    onChange={(e) => setForm({ ...form, studentName: e.target.value })}
-                    placeholder="Your full name"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                </div>
+            {!isLoggedIn ? (
+              <>
+                <h2 className="text-3xl font-bold mb-6 text-center">Log in to Complete Booking</h2>
                 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
-                  <input
-                    type="email"
-                    value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
-                    placeholder="your@email.com"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">We'll send your booking confirmation here</p>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
-                  <input
-                    type="tel"
-                    value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                    placeholder="0412 345 678"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Address</label>
-                  <input
-                    type="text"
-                    value={form.address}
-                    onChange={(e) => setForm({ ...form, address: e.target.value })}
-                    placeholder="Your address for pickup"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Notes for instructor (optional)
-                  </label>
-                  <textarea
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                    placeholder="e.g. Just failed a test, need to focus on reverse parking..."
-                    value={form.notes}
-                    onChange={(e) => setForm({ ...form, notes: e.target.value })}
-                    rows={3}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Booking Summary */}
-            <div className="bg-gradient-to-r from-primary to-secondary rounded-2xl p-6 text-white mb-6">
-              <h3 className="font-semibold mb-3">Booking Summary</h3>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-blue-200 text-sm">Lesson</p>
-                  <p className="font-semibold">{selectedLesson.name}</p>
-                </div>
-                <div>
-                  <p className="text-blue-200 text-sm">Price</p>
-                  <p className="font-semibold text-xl">
-                    {promoApplied ? (
-                      <span className="text-green-300">$0</span>
-                    ) : (
-                      <>${selectedLesson.price}</>
+                <div className="bg-white rounded-2xl shadow-lg p-8 mb-6 text-center">
+                  <div className="text-6xl mb-4">🔐</div>
+                  <h3 className="text-xl font-semibold mb-3">Sign in to continue</h3>
+                  <p className="text-gray-600 mb-6">
+                    Please log in with your email to complete your booking. You'll receive a login code via email.
+                  </p>
+                  
+                  <div className="max-w-sm mx-auto space-y-4">
+                    <div>
+                      <input
+                        type="email"
+                        value={form.email}
+                        onChange={(e) => setForm({ ...form, email: e.target.value })}
+                        placeholder="your@email.com"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                      />
+                    </div>
+                    
+                    {otpError && (
+                      <p className="text-red-500 text-sm">{otpError}</p>
                     )}
-                  </p>
+                    
+                    {!otpSent ? (
+                      <button
+                        onClick={handleSendOTP}
+                        disabled={otpLoading || !form.email}
+                        className="w-full py-3 bg-primary text-white rounded-xl font-semibold hover:bg-secondary transition disabled:opacity-50"
+                      >
+                        {otpLoading ? 'Sending...' : 'Send Login Code'}
+                      </button>
+                    ) : (
+                      <div className="space-y-4">
+                        <input
+                          type="text"
+                          value={otpCode}
+                          onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                          placeholder="Enter 6-digit code"
+                          maxLength={6}
+                          className="w-full py-4 text-center text-2xl tracking-widest border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                        />
+                        <button
+                          onClick={handleVerifyOTP}
+                          disabled={otpLoading || otpCode.length < 6}
+                          className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition disabled:opacity-50"
+                        >
+                          {otpLoading ? 'Verifying...' : 'Verify & Continue'}
+                        </button>
+                        <button
+                          onClick={handleSendOTP}
+                          disabled={otpLoading}
+                          className="text-sm text-gray-500 hover:text-gray-700"
+                        >
+                          Resend code
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div>
-                  <p className="text-blue-200 text-sm">Date</p>
-                  <p className="font-semibold">{formatDate(form.date)}</p>
-                </div>
-                <div>
-                  <p className="text-blue-200 text-sm">Time</p>
-                  <p className="font-semibold">
-                    {form.time}
-                    {form.time === '8:00 PM' && ' 🌙'}
-                  </p>
-                </div>
-              </div>
-              {form.time === '8:00 PM' && (
-                <p className="mt-3 text-sm bg-white/20 rounded-lg p-2">
-                  🌙 This is a night time booking - headlights will be used
-                </p>
-              )}
-            </div>
+              </>
+            ) : (
+              <>
+                <h2 className="text-3xl font-bold mb-6 text-center">Your Details</h2>
+                
+                <div className="bg-white rounded-2xl shadow-lg p-8 mb-6">
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                      <input
+                        type="text"
+                        value={form.studentName}
+                        onChange={(e) => setForm({ ...form, studentName: e.target.value })}
+                        placeholder="Your full name"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Email Address *</label>
+                      <input
+                        type="email"
+                        value={form.email}
+                        disabled
+                        className="w-full px-4 py-3 border border-gray-200 rounded-xl bg-gray-50 text-gray-600"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+                      <input
+                        type="tel"
+                        value={form.phone}
+                        onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                        placeholder="0412 345 678"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Address</label>
+                      <input
+                        type="text"
+                        value={form.address}
+                        onChange={(e) => setForm({ ...form, address: e.target.value })}
+                        placeholder="Your address for pickup"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
+                      />
+                    </div>
 
-            {error && (
-              <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3 text-red-700">
-                {error}
-              </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Notes for instructor (optional)
+                      </label>
+                      <textarea
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                        placeholder="e.g. Just failed a test, need to focus on reverse parking..."
+                        value={form.notes}
+                        onChange={(e) => setForm({ ...form, notes: e.target.value })}
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </>
             )}
 
-            <div className="flex justify-between">
-              <button
-                onClick={() => setStep(2)}
-                className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-              >
-                ← Back
-              </button>
-              <button
-                onClick={handleSubmit}
-                disabled={loading || !form.studentName || !form.email || !form.phone}
-                className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? 'Submitting...' : 'Confirm Booking'}
-              </button>
-            </div>
+            {/* Only show booking summary and confirm button when logged in */}
+            {isLoggedIn && (
+              <>
+                {/* Booking Summary */}
+                <div className="bg-gradient-to-r from-primary to-secondary rounded-2xl p-6 text-white mb-6">
+                  <h3 className="font-semibold mb-3">Booking Summary</h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-blue-200 text-sm">Lesson</p>
+                      <p className="font-semibold">{selectedLesson.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-blue-200 text-sm">Price</p>
+                      <p className="font-semibold text-xl">
+                        {promoApplied ? (
+                          <span className="text-green-300">$0</span>
+                        ) : (
+                          <>${selectedLesson.price}</>
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-blue-200 text-sm">Date</p>
+                      <p className="font-semibold">{formatDate(form.date)}</p>
+                    </div>
+                    <div>
+                      <p className="text-blue-200 text-sm">Time</p>
+                      <p className="font-semibold">
+                        {form.time}
+                        {form.time === '8:00 PM' && ' 🌙'}
+                      </p>
+                    </div>
+                  </div>
+                  {form.time === '8:00 PM' && (
+                    <p className="mt-3 text-sm bg-white/20 rounded-lg p-2">
+                      🌙 This is a night time booking - headlights will be used
+                    </p>
+                  )}
+                </div>
+
+                {error && (
+                  <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3 text-red-700">
+                    {error}
+                  </div>
+                )}
+
+                <div className="flex justify-between">
+                  <button
+                    onClick={() => setStep(2)}
+                    className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    onClick={handleSubmit}
+                    disabled={loading || !form.studentName || !form.email || !form.phone}
+                    className="px-8 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? 'Submitting...' : 'Confirm Booking'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
