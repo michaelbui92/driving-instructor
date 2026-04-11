@@ -45,7 +45,7 @@ export async function sendLoginCode(email: string): Promise<{ success: boolean; 
     }
 
     // Send email with the code
-    const apiKey = process.env.AGENTMAIL_API_KEY
+    const apiKey = process.env.AGENTMAIL_API_KEY || process.env.NEXT_PUBLIC_AGENTMAIL_API_KEY
     if (!apiKey) {
       console.error('AgentMail API key not configured')
       return { success: false, error: 'Email service not configured' }
