@@ -2,6 +2,7 @@
 
 import { AuthProvider } from '@/components/AuthProvider'
 import { ToastProvider } from '@/components/Toast'
+import PWAProvider from '@/components/PWAProvider'
 
 export default function ClientLayout({
   children,
@@ -10,9 +11,11 @@ export default function ClientLayout({
 }) {
   return (
     <AuthProvider>
-      <ToastProvider>
-        {children}
-      </ToastProvider>
+      <PWAProvider>
+        <ToastProvider>
+          {children}
+        </ToastProvider>
+      </PWAProvider>
     </AuthProvider>
   )
 }
