@@ -12,13 +12,13 @@
   "categories": ["education", "lifestyle"],
   "icons": [
     {
-      "src": "/icons/icon.svg",
+      "src": "/icons/icon-car.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
     },
     {
-      "src": "/icons/icon.svg",
+      "src": "/icons/icon-car.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "maskable"
@@ -38,14 +38,14 @@
       "short_name": "Book",
       "description": "Book your next driving lesson",
       "url": "/book",
-      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/icons/icon-car.svg", "sizes": "any" }]
     },
     {
       "name": "Student Dashboard",
       "short_name": "Dashboard",
       "description": "View your bookings and progress",
       "url": "/student/dashboard",
-      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/icons/icon-car.svg", "sizes": "any" }]
     }
   ]
 }
