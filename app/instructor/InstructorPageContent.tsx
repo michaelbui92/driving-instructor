@@ -31,9 +31,9 @@ import {
 } from '@/lib/booking-utils'
 import { authenticatedFetch } from '@/lib/instructor-api'
 import { toast } from '@/components/Toast'
-import InstructorSkillEditor from '@/components/InstructorSkillEditor'
+import InstructorStudentsTab from '@/components/InstructorStudentsTab'
 
-type TabType = 'bookings' | 'schedule' | 'calendar' | 'skills'
+type TabType = 'bookings' | 'schedule' | 'calendar' | 'students'
 
 interface InstructorProfile {
   id: string
@@ -2259,9 +2259,9 @@ export default function InstructorPage() {
                 onClick={() => setSelectedTab('calendar')}
               >📅 Calendar</button>
               <button
-                className={`shrink-0 px-6 py-4 font-semibold transition whitespace-nowrap ${selectedTab === 'skills' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
-                onClick={() => setSelectedTab('skills')}
-              >📊 Skills</button>
+                className={`shrink-0 px-6 py-4 font-semibold transition whitespace-nowrap ${selectedTab === 'students' ? 'border-b-2 border-primary text-primary' : 'text-gray-600 hover:text-gray-800'}`}
+                onClick={() => setSelectedTab('students')}
+              >👨‍🎓 Students</button>
             </div>
           </div>
           <div className="p-6">
@@ -2271,8 +2271,8 @@ export default function InstructorPage() {
                 <div className="my-8 border-t" />
                 {renderAvailabilityTab()}
               </>
-            ) : selectedTab === 'calendar' ? renderCalendarTab() : selectedTab === 'skills' ? (
-              <InstructorSkillEditor />
+            ) : selectedTab === 'calendar' ? renderCalendarTab() : selectedTab === 'students' ? (
+              <InstructorStudentsTab />
             ) : (
               <>
                 {/* Bookings sub-toggle + search */}
