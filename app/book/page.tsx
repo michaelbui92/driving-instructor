@@ -462,8 +462,9 @@ export default function BookPage() {
         throw new Error(data.error || 'Invalid code')
       }
       
-      // Success - cookies are set by the API, redirect to dashboard
-      window.location.href = '/student/dashboard'
+      // Success - reload page to pick up new login cookies
+      // This will show the details form (pre-filled if returning user, blank if new)
+      window.location.reload()
     } catch (err: any) {
       setOtpError(err.message)
     } finally {
