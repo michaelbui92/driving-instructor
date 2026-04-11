@@ -212,10 +212,14 @@ export default function InstructorStudentsTab() {
     }
   }
 
-  const filteredStudents = students.filter(student =>
-    student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.email.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const filteredStudents = students.filter(student => {
+    const name = student.name || ''
+    const email = student.email || ''
+    const search = searchTerm.toLowerCase()
+    
+    return name.toLowerCase().includes(search) ||
+           email.toLowerCase().includes(search)
+  })
 
   if (loading) {
     return (
