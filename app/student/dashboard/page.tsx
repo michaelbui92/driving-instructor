@@ -23,6 +23,8 @@ type BookingType = {
   status: 'pending' | 'confirmed' | 'cancelled' | 'completed'
   notes?: string
   instructor_notes?: string
+  price?: number
+  promo_code?: string
   created_at: string
 }
 
@@ -503,8 +505,16 @@ export default function StudentDashboardPage() {
                           📅 {formatDate(booking.date)} at {booking.time}
                         </p>
                         <p className="text-gray-600">
-                          💰 ${getLessonPrice(booking.lesson_type)}
+                          💰 ${booking.price ?? getLessonPrice(booking.lesson_type)}
+                          {booking.promo_code && (
+                            <span className="text-green-600 ml-2">(Promo: ${booking.price ?? 0})</span>
+                          )}
                         </p>
+                        {booking.status === 'pending' && (
+                          <p className="text-amber-600 text-sm mt-1">
+                            ⏳ Awaiting instructor confirmation
+                          </p>
+                        )}
                         {booking.address && (
                           <p className="text-gray-500 text-sm mt-1">
                             📍 {booking.address}
