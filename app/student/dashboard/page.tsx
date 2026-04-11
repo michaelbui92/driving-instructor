@@ -113,16 +113,45 @@ export default function StudentDashboardPage() {
 
       setBookings(bookingsData || [])
 
-      // Load student info for onboarding check
-      const { data: studentData, error: studentError } = await supabase
-        .from('students')
-        .select('id, onboarding_completed, onboarding_skipped')
-        .eq('email', userEmail)
-        .single()
+      // Load or create student info for onboarding check
+      let studentData = null
+      try {
+        // Try to get existing student
+        const { data, error } = await supabase
+          .from('students')
+          .select('id, name, onboarding_completed, onboarding_skipped')
+          .eq('email', userEmail)
+          .single()
 
-      if (studentError && studentError.code !== 'PGRST116') {
-        console.error('Error loading student:', studentError)
-      } else if (studentData) {
+        if (error && error.code === 'PGRST116') {
+          // Student doesn't exist - create one
+          const defaultName = userEmail.split('@')[0]
+          const { data: newStudent, error: createError } = await supabase
+            .from('students')
+            .insert({
+              email: userEmail,
+              name: defaultName,
+              onboarding_completed: false,
+              onboarding_skipped: false
+            })
+            .select()
+            .single()
+
+          if (createError) {
+            console.error('Error creating student:', createError)
+          } else {
+            studentData = newStudent
+          }
+        } else if (error) {
+          console.error('Error loading student:', error)
+        } else {
+          studentData = data
+        }
+      } catch (err) {
+        console.error('Error in student load/create:', err)
+      }
+
+      if (studentData) {
         setStudentId(studentData.id)
         setStudent(studentData)
         

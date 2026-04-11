@@ -216,10 +216,17 @@ export async function getOrCreateStudent(
 
   if (existing) return existing
 
-  // Create student record
+  // Create student record with default name (email before @)
+  const defaultName = email.split('@')[0]
   const { data: student, error } = await getSupabaseAdmin()
     .from('students')
-    .insert({ auth_user_id: authUserId, email } as any)
+    .insert({ 
+      auth_user_id: authUserId, 
+      email,
+      name: defaultName,
+      onboarding_completed: false,
+      onboarding_skipped: false
+    } as any)
     .select()
     .single()
 

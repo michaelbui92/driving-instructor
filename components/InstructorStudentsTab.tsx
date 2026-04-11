@@ -230,34 +230,99 @@ export default function InstructorStudentsTab() {
         <div className="lg:col-span-1">
           <div className="bg-white rounded-xl shadow-lg p-4">
             <div className="mb-4">
-              <input
-                type="text"
-                placeholder="Search students..."
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
+              {/* Dropdown search */}
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search students..."
+                  value={searchTerm}
+                  onChange={e => setSearchTerm(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent"
+                  list="student-options"
+                />
+                <datalist id="student-options">
+                  {students.map(student => (
+                    <option key={student.id} value={student.name}>
+                      {student.email}
+                    </option>
+                  ))}
+                </datalist>
+              </div>
             </div>
 
             <div className="space-y-2 max-h-[400px] overflow-y-auto">
               {filteredStudents.map(student => (
-                <button
+                <div
                   key={student.id}
-                  onClick={() => setSelectedStudent(student)}
-                  className={`w-full text-left p-3 rounded-lg transition ${
+                  className={`group p-3 rounded-lg transition ${
                     selectedStudent?.id === student.id
                       ? 'bg-primary text-white'
                       : 'bg-gray-50 hover:bg-gray-100'
                   }`}
                 >
-                  <div className="font-semibold">{student.name}</div>
-                  <div className={`text-sm ${selectedStudent?.id === student.id ? 'text-blue-100' : 'text-gray-500'}`}>
-                    {student.email}
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={() => setSelectedStudent(student)}
+                      className="flex-1 text-left"
+                    >
+                      <div className="font-semibold">{student.name}</div>
+                      <div className={`text-sm ${selectedStudent?.id === student.id ? 'text-blue-100' : 'text-gray-500'}`}>
+                        {student.email}
+                      </div>
+                      <div className={`text-xs ${selectedStudent?.id === student.id ? 'text-blue-100' : 'text-gray-400'}`}>
+                        Joined {new Date(student.created_at).toLocaleDateString()}
+                      </div>
+                    </button>
+                    
+                    {/* Delete button */}
+                    <button
+                      onClick={async () => {
+                        if (confirm(`Delete student "${student.name}"? This will remove all their data including bookings and skills.`)) {
+                          try {
+                            // Delete student skills first
+                            await supabase
+                              .from('student_skills')
+                              .delete()
+                              .eq('student_id', student.id)
+
+                            // Delete student bookings
+                            await supabase
+                              .from('bookings_new')
+                              .delete()
+                              .eq('email', student.email)
+
+                            // Delete student record
+                            await supabase
+                              .from('students')
+                              .delete()
+                              .eq('id', student.id)
+
+                            // If this is the selected student, clear selection
+                            if (selectedStudent?.id === student.id) {
+                              setSelectedStudent(null)
+                            }
+
+                            // Reload student list
+                            loadStudents()
+                            
+                            toast('success', `Student "${student.name}" deleted`)
+                          } catch (err) {
+                            console.error('Error deleting student:', err)
+                            toast('error', 'Failed to delete student')
+                          }
+                        }
+                      }}
+                      className={`ml-2 p-2 rounded-lg transition ${
+                        selectedStudent?.id === student.id
+                          ? 'text-red-200 hover:bg-red-500 hover:text-white'
+                          : 'text-gray-400 hover:text-red-600 hover:bg-red-50'
+                      }`}
+                      title="Delete student"
+                    >
+                      🗑️
+                    </button>
                   </div>
-                  <div className={`text-xs ${selectedStudent?.id === student.id ? 'text-blue-100' : 'text-gray-400'}`}>
-                    Joined {new Date(student.created_at).toLocaleDateString()}
-                  </div>
-                </button>
+                </div>
               ))}
             </div>
           </div>
