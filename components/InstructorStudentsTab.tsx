@@ -57,16 +57,26 @@ export default function InstructorStudentsTab() {
 
   const loadStudents = async () => {
     try {
+      console.log('Loading students from database...')
       const { data, error } = await supabase
         .from('students')
         .select('id, name, email, phone, created_at')
         .order('created_at', { ascending: false })
 
-      if (error) throw error
+      if (error) {
+        console.error('Database error loading students:', error)
+        throw error
+      }
+      
+      console.log(`Loaded ${data?.length || 0} students:`, data)
       setStudents(data || [])
+      
+      if (data?.length === 0) {
+        toast('info', 'No students found in database. Students are created when they verify OTP.')
+      }
     } catch (err) {
       console.error('Error loading students:', err)
-      toast('error', 'Failed to load students')
+      toast('error', `Failed to load students: ${err instanceof Error ? err.message : 'Unknown error'}`)
     } finally {
       setLoading(false)
     }
@@ -218,11 +228,44 @@ export default function InstructorStudentsTab() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Student Management</h2>
-        <p className="text-gray-600 mb-6">
-          View student bookings, track skill progress, and manage student data.
-        </p>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold mb-2">Student Management</h2>
+          <p className="text-gray-600">
+            View student bookings, track skill progress, and manage student data.
+          </p>
+        </div>
+        <button
+          onClick={async () => {
+            try {
+              const testEmail = `test.student.${Date.now()}@example.com`
+              const { data, error } = await supabase
+                .from('students')
+                .insert({
+                  email: testEmail,
+                  name: 'Test Student',
+                  phone: '0412 345 678',
+                  address: '123 Test St, Sydney',
+                  details_completed: true,
+                  onboarding_completed: false,
+                  onboarding_skipped: false
+                })
+                .select()
+                .single()
+
+              if (error) throw error
+              
+              toast('success', 'Test student created')
+              loadStudents()
+            } catch (err) {
+              console.error('Error creating test student:', err)
+              toast('error', 'Failed to create test student')
+            }
+          }}
+          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
+        >
+          + Test Student
+        </button>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6">
