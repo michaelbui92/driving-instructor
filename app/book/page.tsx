@@ -78,6 +78,19 @@ export default function BookPage() {
     const isLogged = document.cookie.includes('sb-access-token') || document.cookie.includes('sb-logged-in')
     setIsLoggedIn(isLogged)
     
+    // Restore booking state from sessionStorage if available
+    const savedBooking = sessionStorage.getItem('pendingBooking')
+    if (savedBooking) {
+      try {
+        const parsed = JSON.parse(savedBooking)
+        setForm(prev => ({ ...prev, ...parsed }))
+        setStep(3) // Go to step 3 (details)
+        sessionStorage.removeItem('pendingBooking')
+      } catch (e) {
+        // Invalid JSON, ignore
+      }
+    }
+    
     // Load student details if logged in
     if (isLogged) {
       loadStudentDetails()
@@ -462,8 +475,16 @@ export default function BookPage() {
         throw new Error(data.error || 'Invalid code')
       }
       
-      // Success - reload page to pick up new login cookies
-      // This will show the details form (pre-filled if returning user, blank if new)
+      // Success - save booking state to sessionStorage before reload
+      // This preserves lesson type, date, time selections
+      sessionStorage.setItem('pendingBooking', JSON.stringify({
+        lessonType: form.lessonType,
+        date: form.date,
+        time: form.time,
+        promoApplied: promoApplied
+      }))
+      
+      // Reload page - it will restore state and go to step 3
       window.location.reload()
     } catch (err: any) {
       setOtpError(err.message)
