@@ -1,7 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
 import type { Booking } from './supabase'
 
-// Removed service key usage - all admin operations moved to server-side API routes
+// Lazy-initialized admin client (requires SUPABASE_SERVICE_ROLE_KEY)
+function getSupabaseAdmin() {
+  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured')
+  }
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 // Generate a 6-digit login code
 export function generateLoginCode(): string {
