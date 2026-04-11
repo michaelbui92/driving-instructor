@@ -69,6 +69,9 @@ export default function BookPage() {
   const [otpLoading, setOtpLoading] = useState(false)
   const [otpError, setOtpError] = useState('')
   const [otpSuccess, setOtpSuccess] = useState('')
+  const [promoCode, setPromoCode] = useState('')
+  const [promoApplied, setPromoApplied] = useState(false)
+  const [promoError, setPromoError] = useState('')
 
   // Check if user is logged in and load student details
   useEffect(() => {
@@ -479,6 +482,8 @@ export default function BookPage() {
     setError('')
 
     try {
+      const price = promoApplied ? 0 : (form.lessonType === 'single' ? 55 : 45)
+      
       const { error: insertError } = await supabase
         .from('bookings_new')
         .insert([{
@@ -490,7 +495,9 @@ export default function BookPage() {
           date: form.date,
           time: form.time,
           lesson_type: form.lessonType,
-          status: 'pending'
+          status: 'pending',
+          price: price,
+          promo_code: promoApplied ? 'safedriving' : null
         }])
 
       if (insertError) {
@@ -498,7 +505,7 @@ export default function BookPage() {
       }
 
       // Send booking confirmation email via server-side API route
-      const price = form.lessonType === 'single' ? 55 : 45
+      const emailPrice = promoApplied ? 0 : (form.lessonType === 'single' ? 55 : 45)
       const emailResponse = await fetch('/api/email/booking-confirmation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -508,8 +515,9 @@ export default function BookPage() {
           date: form.date,
           time: form.time,
           lessonType: form.lessonType,
-          price,
-          address: form.address
+          price: emailPrice,
+          address: form.address,
+          promoApplied: promoApplied
         })
       })
 
@@ -537,6 +545,22 @@ export default function BookPage() {
 
   const getLessonInfo = (id: string) => LESSON_TYPES.find(l => l.id === id) || LESSON_TYPES[0]
   const selectedLesson = getLessonInfo(form.lessonType)
+
+  // Promo code handler
+  const handlePromoSubmit = () => {
+    if (promoCode.toLowerCase() === 'safedriving') {
+      setPromoApplied(true)
+      setPromoError('')
+      setForm({ ...form, lessonType: 'single' }) // Default to single when unlocked
+      toast('success', 'Promo applied! Lessons are now free.')
+    } else {
+      setPromoApplied(false)
+      setPromoError('Invalid promo code')
+    }
+  }
+
+  // Get display price
+  const getDisplayPrice = (price: number) => promoApplied ? 0 : price
 
   // Show skeleton while loading initial data
   if (initialLoading) {
@@ -581,58 +605,144 @@ export default function BookPage() {
           <div>
             <h2 className="text-3xl font-bold mb-6 text-center">Choose Your Lesson</h2>
             
-            <div className="grid md:grid-cols-2 gap-8 mb-8">
-              {LESSON_TYPES.map((type) => (
-                <div
-                  key={type.id}
-                  onClick={() => setForm({ ...form, lessonType: type.id })}
-                  className={`cursor-pointer transition-all duration-300 ${
-                    form.lessonType === type.id
-                      ? 'transform scale-[1.02]'
-                      : 'hover:transform hover:scale-[1.01]'
-                  }`}
-                >
-                  <div className={`rounded-2xl overflow-hidden border-4 transition-all ${
-                    form.lessonType === type.id
-                      ? 'border-primary shadow-xl'
-                      : 'border-gray-200 shadow-lg hover:shadow-xl'
-                  }`}>
-                    {/* Image */}
-                    <div className="relative h-48 bg-gradient-to-br from-blue-100 to-indigo-100">
-                      <Image
-                        src={type.image}
-                        alt={type.title}
-                        fill
-                        className="object-contain p-4"
-                      />
-                      {form.lessonType === type.id && (
-                        <div className="absolute top-4 right-4 bg-primary text-white px-3 py-1 rounded-full text-sm font-semibold">
-                          Selected
-                        </div>
-                      )}
-                    </div>
-                    
-                    {/* Content */}
-                    <div className="p-6 bg-white">
-                      <div className="flex justify-between items-start mb-3">
-                        <div>
-                          <h3 className="text-xl font-bold">{type.name}</h3>
-                          <p className="text-gray-500 text-sm">{type.duration}</p>
-                        </div>
-                        <div className="text-2xl font-bold text-primary">${type.price}</div>
-                      </div>
-                      
-                      <p className="text-gray-600 text-sm leading-relaxed">{type.description}</p>
+            {/* Promo Code Box */}
+            {!promoApplied && (
+              <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-200 rounded-2xl p-6 mb-8">
+                <div className="flex items-center gap-3 mb-3">
+                  <span className="text-2xl">🎁</span>
+                  <h3 className="text-lg font-bold text-amber-800">Have a Promo Code?</h3>
+                </div>
+                <p className="text-amber-700 text-sm mb-4">
+                  Enter your code below to unlock free lessons for your test drive.
+                </p>
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={promoCode}
+                    onChange={(e) => {
+                      setPromoCode(e.target.value)
+                      setPromoError('')
+                    }}
+                    placeholder="Enter promo code"
+                    className="flex-1 px-4 py-3 border-2 border-amber-300 rounded-xl focus:ring-2 focus:ring-amber-400 focus:border-amber-400 bg-white"
+                    onKeyDown={(e) => e.key === 'Enter' && handlePromoSubmit()}
+                  />
+                  <button
+                    onClick={handlePromoSubmit}
+                    className="px-6 py-3 bg-amber-500 text-white font-semibold rounded-xl hover:bg-amber-600 transition"
+                  >
+                    Apply
+                  </button>
+                </div>
+                {promoError && (
+                  <p className="text-red-500 text-sm mt-2">{promoError}</p>
+                )}
+              </div>
+            )}
+
+            {promoApplied && (
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-300 rounded-2xl p-6 mb-8">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">✅</span>
+                    <div>
+                      <h3 className="text-lg font-bold text-green-800">Promo Applied!</h3>
+                      <p className="text-green-600 text-sm">Lessons are now free. Select below to continue.</p>
                     </div>
                   </div>
+                  <button
+                    onClick={() => {
+                      setPromoApplied(false)
+                      setPromoCode('')
+                      setForm({ ...form, lessonType: 'single' })
+                    }}
+                    className="text-sm text-green-600 hover:text-green-800 underline"
+                  >
+                    Remove
+                  </button>
                 </div>
-              ))}
+              </div>
+            )}
+            
+            <div className="grid md:grid-cols-2 gap-8 mb-8">
+              {LESSON_TYPES.map((type) => {
+                const isDisabled = !promoApplied
+                const isSelected = form.lessonType === type.id
+                const displayPrice = getDisplayPrice(type.price)
+                
+                return (
+                  <div
+                    key={type.id}
+                    onClick={() => !isDisabled && setForm({ ...form, lessonType: type.id })}
+                    className={`transition-all duration-300 ${
+                      isDisabled 
+                        ? 'cursor-not-allowed opacity-60' 
+                        : isSelected
+                          ? 'cursor-pointer transform scale-[1.02]'
+                          : 'cursor-pointer hover:transform hover:scale-[1.01]'
+                    }`}
+                  >
+                    <div className={`rounded-2xl overflow-hidden border-4 transition-all ${
+                      isSelected && promoApplied
+                        ? 'border-primary shadow-xl'
+                        : isDisabled
+                        ? 'border-gray-300 shadow-md'
+                        : 'border-gray-200 shadow-lg hover:shadow-xl'
+                    }`}>
+                      {/* Image */}
+                      <div className={`relative h-48 bg-gradient-to-br ${
+                        isDisabled ? 'from-gray-100 to-gray-200' : 'from-blue-100 to-indigo-100'
+                      }`}>
+                        <Image
+                          src={type.image}
+                          alt={type.title}
+                          fill
+                          className="object-contain p-4"
+                        />
+                        {isSelected && promoApplied && (
+                          <div className="absolute top-4 right-4 bg-primary text-white px-3 py-1 rounded-full text-sm font-semibold">
+                            Selected
+                          </div>
+                        )}
+                        {isDisabled && (
+                          <div className="absolute inset-0 bg-gray-900/20 flex items-center justify-center">
+                            <div className="bg-white/90 px-4 py-2 rounded-lg text-center">
+                              <p className="text-sm font-semibold text-gray-600">🔒 Enter promo code</p>
+                              <p className="text-xs text-gray-500">to unlock</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Content */}
+                      <div className="p-6 bg-white">
+                        <div className="flex justify-between items-start mb-3">
+                          <div>
+                            <h3 className="text-xl font-bold">{type.name}</h3>
+                            <p className="text-gray-500 text-sm">{type.duration}</p>
+                          </div>
+                          <div className={`text-2xl font-bold ${isDisabled ? 'text-gray-400' : 'text-primary'}`}>
+                            {promoApplied ? (
+                              <span className="text-green-600">$0</span>
+                            ) : (
+                              <>${type.price}</>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <p className="text-gray-600 text-sm leading-relaxed">{type.description}</p>
+                      </div>
+                    </div>
+                  </div>
+                )
+              })}
             </div>
 
             <div className="flex justify-end">
               <button
                 onClick={() => setStep(2)}
-                className="px-8 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold text-lg"
+                disabled={!promoApplied}
+                className="px-8 py-3 bg-primary text-white rounded-lg hover:bg-secondary transition font-semibold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Next →
               </button>
@@ -835,7 +945,13 @@ export default function BookPage() {
                 </div>
                 <div>
                   <p className="text-blue-200 text-sm">Price</p>
-                  <p className="font-semibold text-xl">${selectedLesson.price}</p>
+                  <p className="font-semibold text-xl">
+                    {promoApplied ? (
+                      <span className="text-green-300">$0</span>
+                    ) : (
+                      <>${selectedLesson.price}</>
+                    )}
+                  </p>
                 </div>
                 <div>
                   <p className="text-blue-200 text-sm">Date</p>
