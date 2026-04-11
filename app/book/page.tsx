@@ -1002,10 +1002,19 @@ export default function BookPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl p-8 max-w-md w-full">
             <h2 className="text-2xl font-bold mb-4">Verify Your Email</h2>
-            <p className="text-gray-600 mb-6">
-              We've sent a login code to <strong>{form.email}</strong>. 
-              Enter it below to view your booking on your dashboard.
+            <p className="text-gray-600 mb-4">
+              Your booking was created! Enter the login code sent to <strong>{form.email}</strong> to view your dashboard.
             </p>
+            {otpSuccess && (
+              <div className="bg-green-50 text-green-700 text-sm px-4 py-2 rounded-lg mb-4">
+                ✓ Login code sent! Check your email (and spam folder).
+              </div>
+            )}
+            {otpError && (
+              <div className="bg-red-50 text-red-700 text-sm px-4 py-2 rounded-lg mb-4">
+                {otpError}
+              </div>
+            )}
             
             {!otpSent ? (
               <button
@@ -1022,18 +1031,11 @@ export default function BookPage() {
                     type="text"
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    placeholder="123456"
+                    placeholder="Enter 6-digit code"
                     maxLength={6}
                     className="w-full py-4 text-center text-2xl tracking-widest border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
                   />
                 </div>
-                
-                {otpError && (
-                  <p className="text-red-500 text-sm">{otpError}</p>
-                )}
-                {otpSuccess && (
-                  <p className="text-green-500 text-sm">{otpSuccess}</p>
-                )}
                 
                 <button
                   onClick={handleVerifyOTP}
