@@ -10,6 +10,7 @@ import { sendBookingCancellationEmail } from '@/lib/booking-email'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { DashboardSkeleton, StatsSkeleton, BookingListSkeleton } from '@/components/Skeletons'
 import { toast } from '@/components/Toast'
+import StudentDetailsOnboarding from '@/components/StudentDetailsOnboarding'
 import SkillOnboarding from '@/components/SkillOnboarding'
 import SkillProgress from '@/components/SkillProgress'
 
@@ -32,6 +33,8 @@ type BookingType = {
 
 type StudentType = {
   id: string
+  name: string
+  details_completed: boolean
   onboarding_completed: boolean
   onboarding_skipped: boolean
 }
@@ -48,7 +51,8 @@ export default function StudentDashboardPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [userEmail, setUserEmail] = useState<string>('')
   const [studentId, setStudentId] = useState<string>('')
-  const [showOnboarding, setShowOnboarding] = useState(false)
+  const [showDetailsOnboarding, setShowDetailsOnboarding] = useState(false)
+  const [showSkillOnboarding, setShowSkillOnboarding] = useState(false)
   const [showSkills, setShowSkills] = useState(false)
   const [student, setStudent] = useState<StudentType | null>(null)
   const router = useRouter()
@@ -119,7 +123,7 @@ export default function StudentDashboardPage() {
         // Try to get existing student
         const { data, error } = await supabase
           .from('students')
-          .select('id, name, onboarding_completed, onboarding_skipped')
+          .select('id, name, details_completed, onboarding_completed, onboarding_skipped')
           .eq('email', userEmail)
           .single()
 
@@ -131,6 +135,7 @@ export default function StudentDashboardPage() {
             .insert({
               email: userEmail,
               name: defaultName,
+              details_completed: false,
               onboarding_completed: false,
               onboarding_skipped: false
             })
@@ -155,9 +160,13 @@ export default function StudentDashboardPage() {
         setStudentId(studentData.id)
         setStudent(studentData)
         
-        // Show onboarding if new student hasn't completed or skipped
-        if (!studentData.onboarding_completed && !studentData.onboarding_skipped) {
-          setShowOnboarding(true)
+        // Show details onboarding first if not completed
+        if (!studentData.details_completed) {
+          setShowDetailsOnboarding(true)
+        }
+        // Then show skill onboarding if details are complete but skills aren't
+        else if (!studentData.onboarding_completed && !studentData.onboarding_skipped) {
+          setShowSkillOnboarding(true)
         }
       }
     } catch (err) {
@@ -394,18 +403,35 @@ export default function StudentDashboardPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Navbar showLocation={false} />
 
+      {/* Student Details Onboarding Modal */}
+      {showDetailsOnboarding && studentId && userEmail && (
+        <StudentDetailsOnboarding
+          studentId={studentId}
+          email={userEmail}
+          onComplete={() => {
+            setShowDetailsOnboarding(false)
+            // After details are complete, check if we should show skill onboarding
+            if (student && !student.onboarding_completed && !student.onboarding_skipped) {
+              setShowSkillOnboarding(true)
+            }
+            // Reload to update student status
+            loadDashboard()
+          }}
+        />
+      )}
+
       {/* Skill Onboarding Modal */}
-      {showOnboarding && studentId && userEmail && (
+      {showSkillOnboarding && studentId && userEmail && (
         <SkillOnboarding
           studentId={studentId}
           email={userEmail}
           onComplete={() => {
-            setShowOnboarding(false)
+            setShowSkillOnboarding(false)
             // Reload to update student status
             loadDashboard()
           }}
           onSkip={() => {
-            setShowOnboarding(false)
+            setShowSkillOnboarding(false)
             // Reload to update student status
             loadDashboard()
           }}
@@ -488,9 +514,9 @@ export default function StudentDashboardPage() {
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold">My Skill Progress</h2>
-              {!student?.onboarding_completed && !student?.onboarding_skipped && (
+              {!student?.onboarding_completed && !student?.onboarding_skipped && student?.details_completed && (
                 <button
-                  onClick={() => setShowOnboarding(true)}
+                  onClick={() => setShowSkillOnboarding(true)}
                   className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition text-sm"
                 >
                   Complete Self-Assessment

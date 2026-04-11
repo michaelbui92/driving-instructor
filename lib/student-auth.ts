@@ -224,6 +224,7 @@ export async function getOrCreateStudent(
       auth_user_id: authUserId, 
       email,
       name: defaultName,
+      details_completed: false,
       onboarding_completed: false,
       onboarding_skipped: false
     } as any)
