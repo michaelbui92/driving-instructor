@@ -1,4 +1,53 @@
-// Skill definitions for driving assessment
+// Two-tier skill assessment system
+
+// 1. Student Self-Assessment (Simple)
+export interface ExperienceLevel {
+  key: string
+  name: string
+  description: string
+  icon: string
+  instructor_notes: string
+}
+
+export const EXPERIENCE_LEVELS: ExperienceLevel[] = [
+  {
+    key: 'complete_beginner',
+    name: 'Complete Beginner',
+    description: 'Never driven before or had minimal practice',
+    icon: '👶',
+    instructor_notes: 'Start from absolute basics: controls, starting/stopping, basic maneuvers'
+  },
+  {
+    key: 'overseas_driver',
+    name: 'Overseas Driver',
+    description: 'Have license from another country, need NSW conversion',
+    icon: '🌏',
+    instructor_notes: 'Focus on NSW road rules, test requirements, local driving habits'
+  },
+  {
+    key: 'learner',
+    name: 'Learner Driver',
+    description: 'Some experience, practicing for license test',
+    icon: '📚',
+    instructor_notes: 'Test preparation, advanced maneuvers, hazard perception'
+  },
+  {
+    key: 'refresher',
+    name: 'Refresher Course',
+    description: 'Returning to driving after a break',
+    icon: '🔄',
+    instructor_notes: 'Regain confidence, update on road rules, modern vehicle features'
+  },
+  {
+    key: 'advanced',
+    name: 'Advanced Skills',
+    description: 'Want to improve specific skills (parking, highways, etc.)',
+    icon: '🚀',
+    instructor_notes: 'Targeted skill development, defensive driving techniques'
+  }
+]
+
+// 2. Instructor Detailed Assessment (17 skills)
 export interface Skill {
   key: string
   name: string

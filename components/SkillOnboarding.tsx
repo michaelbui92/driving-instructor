@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { DRIVING_SKILLS, SKILL_CATEGORIES } from '@/lib/skills'
+import { EXPERIENCE_LEVELS } from '@/lib/skills'
 import { supabase } from '@/lib/supabase'
 import { toast } from '@/components/Toast'
 
@@ -13,67 +13,68 @@ interface SkillOnboardingProps {
 }
 
 export default function SkillOnboarding({ studentId, email, onComplete, onSkip }: SkillOnboardingProps) {
-  const [currentCategory, setCurrentCategory] = useState(0)
-  const [ratings, setRatings] = useState<Record<string, number>>({})
+  const [selectedLevel, setSelectedLevel] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
-  const [step, setStep] = useState<'intro' | 'assessment' | 'done'>('intro')
-
-  const categories = SKILL_CATEGORIES.filter(cat => 
-    DRIVING_SKILLS.some(s => s.category === cat.key)
-  )
-
-  const currentCategoryData = categories[currentCategory]
-  const currentSkills = DRIVING_SKILLS.filter(s => s.category === currentCategoryData?.key)
-  const isLastCategory = currentCategory === categories.length - 1
-
-  const handleRatingChange = (skillKey: string, rating: number) => {
-    setRatings(prev => ({ ...prev, [skillKey]: rating }))
-  }
-
-  const handleNext = () => {
-    if (currentCategory < categories.length - 1) {
-      setCurrentCategory(prev => prev + 1)
-    } else {
-      handleSave()
-    }
-  }
-
-  const handleBack = () => {
-    if (currentCategory > 0) {
-      setCurrentCategory(prev => prev - 1)
-    }
-  }
+  const [step, setStep] = useState<'intro' | 'selection' | 'done'>('intro')
 
   const handleSave = async () => {
+    if (!selectedLevel) {
+      toast('error', 'Please select your experience level')
+      return
+    }
+
     setSaving(true)
     try {
-      // Insert skill ratings
-      const skillInserts = DRIVING_SKILLS.map(skill => ({
-        student_id: studentId,
-        skill_key: skill.key,
-        skill_name: skill.name,
-        self_assessment: ratings[skill.key] || 0,
-        instructor_rating: 0
-      }))
-
-      const { error } = await supabase
-        .from('student_skills')
-        .upsert(skillInserts, { onConflict: 'student_id,skill_key' })
-
-      if (error) throw error
-
-      // Mark onboarding complete
-      await supabase
+      const selected = EXPERIENCE_LEVELS.find(l => l.key === selectedLevel)
+      
+      // 1. Store experience level in students table
+      const { error: studentError } = await supabase
         .from('students')
-        .update({ onboarding_completed: true })
+        .update({ 
+          onboarding_completed: true,
+          experience_level: selectedLevel
+        })
         .eq('id', studentId)
 
+      if (studentError) throw studentError
+
+      // 2. Store experience level as a special skill record
+      const { error: skillError } = await supabase
+        .from('student_skills')
+        .upsert({
+          student_id: studentId,
+          skill_key: 'experience_level',
+          skill_name: 'Experience Level',
+          self_assessment: 0,
+          instructor_rating: 0,
+          notes: selected ? `${selected.name}: ${selected.description}` : selectedLevel
+        }, { onConflict: 'student_id,skill_key' })
+
+      if (skillError) throw skillError
+
+      // 3. Create initial skill records for all 17 skills (with 0 ratings)
+      // This gives instructor a starting point to rate after first lesson
+      const skillPromises = DRIVING_SKILLS.map(skill => 
+        supabase
+          .from('student_skills')
+          .upsert({
+            student_id: studentId,
+            skill_key: skill.key,
+            skill_name: skill.name,
+            self_assessment: 0, // Student doesn't rate these
+            instructor_rating: 0, // Instructor will rate after lesson
+            notes: ''
+          }, { onConflict: 'student_id,skill_key' })
+      )
+
+      await Promise.all(skillPromises)
+
       setStep('done')
-      toast('success', 'Skills saved! You can update these anytime.')
-      onComplete()
+      toast('success', 'Experience level saved! Your instructor will use this to plan your lessons.')
+      setTimeout(() => onComplete(), 1500)
     } catch (err) {
-      console.error('Error saving skills:', err)
-      toast('error', 'Failed to save skills. Please try again.')
+      console.error('Error saving experience level:', err)
+      toast('error', 'Failed to save. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -97,22 +98,22 @@ export default function SkillOnboarding({ studentId, email, onComplete, onSkip }
       <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
         <div className="bg-white rounded-2xl max-w-lg w-full p-8 max-h-[90vh] overflow-y-auto">
           <div className="text-center mb-6">
-            <div className="text-6xl mb-4">📋</div>
-            <h2 className="text-2xl font-bold mb-2">Tell Us About Your Driving</h2>
+            <div className="text-6xl mb-4">🚗</div>
+            <h2 className="text-2xl font-bold mb-2">Tell Us About Your Driving Experience</h2>
             <p className="text-gray-600">
-              Help us understand your current skill level so we can tailor lessons to your needs. 
-              This takes about 2 minutes.
+              This helps your instructor understand your starting point and plan lessons that match your needs.
             </p>
           </div>
 
           <div className="bg-blue-50 rounded-xl p-4 mb-6">
             <p className="text-blue-800 text-sm">
-              <strong>How it works:</strong>
+              <strong>Why this matters:</strong>
             </p>
             <ul className="text-blue-700 text-sm mt-2 space-y-1">
-              <li>• Rate your skills from 1-5</li>
-              <li>• Be honest — this is just for your instructor</li>
-              <li>• You can update these anytime</li>
+              <li>• Helps tailor lessons to your exact needs</li>
+              <li>• Saves time by focusing on what you need most</li>
+              <li>• Makes your first lesson more effective</li>
+              <li>• Your instructor can prepare better</li>
             </ul>
           </div>
 
@@ -124,10 +125,10 @@ export default function SkillOnboarding({ studentId, email, onComplete, onSkip }
               Skip for Now
             </button>
             <button
-              onClick={() => setStep('assessment')}
+              onClick={() => setStep('selection')}
               className="flex-1 px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-secondary transition"
             >
-              Start Assessment
+              Select Experience Level
             </button>
           </div>
         </div>
@@ -138,77 +139,64 @@ export default function SkillOnboarding({ studentId, email, onComplete, onSkip }
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl max-w-lg w-full p-6 max-h-[90vh] overflow-y-auto">
-        {/* Progress */}
-        <div className="mb-6">
-          <div className="flex justify-between text-sm text-gray-500 mb-2">
-            <span>Step {currentCategory + 1} of {categories.length}</span>
-            <span>{currentCategoryData?.name}</span>
-          </div>
-          <div className="h-2 bg-gray-200 rounded-full">
-            <div 
-              className="h-2 bg-primary rounded-full transition-all"
-              style={{ width: `${((currentCategory + 1) / categories.length) * 100}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Category Header */}
+        {/* Header */}
         <div className="text-center mb-6">
-          <span className="text-4xl">{currentCategoryData?.icon}</span>
-          <h2 className="text-xl font-bold mt-2">{currentCategoryData?.name}</h2>
-          <p className="text-gray-500 text-sm">Rate your skill level (1 = low, 5 = high)</p>
+          <h2 className="text-xl font-bold mb-2">What best describes your driving experience?</h2>
+          <p className="text-gray-500 text-sm">Select one option</p>
         </div>
 
-        {/* Skills */}
-        <div className="space-y-4 mb-6">
-          {currentSkills.map(skill => (
-            <div key={skill.key} className="bg-gray-50 rounded-xl p-4">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <p className="font-semibold">{skill.icon} {skill.name}</p>
-                  <p className="text-gray-500 text-sm">{skill.description}</p>
+        {/* Experience Levels */}
+        <div className="space-y-3 mb-6">
+          {EXPERIENCE_LEVELS.map(level => (
+            <button
+              key={level.key}
+              onClick={() => setSelectedLevel(level.key)}
+              className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
+                selectedLevel === level.key
+                  ? 'border-primary bg-blue-50'
+                  : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className="text-2xl">{level.icon}</div>
+                <div className="flex-1">
+                  <div className="font-semibold">{level.name}</div>
+                  <div className="text-gray-600 text-sm mt-1">{level.description}</div>
+                  {selectedLevel === level.key && (
+                    <div className="mt-2 p-2 bg-blue-100 rounded-lg">
+                      <div className="text-blue-800 text-xs font-medium">Instructor will focus on:</div>
+                      <div className="text-blue-700 text-xs mt-1">{level.instructor_notes}</div>
+                    </div>
+                  )}
                 </div>
-                <div className="flex gap-1">
-                  {[1, 2, 3, 4, 5].map(level => (
-                    <button
-                      key={level}
-                      onClick={() => handleRatingChange(skill.key, level)}
-                      className={`w-10 h-10 rounded-lg font-semibold transition-all ${
-                        ratings[skill.key] === level
-                          ? 'bg-primary text-white scale-110'
-                          : ratings[skill.key] && ratings[skill.key] > level
-                          ? 'bg-primary/30 text-primary'
-                          : 'bg-gray-200 text-gray-500 hover:bg-gray-300'
-                      }`}
-                    >
-                      {level}
-                    </button>
-                  ))}
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${
+                  selectedLevel === level.key
+                    ? 'border-primary bg-primary'
+                    : 'border-gray-300'
+                }`}>
+                  {selectedLevel === level.key && (
+                    <div className="w-3 h-3 rounded-full bg-white" />
+                  )}
                 </div>
               </div>
-              {ratings[skill.key] && (
-                <p className="text-sm text-primary font-medium">
-                  Self-assessment: {ratings[skill.key]}/5
-                </p>
-              )}
-            </div>
+            </button>
           ))}
         </div>
 
         {/* Navigation */}
         <div className="flex gap-3">
           <button
-            onClick={currentCategory > 0 ? handleBack : handleSkip}
+            onClick={step === 'selection' ? () => setStep('intro') : handleSkip}
             className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition"
           >
-            {currentCategory > 0 ? '← Back' : 'Skip'}
+            {step === 'selection' ? '← Back' : 'Skip'}
           </button>
           <button
-            onClick={handleNext}
-            disabled={saving}
-            className="flex-1 px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-secondary transition disabled:opacity-50"
+            onClick={handleSave}
+            disabled={saving || !selectedLevel}
+            className="flex-1 px-6 py-3 bg-primary text-white rounded-xl font-semibold hover:bg-secondary transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {saving ? 'Saving...' : isLastCategory ? 'Complete' : 'Next →'}
+            {saving ? 'Saving...' : 'Complete'}
           </button>
         </div>
       </div>
