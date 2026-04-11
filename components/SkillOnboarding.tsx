@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { EXPERIENCE_LEVELS } from '@/lib/skills'
+import { EXPERIENCE_LEVELS, DRIVING_SKILLS } from '@/lib/skills'
 import { supabase } from '@/lib/supabase'
 import { toast } from '@/components/Toast'
 

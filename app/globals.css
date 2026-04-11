@@ -26,6 +26,37 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Prevent horizontal overflow on mobile */
+* {
+  max-width: 100%;
+}
+
+/* Ensure images and videos don't cause overflow */
+img, video, iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Container fix for mobile overflow */
+.container-fix {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* Fix for common overflow issues on mobile */
+@media (max-width: 768px) {
+  .max-w-7xl {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  /* Ensure no horizontal scroll on mobile */
+  body {
+    overflow-x: hidden;
+    width: 100%;
+  }
+}
+
 /* Custom text selection color */
 ::selection {
   background-color: #3b82f6;
