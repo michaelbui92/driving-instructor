@@ -209,6 +209,140 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Latest from the Blog */}
+      <section className="bg-gradient-to-br from-blue-50 to-indigo-100 py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold mb-2" data-aos="fade-up">Latest from the Blog</h2>
+              <p className="text-gray-600" data-aos="fade-up" data-aos-delay="100">
+                Driving tips and advice to help you become a safer driver
+              </p>
+            </div>
+            <Link
+              href="/blog"
+              className="hidden md:inline-flex items-center gap-2 px-6 py-3 bg-white text-primary font-semibold rounded-xl hover:bg-gray-50 transition shadow-md"
+              data-aos="fade-up"
+              data-aos-delay="200"
+            >
+              View All Posts →
+            </Link>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Post 1 */}
+            <Link href="/blog/scanning-hazards" className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition hover-lift group" data-aos="fade-up" data-aos-delay="0">
+              <div className="bg-gradient-to-br from-amber-100 to-orange-100 h-40 flex items-center justify-center">
+                <span className="text-5xl group-hover:scale-110 transition">👁️</span>
+              </div>
+              <div className="p-6">
+                <div className="bg-primary/10 text-primary text-xs font-semibold px-3 py-1 rounded-full inline-block mb-3">
+                  Safety Tips
+                </div>
+                <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition">
+                  Scanning for Hazards: Stay One Step Ahead
+                </h3>
+                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                  Learn essential hazard scanning techniques every driver should master. From reversing out of driveways to spotting children near parks.
+                </p>
+                <span className="text-primary text-sm font-semibold group-hover:underline">
+                  Read more →
+                </span>
+              </div>
+            </Link>
+
+            {/* Post 2 */}
+            <Link href="/blog/driving-test-prep" className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition hover-lift group" data-aos="fade-up" data-aos-delay="100">
+              <div className="bg-gradient-to-br from-green-100 to-emerald-100 h-40 flex items-center justify-center">
+                <span className="text-5xl group-hover:scale-110 transition">📝</span>
+              </div>
+              <div className="p-6">
+                <div className="bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full inline-block mb-3">
+                  Test Prep
+                </div>
+                <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition">
+                  NSW Driving Test: What to Expect
+                </h3>
+                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                  A complete guide to the NSW driving test components, scoring system, and common mistakes to avoid.
+                </p>
+                <span className="text-primary text-sm font-semibold group-hover:underline">
+                  Read more →
+                </span>
+              </div>
+            </Link>
+
+            {/* Post 3 */}
+            <Link href="/blog/night-driving" className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition hover-lift group" data-aos="fade-up" data-aos-delay="200">
+              <div className="bg-gradient-to-br from-indigo-100 to-purple-100 h-40 flex items-center justify-center">
+                <span className="text-5xl group-hover:scale-110 transition">🌙</span>
+              </div>
+              <div className="p-6">
+                <div className="bg-purple-100 text-purple-700 text-xs font-semibold px-3 py-1 rounded-full inline-block mb-3">
+                  Night Driving
+                </div>
+                <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition">
+                  Night Driving: Essential Tips for Safety
+                </h3>
+                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                  Everything you need to know about driving safely after dark, from proper headlight use to managing glare.
+                </p>
+                <span className="text-primary text-sm font-semibold group-hover:underline">
+                  Read more →
+                </span>
+              </div>
+            </Link>
+          </div>
+
+          <div className="mt-8 text-center md:hidden">
+            <Link
+              href="/blog"
+              className="inline-flex items-center gap-2 px-6 py-3 bg-white text-primary font-semibold rounded-xl hover:bg-gray-50 transition shadow-md"
+            >
+              View All Posts →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Resources for New Students */}
+      <section className="bg-white py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-10" data-aos="fade-up">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">New to Driving? Start Here</h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Everything you need to know before your first lesson
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6" data-aos="fade-up" data-aos-delay="100">
+            <Link href="/blog/nsw-road-rules" className="bg-blue-50 rounded-xl p-6 hover:shadow-lg transition hover-lift group">
+              <div className="text-4xl mb-4 group-hover:scale-110 transition">📜</div>
+              <h3 className="font-bold text-lg mb-2">NSW Road Rules</h3>
+              <p className="text-gray-600 text-sm">Essential road rules every driver must know in NSW</p>
+            </Link>
+
+            <Link href="/blog/blind-spots" className="bg-orange-50 rounded-xl p-6 hover:shadow-lg transition hover-lift group">
+              <div className="text-4xl mb-4 group-hover:scale-110 transition">👀</div>
+              <h3 className="font-bold text-lg mb-2">Blind Spots Explained</h3>
+              <p className="text-gray-600 text-sm">Understanding and managing your vehicle's blind spots</p>
+            </Link>
+
+            <Link href="/blog/merging-lanes" className="bg-green-50 rounded-xl p-6 hover:shadow-lg transition hover-lift group">
+              <div className="text-4xl mb-4 group-hover:scale-110 transition">🔀</div>
+              <h3 className="font-bold text-lg mb-2">Merging Safely</h3>
+              <p className="text-gray-600 text-sm">How to merge lanes with confidence</p>
+            </Link>
+
+            <Link href="/faq" className="bg-purple-50 rounded-xl p-6 hover:shadow-lg transition hover-lift group">
+              <div className="text-4xl mb-4 group-hover:scale-110 transition">❓</div>
+              <h3 className="font-bold text-lg mb-2">FAQ</h3>
+              <p className="text-gray-600 text-sm">Answers to common questions about lessons</p>
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Your Path to NSW Licence */}
       <section className="bg-white py-16" id="path-to-licence">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
