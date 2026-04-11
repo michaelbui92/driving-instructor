@@ -10,7 +10,7 @@ async function sendRescheduleEmail(
   newDate: string,
   newTime: string
 ): Promise<void> {
-  const apiKey = process.env.AGENTMAIL_API_KEY
+  const apiKey = process.env.AGENTMAIL_API_KEY || process.env.NEXT_PUBLIC_AGENTMAIL_API_KEY
   if (!apiKey) {
     console.error('AgentMail API key not configured')
     return

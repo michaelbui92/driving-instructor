@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Email is required' }, { status: 400 })
     }
 
-    const apiKey = process.env.AGENTMAIL_API_KEY
+    const apiKey = process.env.AGENTMAIL_API_KEY || process.env.NEXT_PUBLIC_AGENTMAIL_API_KEY
     if (!apiKey) {
       console.error('AgentMail API key not configured')
       return NextResponse.json({ error: 'Email service not configured' }, { status: 500 })
