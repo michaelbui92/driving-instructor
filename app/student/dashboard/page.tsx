@@ -123,7 +123,7 @@ export default function StudentDashboardPage() {
         // Try to get existing student
         const { data, error } = await supabase
           .from('students')
-          .select('id, name, details_completed, onboarding_completed, onboarding_skipped')
+          .select('id, name, onboarding_completed, onboarding_skipped')
           .eq('email', userEmail)
           .single()
 
@@ -135,7 +135,6 @@ export default function StudentDashboardPage() {
             .insert({
               email: userEmail,
               name: defaultName,
-              details_completed: false,
               onboarding_completed: false,
               onboarding_skipped: false
             })
@@ -160,12 +159,9 @@ export default function StudentDashboardPage() {
         setStudentId(studentData.id)
         setStudent(studentData)
         
-        // Show details onboarding first if not completed
-        if (!studentData.details_completed) {
-          setShowDetailsOnboarding(true)
-        }
-        // Then show skill onboarding if details are complete but skills aren't
-        else if (!studentData.onboarding_completed && !studentData.onboarding_skipped) {
+        // For now, show skill onboarding if skills aren't completed/skipped
+        // TODO: Add details_completed check after migration runs
+        if (!studentData.onboarding_completed && !studentData.onboarding_skipped) {
           setShowSkillOnboarding(true)
         }
       }
@@ -514,7 +510,7 @@ export default function StudentDashboardPage() {
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold">My Skill Progress</h2>
-              {!student?.onboarding_completed && !student?.onboarding_skipped && student?.details_completed && (
+              {!student?.onboarding_completed && !student?.onboarding_skipped && (
                 <button
                   onClick={() => setShowSkillOnboarding(true)}
                   className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition text-sm"

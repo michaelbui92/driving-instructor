@@ -65,8 +65,7 @@ export default function StudentDetailsOnboarding({ studentId, email, onComplete 
         .update({
           name: formData.name.trim(),
           phone: formData.phone.trim(),
-          address: formData.address.trim(),
-          details_completed: true
+          address: formData.address.trim()
         })
         .eq('id', studentId)
 

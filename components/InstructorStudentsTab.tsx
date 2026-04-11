@@ -246,7 +246,6 @@ export default function InstructorStudentsTab() {
                   name: 'Test Student',
                   phone: '0412 345 678',
                   address: '123 Test St, Sydney',
-                  details_completed: true,
                   onboarding_completed: false,
                   onboarding_skipped: false
                 })
