@@ -78,8 +78,8 @@ export default function Home() {
           <div className="flex-1 relative w-full min-w-0" data-aos="fade-left">
             <div className="relative w-full h-64 md:h-96">
               <Image
-                src="/images/mascot-hero.png"
-                alt="Chibi Bui - Your friendly driving instructor"
+                src="/images/hover-casual.png"
+                alt="Professional driving instructor - Drive with Bui"
                 fill
                 className="object-contain"
                 priority

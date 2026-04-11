@@ -55,6 +55,37 @@ img, video, iframe {
     overflow-x: hidden;
     width: 100%;
   }
+  
+  /* Disable horizontal AOS animations on mobile to prevent overflow */
+  [data-aos][data-aos][data-aos-duration="50"],
+  [data-aos][data-aos][data-aos-duration="100"],
+  [data-aos][data-aos][data-aos-duration="150"],
+  [data-aos][data-aos][data-aos-duration="200"],
+  [data-aos][data-aos][data-aos-duration="250"],
+  [data-aos][data-aos][data-aos-duration="300"],
+  [data-aos][data-aos][data-aos-duration="350"],
+  [data-aos][data-aos][data-aos-duration="400"],
+  [data-aos][data-aos][data-aos-duration="450"],
+  [data-aos][data-aos][data-aos-duration="500"],
+  [data-aos][data-aos][data-aos-duration="550"],
+  [data-aos][data-aos][data-aos-duration="600"],
+  [data-aos][data-aos][data-aos-duration="650"],
+  [data-aos][data-aos][data-aos-duration="700"],
+  [data-aos][data-aos][data-aos-duration="750"],
+  [data-aos][data-aos][data-aos-duration="800"],
+  [data-aos][data-aos][data-aos-duration="850"],
+  [data-aos][data-aos][data-aos-duration="900"],
+  [data-aos][data-aos][data-aos-duration="950"],
+  [data-aos][data-aos][data-aos-duration="1000"] {
+    transition-duration: 0s !important;
+  }
+  
+  /* Specifically target fade-left animations which cause horizontal overflow */
+  [data-aos="fade-left"],
+  [data-aos="fade-right"] {
+    transform: none !important;
+    opacity: 1 !important;
+  }
 }
 
 /* Custom text selection color */
