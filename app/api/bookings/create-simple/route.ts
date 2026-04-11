@@ -66,6 +66,12 @@ export async function POST(request: NextRequest) {
       .select()
     
     if (error) {
+      // Check for unique constraint violation (double-booking)
+      if (error.code === '23505' || error.code === 'PGRST116') {
+        return NextResponse.json({
+          error: `This time slot (${date} at ${time}) is already booked. Please choose a different time.`,
+        }, { status: 409 })
+      }
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
     
