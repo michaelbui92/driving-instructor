@@ -12,10 +12,16 @@
   "categories": ["education", "lifestyle"],
   "icons": [
     {
-      "src": "/icons/icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "src": "/images/mascot-hero.png",
+      "sizes": "338x336",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/images/mascot-hero.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ],
   "screenshots": [
