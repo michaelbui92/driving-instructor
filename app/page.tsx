@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import Navbar from '@/components/Navbar'
 import DynamicHeadline from '@/components/DynamicHeadline'
 import StudentUpcomingLessons from '@/components/StudentUpcomingLessons'
@@ -76,14 +75,12 @@ export default function Home() {
             </div>
           </div>
           <div className="flex-1 relative w-full min-w-0" data-aos="fade-left">
-            <div className="relative w-full h-64 md:h-96">
-              <Image
-                src="/images/hover-casual.png"
-                alt="Professional driving instructor - Drive with Bui"
-                fill
-                className="object-contain"
-                priority
-              />
+            <div className="relative w-full h-64 md:h-96 flex items-center justify-center">
+              <div className="text-center">
+                <div className="text-9xl md:text-[12rem] mb-4">🚗</div>
+                <div className="text-2xl font-bold text-gray-700">Professional Driving Lessons</div>
+                <div className="text-lg text-gray-600 mt-2">Western Sydney • Patient Instructor • Modern Cars</div>
+              </div>
             </div>
           </div>
         </div>
