@@ -876,62 +876,99 @@ export default function BookPage() {
               <>
                 <h2 className="text-3xl font-bold mb-6 text-center">Log in to Complete Booking</h2>
                 
-                <div className="bg-white rounded-2xl shadow-lg p-8 mb-6 text-center">
-                  <div className="text-6xl mb-4">🔐</div>
-                  <h3 className="text-xl font-semibold mb-3">Sign in to continue</h3>
-                  <p className="text-gray-600 mb-6">
-                    Please log in with your email to complete your booking. You'll receive a login code via email.
-                  </p>
-                  
-                  <div className="max-w-sm mx-auto space-y-4">
-                    <div>
-                      <input
-                        type="email"
-                        value={form.email}
-                        onChange={(e) => setForm({ ...form, email: e.target.value })}
-                        placeholder="your@email.com"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
-                      />
+                {/* Login Card */}
+                <div className="max-w-md mx-auto">
+                  <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-primary to-secondary p-6 text-center text-white">
+                      <div className="text-4xl mb-2">🔐</div>
+                      <h3 className="text-xl font-bold">Save Your Booking</h3>
+                      <p className="text-blue-100 text-sm mt-1">
+                        Sign in to securely save your lesson and receive reminders
+                      </p>
                     </div>
                     
-                    {otpError && (
-                      <p className="text-red-500 text-sm">{otpError}</p>
-                    )}
-                    
-                    {!otpSent ? (
-                      <button
-                        onClick={handleSendOTP}
-                        disabled={otpLoading || !form.email}
-                        className="w-full py-3 bg-primary text-white rounded-xl font-semibold hover:bg-secondary transition disabled:opacity-50"
-                      >
-                        {otpLoading ? 'Sending...' : 'Send Login Code'}
-                      </button>
-                    ) : (
-                      <div className="space-y-4">
-                        <input
-                          type="text"
-                          value={otpCode}
-                          onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                          placeholder="Enter 6-digit code"
-                          maxLength={6}
-                          className="w-full py-4 text-center text-2xl tracking-widest border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent"
-                        />
-                        <button
-                          onClick={handleVerifyOTP}
-                          disabled={otpLoading || otpCode.length < 6}
-                          className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition disabled:opacity-50"
-                        >
-                          {otpLoading ? 'Verifying...' : 'Verify & Continue'}
-                        </button>
-                        <button
-                          onClick={handleSendOTP}
-                          disabled={otpLoading}
-                          className="text-sm text-gray-500 hover:text-gray-700"
-                        >
-                          Resend code
-                        </button>
-                      </div>
-                    )}
+                    {/* Form */}
+                    <div className="p-6">
+                      {!otpSent ? (
+                        <>
+                          <p className="text-gray-600 text-sm mb-4 text-center">
+                            Enter your email and we'll send you a login code
+                          </p>
+                          <div className="space-y-4">
+                            <div>
+                              <input
+                                type="email"
+                                value={form.email}
+                                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                                placeholder="your@email.com"
+                                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-0 text-center"
+                              />
+                            </div>
+                            
+                            {otpError && (
+                              <div className="bg-red-50 text-red-600 text-sm px-4 py-2 rounded-lg text-center">
+                                {otpError}
+                              </div>
+                            )}
+                            
+                            <button
+                              onClick={handleSendOTP}
+                              disabled={otpLoading || !form.email}
+                              className="w-full py-3 bg-primary text-white rounded-xl font-semibold hover:bg-secondary transition disabled:opacity-50"
+                            >
+                              {otpLoading ? (
+                                <span>Sending...</span>
+                              ) : (
+                                <span>Send Login Code</span>
+                              )}
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-center mb-4">
+                            <p className="text-green-600 font-medium">✓ Code sent!</p>
+                            <p className="text-gray-500 text-sm">Check your email (and spam folder)</p>
+                          </div>
+                          
+                          <div className="space-y-4">
+                            <div>
+                              <input
+                                type="text"
+                                value={otpCode}
+                                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                placeholder="● ● ● ● ● ●"
+                                maxLength={6}
+                                className="w-full py-4 text-center text-2xl tracking-[0.5em] border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-0"
+                              />
+                            </div>
+                            
+                            {otpError && (
+                              <div className="bg-red-50 text-red-600 text-sm px-4 py-2 rounded-lg text-center">
+                                {otpError}
+                              </div>
+                            )}
+                            
+                            <button
+                              onClick={handleVerifyOTP}
+                              disabled={otpLoading || otpCode.length < 6}
+                              className="w-full py-3 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition disabled:opacity-50"
+                            >
+                              {otpLoading ? 'Verifying...' : 'Verify & Continue'}
+                            </button>
+                            
+                            <button
+                              onClick={handleSendOTP}
+                              disabled={otpLoading}
+                              className="w-full text-sm text-gray-500 hover:text-gray-700 py-2"
+                            >
+                              Didn't receive it? Resend code
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               </>
