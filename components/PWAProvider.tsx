@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Image from 'next/image'
 
 export default function PWAProvider({ children }: { children: React.ReactNode }) {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
@@ -74,8 +73,8 @@ export default function PWAProvider({ children }: { children: React.ReactNode })
         <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-50 animate-slide-up">
           <div className="max-w-md mx-auto flex items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-primary/10 rounded-xl overflow-hidden flex items-center justify-center">
-                <Image src="/images/mascot-hero.png" alt="Drive with Bui" width={48} height={48} className="object-contain" />
+              <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                <span className="text-2xl">🚗</span>
               </div>
               <div>
                 <p className="font-semibold text-gray-900">Add to Home Screen</p>

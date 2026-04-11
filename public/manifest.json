@@ -13,7 +13,7 @@
   "icons": [
     {
       "src": "/images/mascot-hero.png",
-      "sizes": "338x336",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
@@ -21,6 +21,12 @@
       "src": "/images/mascot-hero.png",
       "sizes": "512x512",
       "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "maskable"
     }
   ],
