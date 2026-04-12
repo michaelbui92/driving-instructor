@@ -166,6 +166,28 @@ export const DRIVING_SKILLS: Skill[] = [
     category: 'situations',
     icon: '🛣️'
   },
+  // New: Additional Road Skills
+  {
+    key: 'roundabouts',
+    name: 'Roundabouts',
+    description: 'Navigating roundabouts safely, giving way correctly',
+    category: 'road',
+    icon: '🔄'
+  },
+  {
+    key: 'speed',
+    name: 'Speed Management',
+    description: 'Appropriate speed for conditions, understanding speed limits',
+    category: 'road',
+    icon: '�.speed'
+  },
+  {
+    key: 'defensive',
+    name: 'Defensive Driving',
+    description: 'Proactive hazard awareness and safe following distances',
+    category: 'confidence',
+    icon: '🛡️'
+  },
   // Confidence
   {
     key: 'confidence',

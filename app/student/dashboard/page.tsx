@@ -483,6 +483,53 @@ export default function StudentDashboardPage() {
           )
         })()}
 
+        {/* Blog Recommendations */}
+        <div className="mt-4 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl">
+          <div className="flex items-start gap-3">
+            <div className="text-3xl">📖</div>
+            <div>
+              <h3 className="font-semibold text-blue-900 mb-1">Keep Learning!</h3>
+              <p className="text-blue-700 text-sm mb-2">
+                Our blog has helpful driving tips to complement your lessons. Check out these popular posts:
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <a
+                  href="/blog/scanning-hazards"
+                  className="px-3 py-1.5 bg-white text-primary border border-primary rounded-lg text-sm hover:bg-blue-50 transition"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  🔍 Scanning for Hazards
+                </a>
+                <a
+                  href="/blog/three-second-rule"
+                  className="px-3 py-1.5 bg-white text-primary border border-primary rounded-lg text-sm hover:bg-blue-50 transition"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  ⏱️ The 3-Second Rule
+                </a>
+                <a
+                  href="/blog/nsw-road-rules"
+                  className="px-3 py-1.5 bg-white text-primary border border-primary rounded-lg text-sm hover:bg-blue-50 transition"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  🚦 NSW Road Rules
+                </a>
+                <a
+                  href="/blog"
+                  className="px-3 py-1.5 bg-white text-gray-600 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 transition"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  View All Blogs →
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Tabs */}
         <div className="bg-white rounded-xl shadow-lg">
           <div className="border-b">
