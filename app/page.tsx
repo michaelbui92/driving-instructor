@@ -185,6 +185,57 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Limited Time Promotion */}
+      <section className="bg-gradient-to-r from-amber-500 to-orange-500 py-16" data-aos="fade-up">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center text-white">
+            <div className="inline-block px-4 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold mb-4">
+              🎉 LIMITED TIME OFFER
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">First 3 Students Get FREE Lessons!</h2>
+            <p className="text-xl mb-6 max-w-3xl mx-auto">
+              Be among the first 3 students to sign up and receive complimentary driving lessons.
+            </p>
+            <div className="max-w-2xl mx-auto bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-8">
+              <div className="grid md:grid-cols-3 gap-6 text-center">
+                <div>
+                  <div className="text-4xl mb-2">🎯</div>
+                  <h3 className="font-bold text-lg mb-1">Limited Spots</h3>
+                  <p className="text-amber-100 text-sm">Only 3 students eligible</p>
+                </div>
+                <div>
+                  <div className="text-4xl mb-2">🎁</div>
+                  <h3 className="font-bold text-lg mb-1">Free Lessons</h3>
+                  <p className="text-amber-100 text-sm">Complimentary driving sessions</p>
+                </div>
+                <div>
+                  <div className="text-4xl mb-2">📝</div>
+                  <h3 className="font-bold text-lg mb-1">Contact to Claim</h3>
+                  <p className="text-amber-100 text-sm">Submit form for promo code</p>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href="/contact"
+                className="px-8 py-4 bg-white text-amber-700 font-bold rounded-xl hover:bg-amber-50 transition shadow-lg"
+              >
+                📩 Contact for Promo Code
+              </Link>
+              <Link
+                href="/book"
+                className="px-8 py-4 bg-amber-900/30 text-white font-bold rounded-xl hover:bg-amber-900/50 transition border-2 border-white/30"
+              >
+                📅 Book Your Lesson
+              </Link>
+            </div>
+            <p className="text-amber-100 text-sm mt-6">
+              Submit a contact form to reach out to Michael Bui and obtain your promo code for free lessons.
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Section */}
       <section className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-16" id="pricing">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
