@@ -10,8 +10,7 @@ import { sendBookingCancellationEmail } from '@/lib/booking-email'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { DashboardSkeleton, StatsSkeleton, BookingListSkeleton } from '@/components/Skeletons'
 import { toast } from '@/components/Toast'
-import StudentDetailsOnboarding from '@/components/StudentDetailsOnboarding'
-import SkillOnboarding from '@/components/SkillOnboarding'
+import MyDetailsOnboarding from '@/components/MyDetailsOnboarding'
 import SkillProgress from '@/components/SkillProgress'
 
 type BookingType = {
@@ -37,6 +36,7 @@ type StudentType = {
   details_completed: boolean
   onboarding_completed: boolean
   onboarding_skipped: boolean
+  experience_level?: string
 }
 
 export default function StudentDashboardPage() {
@@ -123,7 +123,7 @@ export default function StudentDashboardPage() {
         // Try to get existing student
         const { data, error } = await supabase
           .from('students')
-          .select('id, name, onboarding_completed, onboarding_skipped')
+          .select('id, name, details_completed, onboarding_completed, onboarding_skipped, experience_level')
           .eq('email', userEmail)
           .single()
 
@@ -135,6 +135,7 @@ export default function StudentDashboardPage() {
             .insert({
               email: userEmail,
               name: defaultName,
+              details_completed: false,
               onboarding_completed: false,
               onboarding_skipped: false
             })
@@ -159,10 +160,10 @@ export default function StudentDashboardPage() {
         setStudentId(studentData.id)
         setStudent(studentData)
         
-        // For now, show skill onboarding if skills aren't completed/skipped
-        // TODO: Add details_completed check after migration runs
-        if (!studentData.onboarding_completed && !studentData.onboarding_skipped) {
-          setShowSkillOnboarding(true)
+        // Show combined onboarding if details aren't completed
+        // This combines details + skill assessment in one page
+        if (!studentData.details_completed) {
+          setShowDetailsOnboarding(true)
         }
       }
     } catch (err) {
@@ -399,35 +400,13 @@ export default function StudentDashboardPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <Navbar showLocation={false} />
 
-      {/* Student Details Onboarding Modal */}
+      {/* Combined My Details + Skill Assessment Modal */}
       {showDetailsOnboarding && studentId && userEmail && (
-        <StudentDetailsOnboarding
+        <MyDetailsOnboarding
           studentId={studentId}
           email={userEmail}
           onComplete={() => {
             setShowDetailsOnboarding(false)
-            // After details are complete, check if we should show skill onboarding
-            if (student && !student.onboarding_completed && !student.onboarding_skipped) {
-              setShowSkillOnboarding(true)
-            }
-            // Reload to update student status
-            loadDashboard()
-          }}
-        />
-      )}
-
-      {/* Skill Onboarding Modal */}
-      {showSkillOnboarding && studentId && userEmail && (
-        <SkillOnboarding
-          studentId={studentId}
-          email={userEmail}
-          onComplete={() => {
-            setShowSkillOnboarding(false)
-            // Reload to update student status
-            loadDashboard()
-          }}
-          onSkip={() => {
-            setShowSkillOnboarding(false)
             // Reload to update student status
             loadDashboard()
           }}
