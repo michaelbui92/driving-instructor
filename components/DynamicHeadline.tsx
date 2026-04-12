@@ -66,9 +66,11 @@ export default function DynamicHeadline() {
   }, [charIndex, isTyping, currentPhraseIndex])
 
   return (
-    <h1 className="text-4xl md:text-6xl font-bold mb-6">
-      <span className="text-primary">{displayedText}</span>
-      <span className="animate-pulse text-primary">|</span>
-    </h1>
+    <div className="min-h-[3rem] md:min-h-[4rem] flex items-center">
+      <h1 className="text-4xl md:text-6xl font-bold">
+        <span className="text-primary">{displayedText}</span>
+        <span className="animate-pulse text-primary">|</span>
+      </h1>
+    </div>
   )
 }

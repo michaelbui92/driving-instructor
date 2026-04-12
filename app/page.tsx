@@ -56,7 +56,9 @@ export default function Home() {
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         <div className="flex flex-col lg:flex-row items-center gap-8">
           <div className="flex-1 text-center lg:text-left" data-aos="fade-right">
-            <DynamicHeadline />
+            <div className="min-h-[4rem] md:min-h-[5rem] flex items-center justify-center lg:justify-start">
+              <DynamicHeadline />
+            </div>
             <p className="text-xl text-gray-600 mb-8">
               Professional driving lessons in Western Sydney. Patient, experienced instructor helping you become a confident, safe driver.
             </p>
