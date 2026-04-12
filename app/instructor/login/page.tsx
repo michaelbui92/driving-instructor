@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
-import { login, hasPinSet } from '@/lib/auth';
+import { login, hasPinSet, setPin } from '@/lib/auth';
 
 export default function InstructorLoginPage() {
   const [pin, setPin] = useState('');
@@ -29,12 +29,21 @@ export default function InstructorLoginPage() {
     setIsLoading(true);
 
     try {
-      const success = await login(pin);
-      if (success) {
-        router.push('/instructor');
+      if (pinSet) {
+        // PIN already exists - try to login
+        const success = await login(pin);
+        if (!success) {
+          setError('Invalid PIN. Please try again.');
+          return;
+        }
       } else {
-        setError('Invalid PIN. Please try again.');
+        // No PIN exists yet - set a new PIN
+        await setPin(pin);
+        // setPin() throws on error, so if we get here it succeeded
       }
+      
+      // Success - redirect to instructor portal
+      router.push('/instructor');
     } catch (err: any) {
       setError(err.message || 'An error occurred');
     } finally {
