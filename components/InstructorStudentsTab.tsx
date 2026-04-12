@@ -83,22 +83,43 @@ export default function InstructorStudentsTab() {
 
     setSaving(true)
     try {
+      // Find the skill definition to get the name
+      const allSkills = [...DRIVING_SKILLS]
+      const skillDef = allSkills.find(s => s.key === skillKey)
+      
+      // Use upsert - will insert if record doesn't exist, update if it does
       const { error } = await supabase
         .from('student_skills')
-        .update({ instructor_rating: editValue })
-        .eq('student_id', selectedStudent.id)
-        .eq('skill_key', skillKey)
+        .upsert({
+          student_id: selectedStudent.id,
+          skill_key: skillKey,
+          skill_name: skillDef?.name || skillKey,
+          self_assessment: 0, // Student doesn't rate these
+          instructor_rating: editValue,
+          notes: ''
+        }, { onConflict: 'student_id,skill_key' })
 
       if (error) throw error
 
-      // Update local state
-      setStudentSkills(prev =>
-        prev.map(s =>
-          s.skill_key === skillKey
-            ? { ...s, instructor_rating: editValue }
-            : s
-        )
-      )
+      // Update local state - either update existing or add new
+      setStudentSkills(prev => {
+        const existing = prev.find(s => s.skill_key === skillKey)
+        if (existing) {
+          return prev.map(s =>
+            s.skill_key === skillKey
+              ? { ...s, instructor_rating: editValue }
+              : s
+          )
+        } else {
+          return [...prev, {
+            skill_key: skillKey,
+            skill_name: skillDef?.name || skillKey,
+            self_assessment: 0,
+            instructor_rating: editValue,
+            notes: ''
+          }]
+        }
+      })
 
       toast('success', 'Skill rating updated!')
       setEditingSkill(null)
