@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import Navbar from '@/components/Navbar'
 
 const blogPosts = [
   {
@@ -88,29 +89,7 @@ export default function BlogPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Import Navbar */}
-      <nav className="bg-white shadow-lg sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-primary hover:text-secondary transition">
-                🚗 Drive With Bui
-              </Link>
-              <span className="ml-2 text-sm text-gray-600 hidden md:inline">• Lidcombe Area</span>
-            </div>
-            <div className="hidden md:flex space-x-4 items-center">
-              <Link href="/about" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">About</Link>
-              <Link href="/blog" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">Blog</Link>
-              <Link href="/faq" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">FAQ</Link>
-              <Link href="/contact" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">Contact</Link>
-              <div className="flex space-x-2 ml-2">
-                <Link href="/student/login" className="px-3 py-1.5 border border-primary text-primary rounded-lg hover:bg-primary hover:text-white transition font-medium text-sm">Student Login</Link>
-                <Link href="/instructor" className="px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-secondary transition font-medium text-sm">Instructor Portal</Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
       
       <div className="max-w-4xl mx-auto px-4 py-16">
         <h1 className="text-4xl font-bold text-center mb-4" data-aos="fade-up">Driving Tips & Blog</h1>
