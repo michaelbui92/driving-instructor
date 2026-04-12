@@ -56,17 +56,17 @@ export default function ContactPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <Navbar />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
           <div className="text-center">
-            <h1 className="text-4xl md:text-4xl font-bold mb-6" data-aos="fade-up">
+            <h1 className="text-4xl md:text-4xl font-bold mb-6 text-gray-900 dark:text-white" data-aos="fade-up">
               Get in Touch
             </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8" data-aos="fade-up" data-aos-delay="100">
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-8" data-aos="fade-up" data-aos-delay="100">
               Have questions about driving lessons? Ready to book? I'm here to help!
             </p>
           </div>
@@ -77,7 +77,7 @@ export default function ContactPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         <div className="grid lg:grid-cols-2 gap-12">
           {/* Contact Form */}
-          <div className="bg-white rounded-2xl shadow-xl p-8" data-aos="fade-right">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8" data-aos="fade-right">
             <h2 className="text-3xl font-bold mb-6">Send a Message</h2>
             
             {success && (
@@ -172,8 +172,8 @@ export default function ContactPage() {
           {/* Contact Info */}
           <div className="space-y-8" data-aos="fade-left">
             {/* Contact Cards */}
-            <div className="bg-white rounded-2xl shadow-xl p-8">
-              <h3 className="text-2xl font-bold mb-6">Contact Information</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+              <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Contact Information</h3>
               <div className="space-y-6">
                 <div className="flex items-start gap-4">
                   <div className="flex-shrink-0 w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -206,9 +206,9 @@ export default function ContactPage() {
             </div>
 
             {/* FAQ Link */}
-            <div className="bg-white rounded-2xl shadow-xl p-8">
-              <h3 className="text-2xl font-bold mb-4">Common Questions</h3>
-              <p className="text-gray-600 mb-4">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8">
+              <h3 className="text-2xl font-bold mb-4 text-gray-900 dark:text-white">Common Questions</h3>
+              <p className="text-gray-600 dark:text-gray-300 mb-4">
                 Check our FAQ for answers to common questions about lessons, pricing, and requirements.
               </p>
               <Link
@@ -223,8 +223,8 @@ export default function ContactPage() {
         </div>
 
         {/* Social Media */}
-        <div className="mt-12 bg-white rounded-2xl shadow-xl p-8" data-aos="fade-up">
-          <h3 className="text-2xl font-bold mb-6">Follow Us</h3>
+        <div className="mt-12 bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8" data-aos="fade-up">
+          <h3 className="text-2xl font-bold mb-6 text-gray-900 dark:text-white">Follow Us</h3>
           <div className="text-center">
             <div className="text-6xl mb-6">📱</div>
             <h4 className="text-xl font-bold mb-2">Stay Updated on Instagram</h4>

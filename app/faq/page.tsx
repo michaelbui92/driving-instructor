@@ -108,17 +108,17 @@ export default function FAQPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <Navbar />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
           <div className="text-center">
-            <h1 className="text-4xl md:text-4xl font-bold mb-6" data-aos="fade-up">
+            <h1 className="text-4xl md:text-4xl font-bold mb-6 text-gray-900 dark:text-white" data-aos="fade-up">
               Frequently Asked Questions
             </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8" data-aos="fade-up" data-aos-delay="100">
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-8" data-aos="fade-up" data-aos-delay="100">
               Everything you need to know about learning to drive with me.
             </p>
             <div className="inline-block px-6 py-3 bg-primary text-white rounded-lg font-semibold" data-aos="fade-up" data-aos-delay="200">
@@ -149,19 +149,19 @@ export default function FAQPage() {
           {filteredFAQs.map((faq, index) => (
             <div 
               key={index} 
-              className="bg-white rounded-xl shadow-lg overflow-hidden"
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden"
               data-aos="fade-up"
               data-aos-delay={index * 50}
             >
               <button
                 onClick={() => toggleFAQ(index)}
-                className="w-full text-left p-6 flex justify-between items-center hover:bg-gray-50 transition"
+                className="w-full text-left p-6 flex justify-between items-center hover:bg-gray-50 dark:hover:bg-gray-700 transition"
               >
                 <div className="flex items-center gap-4">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${openIndex === index ? 'bg-primary text-white' : 'bg-blue-100 text-primary'}`}>
                     <span className="text-lg">?</span>
                   </div>
-                  <h3 className="text-lg font-semibold">{faq.question}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{faq.question}</h3>
                 </div>
                 <div className={`text-2xl transition-transform ${openIndex === index ? 'rotate-180' : ''}`}>
                   ▼
@@ -172,11 +172,11 @@ export default function FAQPage() {
                 <div className="px-6 pb-6">
                   <div className="pl-14">
                     <div className="mb-2">
-                      <span className="inline-block px-3 py-1 bg-gray-100 text-gray-700 text-sm font-medium rounded-full">
+                      <span className="inline-block px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm font-medium rounded-full">
                         {faq.category}
                       </span>
                     </div>
-                    <p className="text-gray-600">{faq.answer}</p>
+                    <p className="text-gray-600 dark:text-gray-300">{faq.answer}</p>
                   </div>
                 </div>
               )}
