@@ -765,15 +765,28 @@ export async function getSortedRulesAsync(): Promise<AvailabilityRule[]> {
 }
 
 // Async CRUD operations for blocked slots using Supabase
+// Helper function to get Sydney date in YYYY-MM-DD format
+function getSydneyDateString(): string {
+  // Get current date in Australia/Sydney timezone
+  const now = new Date()
+  // Format as YYYY-MM-DD in Sydney time
+  return now.toLocaleDateString('en-CA', { 
+    timeZone: 'Australia/Sydney',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  })
+}
+
 export async function getBlockedSlotsAsync(): Promise<BlockedSlot[]> {
   try {
-    // Get today's date in YYYY-MM-DD format for comparison
-    const today = new Date().toISOString().split('T')[0]
+    // Get today's date in Sydney time (YYYY-MM-DD format)
+    const todaySydney = getSydneyDateString()
     
     const { data, error } = await supabase
       .from('blocked_slots')
       .select('*')
-      .gte('date', today) // Only get dates >= today
+      .gte('date', todaySydney) // Only get dates >= today in Sydney time
       .order('date', { ascending: true })
     
     if (error) {
@@ -838,21 +851,21 @@ export async function removeBlockedSlotAsync(date: string, time: string): Promis
 
 export async function cleanupPastBlocksAsync(): Promise<void> {
   try {
-    // Get today's date in YYYY-MM-DD format
-    const today = new Date().toISOString().split('T')[0]
+    // Get today's date in Sydney time (YYYY-MM-DD format)
+    const todaySydney = getSydneyDateString()
     
-    // Delete all blocked slots with dates before today
+    // Delete all blocked slots with dates before today in Sydney time
     const { error } = await supabase
       .from('blocked_slots')
       .delete()
-      .lt('date', today)
+      .lt('date', todaySydney)
     
     if (error) {
       console.error('Error cleaning up past blocks from Supabase:', error)
       throw error
     }
     
-    console.log('Cleaned up past blocked slots from database')
+    console.log('Cleaned up past blocked slots from database (Sydney time)')
   } catch (error) {
     console.error('Error in cleanupPastBlocksAsync:', error)
     throw error
