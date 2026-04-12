@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { EXPERIENCE_LEVELS, DRIVING_SKILLS } from '@/lib/skills'
+import { EXPERIENCE_LEVELS } from '@/lib/skills'
 import { supabase } from '@/lib/supabase'
 import { toast } from '@/components/Toast'
 
@@ -45,33 +45,18 @@ export default function SkillOnboarding({ studentId, email, onComplete, onSkip }
           student_id: studentId,
           skill_key: 'experience_level',
           skill_name: 'Experience Level',
-          self_assessment: 0,
+          self_assessment: selectedLevel === 'complete_beginner' ? 1 : 
+                          selectedLevel === 'overseas_driver' ? 2 : 
+                          selectedLevel === 'learner' ? 3 : 
+                          selectedLevel === 'refresher' ? 4 : 5,
           instructor_rating: 0,
           notes: selected ? `${selected.name}: ${selected.description}` : selectedLevel
-        }, { onConflict: 'student_id,skill_key' })
+        })
 
       if (skillError) throw skillError
 
-      // 3. Create initial skill records for all 17 skills (with 0 ratings)
-      // This gives instructor a starting point to rate after first lesson
-      const skillPromises = DRIVING_SKILLS.map(skill => 
-        supabase
-          .from('student_skills')
-          .upsert({
-            student_id: studentId,
-            skill_key: skill.key,
-            skill_name: skill.name,
-            self_assessment: 0, // Student doesn't rate these
-            instructor_rating: 0, // Instructor will rate after lesson
-            notes: ''
-          }, { onConflict: 'student_id,skill_key' })
-      )
-
-      await Promise.all(skillPromises)
-
-      setStep('done')
       toast('success', 'Experience level saved! Your instructor will use this to plan your lessons.')
-      setTimeout(() => onComplete(), 1500)
+      onComplete()
     } catch (err) {
       console.error('Error saving experience level:', err)
       toast('error', 'Failed to save. Please try again.')

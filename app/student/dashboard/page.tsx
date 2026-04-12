@@ -510,12 +510,12 @@ export default function StudentDashboardPage() {
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-2xl font-bold">My Skill Progress</h2>
-              {!student?.onboarding_completed && !student?.onboarding_skipped && (
+              {!student?.onboarding_completed && (
                 <button
                   onClick={() => setShowSkillOnboarding(true)}
                   className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary transition text-sm"
                 >
-                  Complete Self-Assessment
+                  {student?.onboarding_skipped ? 'Complete Self-Assessment' : 'Complete Self-Assessment'}
                 </button>
               )}
             </div>
