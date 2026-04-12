@@ -17,6 +17,26 @@ export function generateLoginCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString()
 }
 
+// Check if a student exists by email
+export async function checkStudentExists(email: string): Promise<boolean> {
+  try {
+    const adminClient = getSupabaseAdmin()
+    
+    // Check if user exists in auth.users
+    const { data: users, error: listError } = await adminClient.auth.admin.listUsers()
+    if (listError) {
+      console.error('Error listing users:', listError)
+      return false
+    }
+    
+    const user = users?.users.find(u => u.email === email)
+    return !!user
+  } catch (err) {
+    console.error('Error checking student existence:', err)
+    return false
+  }
+}
+
 // Send login code to email via AgentMail
 export async function sendLoginCode(email: string): Promise<{ success: boolean; error?: string }> {
   try {
@@ -127,20 +147,9 @@ export async function verifyLoginCodeAndSignIn(
     const { data: users, error: listError } = await adminClient.auth.admin.listUsers()
     let user = users?.users.find(u => u.email === email)
 
-    // If user doesn't exist, create one with the code as password
+    // If user doesn't exist, reject login (account creation disabled)
     if (!user) {
-      const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
-        email,
-        password: code, // Use the OTP code as password
-        email_confirm: true,
-      })
-
-      if (createError) {
-        console.error('Create user error:', createError)
-        return { success: false, error: 'Failed to create user account' }
-      }
-
-      user = newUser.user
+      return { success: false, error: 'Account not found. New student accounts must be created by instructor. Please contact via website.' }
     }
 
     // Ensure student record exists

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { sendLoginCode } from '@/lib/student-auth'
+import { sendLoginCode, checkStudentExists } from '@/lib/student-auth'
 import { checkRateLimit, getClientIP } from '@/lib/rate-limit'
 
 export async function POST(request: NextRequest) {
@@ -20,6 +20,15 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'Valid email is required' },
         { status: 400 }
+      )
+    }
+
+    // Check if student exists before sending OTP
+    const studentExists = await checkStudentExists(email)
+    if (!studentExists) {
+      return NextResponse.json(
+        { error: 'Account not found. New student accounts must be created by instructor. Please contact via website.' },
+        { status: 403 }
       )
     }
 
