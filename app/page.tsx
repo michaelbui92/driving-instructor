@@ -170,15 +170,15 @@ export default function Home() {
             <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg" data-aos="fade-up" data-aos-delay="100">
               <div className="text-green-500 text-xl">✓</div>
               <div>
-                <h4 className="font-semibold text-gray-900 dark:text-white">Test Preparation</h4>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">Mock tests & practice routes</p>
+                <h4 className="font-semibold text-gray-900 dark:text-white">Mock tests & practice routes</h4>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">Test Preparation</p>
               </div>
             </div>
             <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg" data-aos="fade-up" data-aos-delay="200">
               <div className="text-green-500 text-xl">✓</div>
               <div>
-                <h4 className="font-semibold text-gray-900 dark:text-white">Flexible Scheduling</h4>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">Weekdays & weekends available</p>
+                <h4 className="font-semibold text-gray-900 dark:text-white">Weekdays & weekends available</h4>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">Flexible Scheduling</p>
               </div>
             </div>
           </div>
