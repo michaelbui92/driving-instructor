@@ -224,7 +224,7 @@ export default function Home() {
             </Link>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-3 gap-6">
             {/* Post 1 */}
             <Link href="/blog/three-second-rule" className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition hover-lift group" data-aos="fade-up" data-aos-delay="0">
               <div className="bg-gradient-to-br from-blue-100 to-indigo-100 h-40 flex items-center justify-center">
@@ -267,27 +267,6 @@ export default function Home() {
               </div>
             </Link>
 
-            {/* Post 2 */}
-            <Link href="/blog/driving-test-prep" className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition hover-lift group" data-aos="fade-up" data-aos-delay="100">
-              <div className="bg-gradient-to-br from-green-100 to-emerald-100 h-40 flex items-center justify-center">
-                <span className="text-5xl group-hover:scale-110 transition">📝</span>
-              </div>
-              <div className="p-6">
-                <div className="bg-green-100 text-green-700 text-xs font-semibold px-3 py-1 rounded-full inline-block mb-3">
-                  Test Prep
-                </div>
-                <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition">
-                  NSW Driving Test: What to Expect
-                </h3>
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                  A complete guide to the NSW driving test components, scoring system, and common mistakes to avoid.
-                </p>
-                <span className="text-primary text-sm font-semibold group-hover:underline">
-                  Read more →
-                </span>
-              </div>
-            </Link>
-
             {/* Post 3 */}
             <Link href="/blog/night-driving" className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition hover-lift group" data-aos="fade-up" data-aos-delay="200">
               <div className="bg-gradient-to-br from-indigo-100 to-purple-100 h-40 flex items-center justify-center">
@@ -321,68 +300,30 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Your Path to NSW Licence */}
-      <section className="bg-white py-16" id="path-to-licence">
+      {/* Testimonials Section */}
+      <section className="bg-white py-16" id="testimonials">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div data-aos="fade-right">
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">Your Path to a NSW Licence</h2>
-              <p className="text-xl text-gray-600 mb-8">
-                Whether you're an international student, working holiday maker, or just need to build confidence on the road, I'm here to help you every step of the way. Together, we'll work toward getting you safely licensed and road-ready.
-              </p>
-              <Link
-                href="/about"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-secondary transition"
-              >
-                Learn About My Approach
-                <span>→</span>
-              </Link>
-            </div>
-            
-            <div data-aos="fade-left">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="flex items-start gap-4 p-4 bg-blue-50 rounded-xl">
-                  <div className="text-2xl">✓</div>
-                  <div>
-                    <h3 className="font-bold mb-1">Safe Driving Skills</h3>
-                    <p className="text-gray-600 text-sm">Learn essential skills for navigating Sydney's roads safely and confidently</p>
-                  </div>
+          <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center" data-aos="fade-up">
+            What Students Say
+          </h2>
+          <div className="max-w-3xl mx-auto">
+            {/* Testimonial 1 - Jihee */}
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 md:p-10 shadow-lg" data-aos="fade-up">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-3xl text-white">
+                  👩
                 </div>
-                <div className="flex items-start gap-4 p-4 bg-green-50 rounded-xl">
-                  <div className="text-2xl">✓</div>
-                  <div>
-                    <h3 className="font-bold mb-1">Test Preparation</h3>
-                    <p className="text-gray-600 text-sm">Mock tests and practice routes to prepare you for your NSW driving test</p>
-                  </div>
+                <div>
+                  <p className="text-2xl font-bold">Jihee</p>
+                  <p className="text-gray-600 text-sm">지희</p>
                 </div>
-                <div className="flex items-start gap-4 p-4 bg-purple-50 rounded-xl">
-                  <div className="text-2xl">✓</div>
-                  <div>
-                    <h3 className="font-bold mb-1">Experienced Instructor</h3>
-                    <p className="text-gray-600 text-sm">Years of experience helping students from all backgrounds pass their tests</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4 p-4 bg-orange-50 rounded-xl">
-                  <div className="text-2xl">✓</div>
-                  <div>
-                    <h3 className="font-bold mb-1">Flexible Scheduling</h3>
-                    <p className="text-gray-600 text-sm">Weekdays 9am-8pm, weekends 8am-7pm — lessons that fit around your life</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4 p-4 bg-pink-50 rounded-xl">
-                  <div className="text-2xl">✓</div>
-                  <div>
-                    <h3 className="font-bold mb-1">Patient & Supportive</h3>
-                    <p className="text-gray-600 text-sm">No judgment, just encouragement — everyone learns at their own pace</p>
-                  </div>
-                </div>
-                <div className="flex items-start gap-4 p-4 bg-indigo-50 rounded-xl">
-                  <div className="text-2xl">✓</div>
-                  <div>
-                    <h3 className="font-bold mb-1">Dedicated to Your Progress</h3>
-                    <p className="text-gray-600 text-sm">Full 60 minutes every lesson — if you need a lift home, I've got you covered</p>
-                  </div>
-                </div>
+              </div>
+              <blockquote className="text-lg text-gray-700 leading-relaxed mb-6">
+                "I came to Australia as a working holiday student with no driving experience. Through Michael's patient teaching, I learned essential driving skills that gave me confidence on the road. With his guidance, I was able to complete my 2nd visa requirements and even drive to Victoria! Michael's lessons changed my life."
+              </blockquote>
+              <div className="flex items-center gap-2 text-yellow-500">
+                <span>⭐⭐⭐⭐⭐</span>
+                <span className="text-gray-500 text-sm ml-2">Working Holiday Student</span>
               </div>
             </div>
           </div>
