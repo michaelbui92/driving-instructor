@@ -161,6 +161,13 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
                         📊 Dashboard
                       </Link>
                       <Link
+                        href="/student/skills"
+                        onClick={handleLinkClick}
+                        className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-primary transition"
+                      >
+                        📈 Skills
+                      </Link>
+                      <Link
                         href="/student/details"
                         onClick={handleLinkClick}
                         className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-primary transition"
@@ -222,6 +229,7 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
                 <>
                   <p className="px-4 py-2 text-xs font-semibold text-gray-400 uppercase tracking-wider truncate">{userEmail}</p>
                   <Link href="/student/dashboard" onClick={handleLinkClick} className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-primary rounded-lg transition">📊 Dashboard</Link>
+                  <Link href="/student/skills" onClick={handleLinkClick} className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-primary rounded-lg transition">📈 Skills</Link>
                   <Link href="/student/details" onClick={handleLinkClick} className="block px-4 py-2 text-gray-700 hover:bg-blue-50 hover:text-primary rounded-lg transition">👤 My Details</Link>
                   <button
                     onClick={() => { handleLogout(); handleLinkClick(); }}

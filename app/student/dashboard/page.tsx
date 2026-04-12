@@ -11,7 +11,6 @@ import ErrorBoundary from '@/components/ErrorBoundary'
 import { DashboardSkeleton, StatsSkeleton, BookingListSkeleton } from '@/components/Skeletons'
 import { toast } from '@/components/Toast'
 import MyDetailsOnboarding from '@/components/MyDetailsOnboarding'
-import SkillProgress from '@/components/SkillProgress'
 
 type BookingType = {
   id: string
@@ -483,18 +482,6 @@ export default function StudentDashboardPage() {
             </div>
           )
         })()}
-
-        {/* Skill Progress Section - Compact Cards for Students */}
-        {studentId && (
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold">My Skill Progress</h2>
-            </div>
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <SkillProgress studentId={studentId} readOnly={true} />
-            </div>
-          </div>
-        )}
 
         {/* Tabs */}
         <div className="bg-white rounded-xl shadow-lg">
