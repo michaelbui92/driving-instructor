@@ -9,19 +9,19 @@ import { supabase } from '@/lib/supabase'
 type StudentDetails = {
   id?: string
   email: string
-  fullName: string
+  name: string
   phone: string
   address: string
-  hasCompletedDetails: boolean
+  detailsCompleted: boolean
 }
 
 export default function StudentDetailsPage() {
   const [details, setDetails] = useState<StudentDetails>({
     email: '',
-    fullName: '',
+    name: '',
     phone: '',
     address: '',
-    hasCompletedDetails: false,
+    detailsCompleted: false,
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -58,7 +58,7 @@ export default function StudentDetailsPage() {
       // Query students table for this email
       const { data: student, error: fetchError } = await supabase
         .from('students')
-        .select('*')
+        .select('id, name, phone, address, details_completed')
         .eq('email', email)
         .single()
       
@@ -71,10 +71,10 @@ export default function StudentDetailsPage() {
         setDetails(prev => ({
           ...prev,
           id: student.id,
-          fullName: student.full_name || '',
+          name: student.name || '',
           phone: student.phone || '',
           address: student.address || '',
-          hasCompletedDetails: student.has_completed_details || false,
+          detailsCompleted: student.details_completed || false,
         }))
       }
     } catch (err: any) {
@@ -126,10 +126,10 @@ export default function StudentDetailsPage() {
         const { error: updateError } = await supabase
           .from('students')
           .update({
-            full_name: details.fullName,
+            name: details.name,
             phone: details.phone,
             address: details.address,
-            has_completed_details: true,
+            details_completed: true,
           })
           .eq('email', email)
         
@@ -140,25 +140,23 @@ export default function StudentDetailsPage() {
           .from('students')
           .insert({
             email: email,
-            full_name: details.fullName,
+            name: details.name,
             phone: details.phone,
             address: details.address,
-            has_completed_details: true,
+            details_completed: true,
           })
         
         if (insertError) throw insertError
       }
 
       setSuccess(true)
-      setDetails(prev => ({ ...prev, hasCompletedDetails: true }))
+      setDetails(prev => ({ ...prev, detailsCompleted: true }))
       setIsEditing(false)
       
-      // Redirect to dashboard after short delay (only for first time)
-      if (!details.hasCompletedDetails) {
-        setTimeout(() => {
-          router.push('/student/dashboard')
-        }, 1500)
-      }
+      // Show success then reload page
+      setTimeout(() => {
+        loadDetails()
+      }, 1500)
     } catch (err: any) {
       console.error('Save error:', err)
       setError(err.message || 'Failed to save details')
@@ -186,9 +184,9 @@ export default function StudentDetailsPage() {
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-2">My Details</h1>
           <p className="text-gray-600">
-            {details.hasCompletedDetails 
+            {details.detailsCompleted 
               ? 'Update your contact information below'
-              : 'Please fill in your details to continue booking'}
+              : 'Please fill in your details to continue'}
           </p>
         </div>
 
@@ -200,7 +198,7 @@ export default function StudentDetailsPage() {
 
         {success && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700">
-            Details saved! Redirecting to dashboard...
+            Details saved successfully!
           </div>
         )}
 
@@ -223,13 +221,13 @@ export default function StudentDetailsPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
               <input
                 type="text"
-                name="fullName"
-                value={details.fullName}
+                name="name"
+                value={details.name}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border border-gray-300 rounded-xl ${isEditing || !details.hasCompletedDetails ? 'focus:ring-2 focus:ring-primary focus:border-transparent' : 'bg-gray-100 cursor-not-allowed'}`}
+                className={`w-full px-4 py-3 border border-gray-300 rounded-xl ${isEditing || !details.detailsCompleted ? 'focus:ring-2 focus:ring-primary focus:border-transparent' : 'bg-gray-100 cursor-not-allowed'}`}
                 placeholder="Your full name"
                 required
-                readOnly={details.hasCompletedDetails && !isEditing}
+                readOnly={details.detailsCompleted && !isEditing}
               />
             </div>
 
@@ -241,10 +239,10 @@ export default function StudentDetailsPage() {
                 name="phone"
                 value={details.phone}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border border-gray-300 rounded-xl ${isEditing || !details.hasCompletedDetails ? 'focus:ring-2 focus:ring-primary focus:border-transparent' : 'bg-gray-100 cursor-not-allowed'}`}
+                className={`w-full px-4 py-3 border border-gray-300 rounded-xl ${isEditing || !details.detailsCompleted ? 'focus:ring-2 focus:ring-primary focus:border-transparent' : 'bg-gray-100 cursor-not-allowed'}`}
                 placeholder="0412 345 678"
                 required
-                readOnly={details.hasCompletedDetails && !isEditing}
+                readOnly={details.detailsCompleted && !isEditing}
               />
             </div>
 
@@ -256,15 +254,15 @@ export default function StudentDetailsPage() {
                 rows={3}
                 value={details.address}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border border-gray-300 rounded-xl resize-none ${isEditing || !details.hasCompletedDetails ? 'focus:ring-2 focus:ring-primary focus:border-transparent' : 'bg-gray-100 cursor-not-allowed'}`}
+                className={`w-full px-4 py-3 border border-gray-300 rounded-xl resize-none ${isEditing || !details.detailsCompleted ? 'focus:ring-2 focus:ring-primary focus:border-transparent' : 'bg-gray-100 cursor-not-allowed'}`}
                 placeholder="Your address for pickup and drop-off"
                 required
-                readOnly={details.hasCompletedDetails && !isEditing}
+                readOnly={details.detailsCompleted && !isEditing}
               />
             </div>
 
             <div className="pt-4">
-              {details.hasCompletedDetails && !isEditing ? (
+              {details.detailsCompleted && !isEditing ? (
                 <button
                   type="button"
                   onClick={() => setIsEditing(true)}
@@ -284,7 +282,10 @@ export default function StudentDetailsPage() {
                   {isEditing && (
                     <button
                       type="button"
-                      onClick={() => setIsEditing(false)}
+                      onClick={() => {
+                        setIsEditing(false)
+                        loadDetails() // Reload to get original values
+                      }}
                       className="w-full px-6 py-3 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition font-semibold"
                     >
                       Cancel
