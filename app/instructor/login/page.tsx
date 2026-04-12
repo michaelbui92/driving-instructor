@@ -29,9 +29,8 @@ export default function InstructorLoginPage() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // Login successful!
-        window.dispatchEvent(new Event('auth-change'));
-        router.push('/instructor');
+        // Login successful! Use hard redirect to ensure page reload
+        window.location.href = '/instructor';
         return;
       }
 
@@ -69,9 +68,8 @@ export default function InstructorLoginPage() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        // PIN set successfully!
-        window.dispatchEvent(new Event('auth-change'));
-        router.push('/instructor');
+        // PIN set successfully! Use hard redirect to ensure page reload
+        window.location.href = '/instructor';
         return;
       }
 
