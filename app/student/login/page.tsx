@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Navbar from '@/components/Navbar'
 
-type AuthMode = 'signin' | 'create'
+type AuthMode = 'signin' // 'create' removed - account creation disabled
 
 export default function StudentLoginPage() {
   const [email, setEmail] = useState('')
@@ -114,7 +114,8 @@ export default function StudentLoginPage() {
   }
 
   const handleModeSelect = (selectedMode: AuthMode) => {
-    setMode(selectedMode)
+    // Only allow signin mode, create account is disabled
+    setMode('signin')
     setStep('email')
   }
 
@@ -137,20 +138,18 @@ export default function StudentLoginPage() {
           <div className="bg-gradient-to-r from-primary to-secondary p-6 text-center">
             <div className="text-4xl mb-2">{mode === 'signin' ? '👋' : '✨'}</div>
             <h1 className="text-2xl font-bold text-white mb-1">
-              {mode === 'signin' ? 'Welcome Back' : 'Create Account'}
+              Student Login
             </h1>
             <p className="text-blue-100 text-sm">
-              {mode === 'signin' 
-                ? 'Sign in to view and manage your bookings' 
-                : 'Create an account to book lessons and track progress'}
+              Sign in to view and manage your bookings
             </p>
           </div>
           
-          {/* Mode Selection */}
+          {/* Mode Selection - Create Account Disabled */}
           {step === 'mode' && (
             <div className="p-6 space-y-4">
               <p className="text-gray-600 text-center text-sm mb-4">
-                Choose how you want to continue
+                Sign in with your email to access your account
               </p>
               
               <button
@@ -166,26 +165,20 @@ export default function StudentLoginPage() {
                 </div>
               </button>
               
-              <button
-                onClick={() => handleModeSelect('create')}
-                className="w-full p-4 border-2 border-gray-200 rounded-xl hover:border-primary hover:bg-blue-50 transition text-left"
-              >
+              {/* Create Account Disabled */}
+              <div className="w-full p-4 border-2 border-gray-200 rounded-xl bg-gray-50 opacity-60 cursor-not-allowed">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">✨</span>
+                  <span className="text-2xl text-gray-400">✨</span>
                   <div>
-                    <p className="font-semibold text-gray-900">Create Account</p>
-                    <p className="text-sm text-gray-500">New here? Create an account to get started</p>
+                    <p className="font-semibold text-gray-400">Create Account (Disabled)</p>
+                    <p className="text-sm text-gray-400">Account creation is currently disabled. Contact instructor for access.</p>
                   </div>
                 </div>
-              </button>
-
-              <div className="pt-4 border-t border-gray-100 text-center">
-                <p className="text-sm text-gray-500">
-                  Or{' '}
-                  <Link href="/book" className="text-primary font-medium hover:underline">
-                    book a lesson
-                  </Link>{' '}
-                  — you can create an account during checkout.
+              </div>
+              
+              <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <p className="text-sm text-yellow-800 text-center">
+                  <span className="font-medium">Note:</span> New student accounts are created by instructor only. Contact via website for access.
                 </p>
               </div>
             </div>
@@ -274,7 +267,7 @@ export default function StudentLoginPage() {
                   disabled={loading || otp.length < 6}
                   className="w-full py-3 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition disabled:opacity-50"
                 >
-                  {loading ? 'Verifying...' : mode === 'signin' ? 'Verify & Login' : 'Verify & Create Account'}
+                  {loading ? 'Verifying...' : 'Verify & Login'}
                 </button>
 
                 <div className="text-center">
