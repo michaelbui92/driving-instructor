@@ -223,8 +223,6 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
                   Student Login
                 </Link>
               )}
-              <Link href="/instructor" className="px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-secondary transition font-medium text-sm">Instructor Portal</Link>
-              
               {/* Dark Mode Toggle */}
               <button
                 onClick={toggleDarkMode}

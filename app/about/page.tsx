@@ -6,17 +6,17 @@ import Navbar from '@/components/Navbar'
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
       <Navbar />
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
           <div className="text-center">
-            <h1 className="text-4xl md:text-4xl font-bold mb-6" data-aos="fade-up">
+            <h1 className="text-4xl md:text-4xl font-bold mb-6 text-gray-900 dark:text-white" data-aos="fade-up">
               Meet Your Driving Instructor
             </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8" data-aos="fade-up" data-aos-delay="100">
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto mb-8" data-aos="fade-up" data-aos-delay="100">
               Professional, patient, and passionate about helping you become a confident, safe driver.
             </p>
           </div>
@@ -26,11 +26,11 @@ export default function AboutPage() {
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         {/* Introduction */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 mb-12" data-aos="fade-up">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 md:p-12 mb-12" data-aos="fade-up">
           <div className="flex flex-col lg:flex-row items-start gap-8">
             <div className="flex-[3]">
-              <h2 className="text-3xl font-bold mb-6">Hi, I'm Michael</h2>
-              <div className="space-y-4 text-gray-600">
+              <h2 className="text-3xl font-bold mb-6 text-gray-900 dark:text-white">Hi, I'm Michael</h2>
+              <div className="space-y-4 text-gray-600 dark:text-gray-300">
                 <p>
                   Your patient and professional driving instructor in the Lidcombe area. I specialize in creating a supportive, stress-free learning environment for international students and nervous drivers.
                 </p>
@@ -38,24 +38,24 @@ export default function AboutPage() {
                   My teaching approach focuses on practical skills, safety awareness, and building your confidence step by step. Whether you're a complete beginner or just need to sharpen your skills, I'm here to guide you every step of the way.
                 </p>
                 <div className="flex flex-wrap gap-4 mt-6">
-                  <div className="flex items-center gap-2 px-4 py-2 bg-green-50 border border-green-200 rounded-lg">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg">
                     <span className="text-green-600">✓</span>
-                    <span className="font-medium">Fully Insured</span>
+                    <span className="font-medium text-gray-900 dark:text-white">Fully Insured</span>
                   </div>
-                  <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg">
                     <span className="text-blue-600">✓</span>
-                    <span className="font-medium">Licensed Instructor</span>
+                    <span className="font-medium text-gray-900 dark:text-white">Licensed Instructor</span>
                   </div>
-                  <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 border border-purple-200 rounded-lg">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 dark:bg-purple-900/30 border border-purple-200 dark:border-purple-800 rounded-lg">
                     <span className="text-purple-600">✓</span>
-                    <span className="font-medium">Dual Control Vehicle</span>
+                    <span className="font-medium text-gray-900 dark:text-white">Dual Control Vehicle</span>
                   </div>
                 </div>
               </div>
             </div>
             <div className="flex-1 relative">
               <div className="bg-gradient-to-br from-primary to-secondary rounded-2xl p-1 max-w-[280px] mx-auto lg:mx-0">
-                <div className="bg-white rounded-xl overflow-hidden">
+                <div className="bg-white dark:bg-gray-700 rounded-xl overflow-hidden">
                   <Image
                     src="/images/student-portal-2.png"
                     alt="Student focused approach - Drive With Bui dashboard"
