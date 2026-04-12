@@ -27,9 +27,9 @@ export default function AboutPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
         {/* Introduction */}
         <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 mb-12" data-aos="fade-up">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h2 className="text-4xl font-bold mb-6">Hi, I'm Michael</h2>
+          <div className="flex flex-col lg:flex-row items-start gap-8">
+            <div className="flex-[3]">
+              <h2 className="text-3xl font-bold mb-6">Hi, I'm Michael</h2>
               <div className="space-y-4 text-gray-600">
                 <p>
                   Your patient and professional driving instructor in the Lidcombe area. I specialize in creating a supportive, stress-free learning environment for international students and nervous drivers.
@@ -53,14 +53,14 @@ export default function AboutPage() {
                 </div>
               </div>
             </div>
-            <div className="relative">
-              <div className="bg-gradient-to-br from-primary to-secondary rounded-2xl p-1 max-w-md mx-auto">
+            <div className="flex-1 relative">
+              <div className="bg-gradient-to-br from-primary to-secondary rounded-2xl p-1 max-w-[280px] mx-auto lg:mx-0">
                 <div className="bg-white rounded-xl overflow-hidden">
                   <Image
                     src="/images/student-portal-2.png"
                     alt="Student focused approach - Drive With Bui dashboard"
-                    width={500}
-                    height={300}
+                    width={280}
+                    height={168}
                     className="w-full h-auto"
                   />
                 </div>
