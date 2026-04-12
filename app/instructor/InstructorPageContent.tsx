@@ -27,7 +27,8 @@ import {
   toggleRuleAsync,
   getBlockedSlotsAsync,
   addBlockedSlotAsync,
-  removeBlockedSlotAsync
+  removeBlockedSlotAsync,
+  cleanupPastBlocksAsync
 } from '@/lib/booking-utils'
 import { authenticatedFetch } from '@/lib/instructor-api'
 import { toast } from '@/components/Toast'
@@ -237,6 +238,11 @@ export default function InstructorPage() {
     // Load rules and blocked slots from Supabase
     const loadRulesAndSlots = async () => {
       try {
+        // Clean up past blocks first (non-blocking - we don't need to wait for it)
+        cleanupPastBlocksAsync().catch(err => {
+          console.warn('Failed to cleanup past blocks (non-critical):', err)
+        })
+        
         const [rulesData, blockedSlotsData] = await Promise.all([
           getRulesAsync(),
           getBlockedSlotsAsync()

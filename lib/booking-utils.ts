@@ -767,9 +767,13 @@ export async function getSortedRulesAsync(): Promise<AvailabilityRule[]> {
 // Async CRUD operations for blocked slots using Supabase
 export async function getBlockedSlotsAsync(): Promise<BlockedSlot[]> {
   try {
+    // Get today's date in YYYY-MM-DD format for comparison
+    const today = new Date().toISOString().split('T')[0]
+    
     const { data, error } = await supabase
       .from('blocked_slots')
       .select('*')
+      .gte('date', today) // Only get dates >= today
       .order('date', { ascending: true })
     
     if (error) {
@@ -828,6 +832,29 @@ export async function removeBlockedSlotAsync(date: string, time: string): Promis
     }
   } catch (error) {
     console.error('Error in removeBlockedSlotAsync:', error)
+    throw error
+  }
+}
+
+export async function cleanupPastBlocksAsync(): Promise<void> {
+  try {
+    // Get today's date in YYYY-MM-DD format
+    const today = new Date().toISOString().split('T')[0]
+    
+    // Delete all blocked slots with dates before today
+    const { error } = await supabase
+      .from('blocked_slots')
+      .delete()
+      .lt('date', today)
+    
+    if (error) {
+      console.error('Error cleaning up past blocks from Supabase:', error)
+      throw error
+    }
+    
+    console.log('Cleaned up past blocked slots from database')
+  } catch (error) {
+    console.error('Error in cleanupPastBlocksAsync:', error)
     throw error
   }
 }
