@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
-import { EXPERIENCE_LEVELS } from '@/lib/skills'
+import { EXPERIENCE_LEVELS, DRIVING_SKILLS, SKILL_CATEGORIES } from '@/lib/skills'
 import { toast } from '@/components/Toast'
 
 interface Student {
@@ -16,16 +16,34 @@ interface Student {
   onboarding_completed?: boolean
 }
 
+interface StudentSkill {
+  skill_key: string
+  skill_name: string
+  self_assessment: number
+  instructor_rating: number
+  notes: string
+}
+
 export default function InstructorStudentsTab() {
   const [students, setStudents] = useState<Student[]>([])
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
+  const [studentSkills, setStudentSkills] = useState<StudentSkill[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState('')
   const [deleting, setDeleting] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [editingSkill, setEditingSkill] = useState<string | null>(null)
+  const [editValue, setEditValue] = useState(0)
 
   useEffect(() => {
     loadStudents()
   }, [])
+
+  useEffect(() => {
+    if (selectedStudent) {
+      loadStudentSkills(selectedStudent.id)
+    }
+  }, [selectedStudent])
 
   const loadStudents = async () => {
     try {
@@ -44,6 +62,54 @@ export default function InstructorStudentsTab() {
     }
   }
 
+  const loadStudentSkills = async (studentId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('student_skills')
+        .select('*')
+        .eq('student_id', studentId)
+        .order('skill_key')
+
+      if (error) throw error
+      setStudentSkills(data || [])
+    } catch (err) {
+      console.error('Error loading skills:', err)
+      toast('error', 'Failed to load skills')
+    }
+  }
+
+  const handleSaveSkill = async (skillKey: string) => {
+    if (!selectedStudent) return
+
+    setSaving(true)
+    try {
+      const { error } = await supabase
+        .from('student_skills')
+        .update({ instructor_rating: editValue })
+        .eq('student_id', selectedStudent.id)
+        .eq('skill_key', skillKey)
+
+      if (error) throw error
+
+      // Update local state
+      setStudentSkills(prev =>
+        prev.map(s =>
+          s.skill_key === skillKey
+            ? { ...s, instructor_rating: editValue }
+            : s
+        )
+      )
+
+      toast('success', 'Skill rating updated!')
+      setEditingSkill(null)
+    } catch (err) {
+      console.error('Error updating skill:', err)
+      toast('error', 'Failed to update skill')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const handleDeleteStudent = async (student: Student) => {
     if (!confirm(`Delete student "${student.name || student.email}"?\n\nThis will permanently delete:\n- Their profile\n- All their bookings\n- All their skill records\n\nThis cannot be undone.`)) {
       return
@@ -52,38 +118,26 @@ export default function InstructorStudentsTab() {
     setDeleting(true)
     try {
       // 1. Delete student's skill records
-      const { error: skillsError } = await supabase
+      await supabase
         .from('student_skills')
         .delete()
         .eq('student_id', student.id)
 
-      if (skillsError) {
-        console.error('Error deleting skills:', skillsError)
-        // Continue anyway - skills might not exist
-      }
-
       // 2. Delete student's bookings
-      const { error: bookingsError } = await supabase
+      await supabase
         .from('bookings_new')
         .delete()
         .eq('email', student.email)
 
-      if (bookingsError) {
-        console.error('Error deleting bookings:', bookingsError)
-        // Continue anyway - bookings might not exist
-      }
-
       // 3. Delete the student record
-      const { error: studentError } = await supabase
+      const { error } = await supabase
         .from('students')
         .delete()
         .eq('id', student.id)
 
-      if (studentError) throw studentError
+      if (error) throw error
 
       toast('success', `Student "${student.name || student.email}" deleted`)
-      
-      // Clear selection and reload
       setSelectedStudent(null)
       loadStudents()
     } catch (err) {
@@ -92,6 +146,11 @@ export default function InstructorStudentsTab() {
     } finally {
       setDeleting(false)
     }
+  }
+
+  const getSkillRating = (skillKey: string) => {
+    const skill = studentSkills.find(s => s.skill_key === skillKey)
+    return skill ? skill.instructor_rating : 0
   }
 
   const filteredStudents = students.filter(student => {
@@ -158,9 +217,6 @@ export default function InstructorStudentsTab() {
                           </span>
                         )}
                       </div>
-                      <div className="text-xs text-gray-400 mt-1">
-                        Created: {new Date(student.created_at).toLocaleDateString()}
-                      </div>
                     </div>
                   </div>
                 </button>
@@ -176,8 +232,8 @@ export default function InstructorStudentsTab() {
 
         <div className="lg:col-span-2">
           {selectedStudent ? (
-            <div className="bg-white border rounded-lg p-6">
-              <div className="flex items-start justify-between mb-6">
+            <div className="bg-white border rounded-lg p-6 space-y-6">
+              <div className="flex items-start justify-between">
                 <div>
                   <h3 className="text-xl font-bold mb-2">
                     {selectedStudent.name || 'No name set'}
@@ -192,12 +248,12 @@ export default function InstructorStudentsTab() {
                   disabled={deleting}
                   className="px-4 py-2 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition text-sm font-medium disabled:opacity-50"
                 >
-                  {deleting ? 'Deleting...' : '🗑️ Delete Student'}
+                  {deleting ? 'Deleting...' : '🗑️ Delete'}
                 </button>
               </div>
 
               {/* Status Badges */}
-              <div className="flex flex-wrap gap-2 mb-6">
+              <div className="flex flex-wrap gap-2">
                 {selectedStudent.details_completed ? (
                   <span className="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm">
                     ✅ Details Complete
@@ -220,7 +276,7 @@ export default function InstructorStudentsTab() {
 
               {/* Experience Level */}
               {selectedStudent.experience_level && (
-                <div className="bg-blue-50 p-4 rounded-lg mb-6">
+                <div className="bg-blue-50 p-4 rounded-lg">
                   <h4 className="font-semibold mb-2">Student Self-Assessment</h4>
                   <div className="flex items-center gap-3">
                     <div className="text-3xl">
@@ -233,16 +289,104 @@ export default function InstructorStudentsTab() {
                       <p className="text-sm text-gray-600">
                         {EXPERIENCE_LEVELS.find(l => l.key === selectedStudent.experience_level)?.description}
                       </p>
-                      <p className="text-sm text-blue-700 mt-1">
-                        <strong>Instructor focus:</strong> {EXPERIENCE_LEVELS.find(l => l.key === selectedStudent.experience_level)?.instructor_notes}
-                      </p>
                     </div>
                   </div>
                 </div>
               )}
 
+              {/* Instructor Skill Rating Section */}
+              <div>
+                <h4 className="font-semibold text-lg mb-4">Instructor Skill Ratings</h4>
+                <p className="text-sm text-gray-500 mb-4">
+                  Rate student skills after lessons (0 = not assessed, 5 = excellent)
+                </p>
+
+                <div className="space-y-4">
+                  {SKILL_CATEGORIES.map(category => {
+                    const categorySkills = DRIVING_SKILLS.filter(s => s.category === category.key)
+                    
+                    return (
+                      <div key={category.key} className="border rounded-lg overflow-hidden">
+                        <div className="bg-gray-50 p-3 border-b">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xl">{category.icon}</span>
+                            <span className="font-semibold">{category.name}</span>
+                          </div>
+                        </div>
+                        <div className="p-3 space-y-3">
+                          {categorySkills.map(skill => {
+                            const rating = getSkillRating(skill.key)
+                            const isEditing = editingSkill === skill.key
+
+                            return (
+                              <div key={skill.key} className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <span>{skill.icon}</span>
+                                  <div>
+                                    <p className="font-medium text-sm">{skill.name}</p>
+                                    <p className="text-xs text-gray-500">{skill.description}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {isEditing ? (
+                                    <>
+                                      <select
+                                        value={editValue}
+                                        onChange={e => setEditValue(Number(e.target.value))}
+                                        className="px-2 py-1 border rounded text-sm"
+                                      >
+                                        {[0, 1, 2, 3, 4, 5].map(v => (
+                                          <option key={v} value={v}>{v}</option>
+                                        ))}
+                                      </select>
+                                      <button
+                                        onClick={() => handleSaveSkill(skill.key)}
+                                        disabled={saving}
+                                        className="px-2 py-1 bg-green-600 text-white rounded text-sm disabled:opacity-50"
+                                      >
+                                        ✓
+                                      </button>
+                                      <button
+                                        onClick={() => setEditingSkill(null)}
+                                        className="px-2 py-1 bg-gray-300 rounded text-sm"
+                                      >
+                                        ✕
+                                      </button>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <span className={`text-lg font-bold w-8 text-center ${
+                                        rating >= 4 ? 'text-green-600' :
+                                        rating >= 2 ? 'text-yellow-600' :
+                                        rating > 0 ? 'text-orange-600' :
+                                        'text-gray-400'
+                                      }`}>
+                                        {rating > 0 ? rating : '—'}
+                                      </span>
+                                      <button
+                                        onClick={() => {
+                                          setEditingSkill(skill.key)
+                                          setEditValue(rating)
+                                        }}
+                                        className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-sm hover:bg-blue-200"
+                                      >
+                                        Edit
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
               {/* Student Info */}
-              <div className="grid grid-cols-2 gap-4 text-sm">
+              <div className="grid grid-cols-2 gap-4 text-sm pt-4 border-t">
                 <div className="bg-gray-50 p-3 rounded-lg">
                   <p className="text-gray-500">Student ID</p>
                   <p className="font-mono text-xs truncate">{selectedStudent.id}</p>
