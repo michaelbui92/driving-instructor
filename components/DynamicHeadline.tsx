@@ -67,7 +67,7 @@ export default function DynamicHeadline() {
 
   return (
     <div className="min-h-[3rem] md:min-h-[4rem] flex items-center">
-      <h1 className="text-4xl md:text-6xl font-bold">
+      <h1 className="text-3xl md:text-5xl font-bold">
         <span className="text-primary">{displayedText}</span>
         <span className="animate-pulse text-primary">|</span>
       </h1>

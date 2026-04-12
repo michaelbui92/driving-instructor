@@ -55,11 +55,11 @@ export default function Home() {
       {/* Hero Section */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         <div className="flex flex-col lg:flex-row items-center gap-8">
-          <div className="flex-1 text-center lg:text-left" data-aos="fade-right">
+          <div className="flex-[3] text-center lg:text-left" data-aos="fade-right">
             <div className="min-h-[4rem] md:min-h-[5rem] flex items-center justify-center lg:justify-start mb-8">
               <DynamicHeadline />
             </div>
-            <p className="text-xl text-gray-600">
+            <p className="text-lg text-gray-600">
               Professional driving lessons in Western Sydney. Patient, experienced instructor helping you become a confident, safe driver.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
