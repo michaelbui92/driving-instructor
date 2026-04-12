@@ -53,8 +53,8 @@ export default function Home() {
       <Navbar />
 
       {/* Hero Section */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
-        <div className="flex flex-col lg:flex-row items-center gap-12">
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+        <div className="flex flex-col lg:flex-row items-center gap-8">
           <div className="flex-1 text-center lg:text-left" data-aos="fade-right">
             <DynamicHeadline />
             <p className="text-xl text-gray-600 mb-8">
@@ -76,7 +76,7 @@ export default function Home() {
             </div>
           </div>
           <div className="flex-1 relative w-full min-w-0" data-aos="fade-left">
-            <div className="relative w-full h-64 md:h-96">
+            <div className="relative w-full h-48 md:h-64">
               <Image
                 src="/images/mascot-hero.png"
                 alt="Chibi Bui - Your friendly driving instructor"
@@ -97,11 +97,6 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-12" data-aos="fade-up">Why Choose Drive With Bui?</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="text-center p-6 rounded-lg bg-blue-50 hover:shadow-xl transition hover-lift" data-aos="fade-up" data-aos-delay="0">
-              <div className="text-5xl mb-4">🕐</div>
-              <h3 className="text-xl font-bold mb-2">Flexible Hours</h3>
-              <p className="text-gray-600">Weekdays 9am-8pm, weekends 8am-7pm — lessons that fit around your study or work schedule</p>
-            </div>
             <div className="text-center p-6 rounded-lg bg-blue-50 hover:shadow-xl transition hover-lift" data-aos="fade-up" data-aos-delay="100">
               <div className="text-5xl mb-4">🎯</div>
               <h3 className="text-xl font-bold mb-2">Personalized Lessons</h3>
@@ -321,44 +316,6 @@ export default function Home() {
               className="inline-flex items-center gap-2 px-6 py-3 bg-white text-primary font-semibold rounded-xl hover:bg-gray-50 transition shadow-md"
             >
               View All Posts →
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* Resources for New Students */}
-      <section className="bg-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10" data-aos="fade-up">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">New to Driving? Start Here</h2>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Everything you need to know before your first lesson
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6" data-aos="fade-up" data-aos-delay="100">
-            <Link href="/blog/nsw-road-rules" className="bg-blue-50 rounded-xl p-6 hover:shadow-lg transition hover-lift group">
-              <div className="text-4xl mb-4 group-hover:scale-110 transition">📜</div>
-              <h3 className="font-bold text-lg mb-2">NSW Road Rules</h3>
-              <p className="text-gray-600 text-sm">Essential road rules every driver must know in NSW</p>
-            </Link>
-
-            <Link href="/blog/blind-spots" className="bg-orange-50 rounded-xl p-6 hover:shadow-lg transition hover-lift group">
-              <div className="text-4xl mb-4 group-hover:scale-110 transition">👀</div>
-              <h3 className="font-bold text-lg mb-2">Blind Spots Explained</h3>
-              <p className="text-gray-600 text-sm">Understanding and managing your vehicle's blind spots</p>
-            </Link>
-
-            <Link href="/blog/merging-lanes" className="bg-green-50 rounded-xl p-6 hover:shadow-lg transition hover-lift group">
-              <div className="text-4xl mb-4 group-hover:scale-110 transition">🔀</div>
-              <h3 className="font-bold text-lg mb-2">Merging Safely</h3>
-              <p className="text-gray-600 text-sm">How to merge lanes with confidence</p>
-            </Link>
-
-            <Link href="/faq" className="bg-purple-50 rounded-xl p-6 hover:shadow-lg transition hover-lift group">
-              <div className="text-4xl mb-4 group-hover:scale-110 transition">❓</div>
-              <h3 className="font-bold text-lg mb-2">FAQ</h3>
-              <p className="text-gray-600 text-sm">Answers to common questions about lessons</p>
             </Link>
           </div>
         </div>

@@ -63,7 +63,7 @@ export default function ContactPage() {
       <section className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
           <div className="text-center">
-            <h1 className="text-5xl md:text-6xl font-bold mb-6" data-aos="fade-up">
+            <h1 className="text-4xl md:text-4xl font-bold mb-6" data-aos="fade-up">
               Get in Touch
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8" data-aos="fade-up" data-aos-delay="100">

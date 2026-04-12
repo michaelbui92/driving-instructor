@@ -11,9 +11,9 @@ export default function AboutPage() {
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
           <div className="text-center">
-            <h1 className="text-5xl md:text-6xl font-bold mb-6" data-aos="fade-up">
+            <h1 className="text-4xl md:text-4xl font-bold mb-6" data-aos="fade-up">
               Meet Your Driving Instructor
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8" data-aos="fade-up" data-aos-delay="100">
@@ -54,14 +54,12 @@ export default function AboutPage() {
               </div>
             </div>
             <div className="relative">
-              <div className="bg-gradient-to-br from-primary to-secondary rounded-2xl p-1">
-                <div className="bg-white rounded-xl p-4">
-                  <div className="aspect-square bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg flex items-center justify-center">
-                    <div className="text-center p-8">
-                      <div className="text-6xl mb-4">👨‍🏫</div>
-                      <h3 className="text-2xl font-bold mb-2">Student-Focused Approach</h3>
-                      <p className="text-gray-600">Specializing in international students and nervous drivers</p>
-                    </div>
+              <div className="bg-gradient-to-br from-primary to-secondary rounded-2xl p-1 max-w-sm mx-auto">
+                <div className="bg-white rounded-xl p-3">
+                  <div className="bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg p-4 text-center">
+                    <div className="text-4xl mb-2">👨‍🏫</div>
+                    <h3 className="text-lg font-bold mb-1">Student-Focused Approach</h3>
+                    <p className="text-sm text-gray-600">Specializing in international students and nervous drivers</p>
                   </div>
                 </div>
               </div>
