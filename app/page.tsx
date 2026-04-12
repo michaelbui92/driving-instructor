@@ -226,16 +226,16 @@ export default function Home() {
             </div>
 
             {/* Casual Driving */}
-            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 relative hover:shadow-2xl transition-all duration-300 gradient-border-card" data-aos="fade-up" data-aos-delay="300">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 relative" data-aos="fade-up" data-aos-delay="300">
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                <span className="inline-block px-4 py-1 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold rounded-full shadow-lg">Best Value</span>
+                <span className="inline-block px-4 py-1 bg-accent text-white text-sm font-semibold rounded-full">Best Value</span>
               </div>
-
+              
               <div className="text-center">
                 <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">Casual Driving</h3>
                 <div className="text-5xl font-bold text-gray-800 dark:text-white mb-2">$45</div>
                 <p className="text-gray-500 dark:text-gray-400 mb-6">per 60-minute lesson</p>
-
+                
                 <div className="space-y-3 mb-8 text-left">
                   <div className="flex items-start gap-3">
                     <div className="text-green-600 text-xl">✓</div>
@@ -250,10 +250,10 @@ export default function Home() {
                     <p className="text-gray-700 dark:text-gray-300">Stay road-ready</p>
                   </div>
                 </div>
-
+                
                 <Link
                   href="/book"
-                  className="block w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-lg hover:from-amber-600 hover:to-orange-600 transition text-center shadow-md"
+                  className="block w-full px-6 py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition text-center"
                 >
                   Book Now
                 </Link>
@@ -291,7 +291,7 @@ export default function Home() {
               View All Posts →
             </Link>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-6">
             {/* Post 1 */}
             <Link href="/blog/three-second-rule" className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition hover-lift group border border-gray-100 dark:border-gray-700" data-aos="fade-up" data-aos-delay="0">
@@ -356,7 +356,7 @@ export default function Home() {
               </div>
             </Link>
           </div>
-          
+
           <div className="mt-8 text-center md:hidden">
             <Link
               href="/blog"
