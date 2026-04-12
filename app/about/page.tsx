@@ -54,13 +54,15 @@ export default function AboutPage() {
               </div>
             </div>
             <div className="relative">
-              <div className="bg-gradient-to-br from-primary to-secondary rounded-2xl p-1 max-w-sm mx-auto">
-                <div className="bg-white rounded-xl p-3">
-                  <div className="bg-gradient-to-br from-blue-100 to-indigo-100 rounded-lg p-4 text-center">
-                    <div className="text-4xl mb-2">👨‍🏫</div>
-                    <h3 className="text-lg font-bold mb-1">Student-Focused Approach</h3>
-                    <p className="text-sm text-gray-600">Specializing in international students and nervous drivers</p>
-                  </div>
+              <div className="bg-gradient-to-br from-primary to-secondary rounded-2xl p-1 max-w-md mx-auto">
+                <div className="bg-white rounded-xl overflow-hidden">
+                  <Image
+                    src="/images/student-portal-2.png"
+                    alt="Student focused approach - Drive With Bui dashboard"
+                    width={500}
+                    height={300}
+                    className="w-full h-auto"
+                  />
                 </div>
               </div>
             </div>
