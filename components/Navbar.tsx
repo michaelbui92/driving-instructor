@@ -13,8 +13,39 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
   const [studentDropdownOpen, setStudentDropdownOpen] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userEmail, setUserEmail] = useState('')
+  const [darkMode, setDarkMode] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
+
+  // Initialize dark mode
+  useEffect(() => {
+    // Check localStorage for dark mode preference
+    const savedDarkMode = localStorage.getItem('darkMode') === 'true'
+    // Check system preference
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    
+    const initialDarkMode = savedDarkMode || systemPrefersDark
+    setDarkMode(initialDarkMode)
+    
+    if (initialDarkMode) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [])
+
+  // Toggle dark mode
+  const toggleDarkMode = () => {
+    const newDarkMode = !darkMode
+    setDarkMode(newDarkMode)
+    localStorage.setItem('darkMode', newDarkMode.toString())
+    
+    if (newDarkMode) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }
 
   // Check auth status and get email
   useEffect(() => {
@@ -193,6 +224,35 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
                 </Link>
               )}
               <Link href="/instructor" className="px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-secondary transition font-medium text-sm">Instructor Portal</Link>
+              
+              {/* Location Badge and Dark Mode Toggle */}
+              {showLocation && (
+                <div className="flex items-center gap-2 ml-2">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 rounded-full shadow-sm border border-gray-200 dark:border-gray-700">
+                    <svg className="w-4 h-4 mr-2 text-primary" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+                    </svg>
+                    <span className="font-medium text-gray-800 dark:text-gray-200 text-sm">📍 Lidcombe Area</span>
+                  </div>
+                  
+                  {/* Dark Mode Toggle */}
+                  <button
+                    onClick={toggleDarkMode}
+                    className="flex items-center justify-center w-10 h-10 bg-white dark:bg-gray-800 rounded-full shadow-sm border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                    aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+                  >
+                    {darkMode ? (
+                      <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+                      </svg>
+                    ) : (
+                      <svg className="w-5 h-5 text-gray-700 dark:text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -245,13 +305,35 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
             </div>
             
             {showLocation && (
-              <div className="px-4 py-3 text-sm text-gray-600 border-t border-gray-200 mt-3 pt-3">
+              <div className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400 border-t border-gray-200 dark:border-gray-700 mt-3 pt-3">
                 <div className="flex items-center">
                   <svg className="w-4 h-4 mr-2 text-primary" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                   </svg>
-                  <span className="font-medium text-gray-800">📍 Lidcombe Area</span>
+                  <span className="font-medium text-gray-800 dark:text-gray-200">📍 Lidcombe Area</span>
                 </div>
+                {/* Dark Mode Toggle for Mobile */}
+                <button
+                  onClick={toggleDarkMode}
+                  className="w-full mt-3 flex items-center justify-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                  aria-label={darkMode ? "Switch to light mode" : "Switch to dark mode"}
+                >
+                  {darkMode ? (
+                    <>
+                      <svg className="w-5 h-5 text-yellow-500" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
+                      </svg>
+                      <span className="text-gray-700 dark:text-gray-300 font-medium">Switch to Light Mode</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5 text-gray-700 dark:text-gray-300" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                      </svg>
+                      <span className="text-gray-700 dark:text-gray-300 font-medium">Switch to Dark Mode</span>
+                    </>
+                  )}
+                </button>
               </div>
             )}
           </div>
