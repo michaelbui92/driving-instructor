@@ -95,13 +95,8 @@ export default function Home() {
       {/* Why Choose Drive With Bui? */}
       <section className="bg-white py-16" id="why-choose">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12" data-aos="fade-up">Why Choose Drive With Bui?</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="text-center p-6 rounded-lg bg-blue-50 hover:shadow-xl transition hover-lift" data-aos="fade-up" data-aos-delay="100">
-              <div className="text-5xl mb-4">🎯</div>
-              <h3 className="text-xl font-bold mb-2">Personalized Lessons</h3>
-              <p className="text-gray-600">Tailored instruction based on your experience level, from complete beginner to test preparation</p>
-            </div>
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12" data-aos="fade-up">Why Drive With Bui?</h2>
+          <div className="grid md:grid-cols-2 gap-8">
             <div className="text-center p-6 rounded-lg bg-blue-50 hover:shadow-xl transition hover-lift" data-aos="fade-up" data-aos-delay="200">
               <div className="text-5xl mb-4">🌍</div>
               <h3 className="text-xl font-bold mb-2">International Students Welcome</h3>
@@ -318,9 +313,12 @@ export default function Home() {
                   <p className="text-gray-600 text-sm">지희</p>
                 </div>
               </div>
-              <blockquote className="text-lg text-gray-700 leading-relaxed mb-6">
+              <blockquote className="text-lg text-gray-700 leading-relaxed mb-4">
                 "I came to Australia as a working holiday student with no driving experience. Through Michael's patient teaching, I learned essential driving skills that gave me confidence on the road. With his guidance, I was able to complete my 2nd visa requirements and even drive to Victoria! Michael's lessons changed my life."
               </blockquote>
+              <p className="text-gray-600 italic leading-relaxed mb-6 text-sm">
+                저는 운전 경력이 전혀 없는 워킹 홀리데이 학생으로 호주에 왔습니다. Michael님의 인내심 있는 가르침으로 저는 도로에서의 자신감을 준 필수 운전 기술을 배웠습니다. 그의 안내로 저는 2번째 비자 요건을 완료하고 빅토리아까지 운전할 수 있었습니다! Michael님의 수업은 제 인생을 바꿨습니다.
+              </p>
               <div className="flex items-center gap-2 text-yellow-500">
                 <span>⭐⭐⭐⭐⭐</span>
                 <span className="text-gray-500 text-sm ml-2">Working Holiday Student</span>
