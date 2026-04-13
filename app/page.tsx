@@ -6,8 +6,10 @@ import Image from 'next/image'
 import Navbar from '@/components/Navbar'
 import DynamicHeadline from '@/components/DynamicHeadline'
 import StudentUpcomingLessons from '@/components/StudentUpcomingLessons'
+import { useTranslation } from '@/lib/i18n/context'
 
 export default function Home() {
+  const { t } = useTranslation()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [userEmail, setUserEmail] = useState('')
 
@@ -28,7 +30,6 @@ export default function Home() {
             if (data.email) {
               setUserEmail(data.email)
             } else {
-              // Fallback to cookie email
               const cookies = document.cookie.split(';')
               for (const cookie of cookies) {
                 const [name, value] = cookie.trim().split('=')
@@ -60,28 +61,27 @@ export default function Home() {
               <DynamicHeadline />
             </div>
             <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">
-              Transform from nervous beginner to confident driver with Sydney's most patient instructor.
-              Specializing in international students and those who need extra care on the road.
+              {t('hero.tagline1')}
             </p>
             <p className="text-gray-700 dark:text-gray-400 mb-8">
-              🚗 <span className="font-semibold">Master Sydney roads</span> with personalized coaching
+              🚗 <span className="font-semibold">{t('hero.masterSydney')}</span> {t('hero.masterSydneySub')}
               <br />
-              🌏 <span className="font-semibold">International students welcome</span> - English/Korean support
+              🌏 <span className="font-semibold">{t('hero.internationalWelcome')}</span> - {t('hero.internationalSub')}
               <br />
-              😌 <span className="font-semibold">Nervous driver friendly</span> - Zero judgment, all patience
+              😌 <span className="font-semibold">{t('hero.nervousFriendly')}</span> - {t('hero.nervousSub')}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mt-8">
               <Link
                 href="/book"
                 className="px-8 py-4 bg-primary text-white text-lg font-semibold rounded-xl hover:bg-secondary transition shadow-lg shimmer-btn dark:shadow-gray-900/50"
               >
-                Start Your Driving Journey
+                {t('hero.startJourney')}
               </Link>
               <Link
                 href="/about"
                 className="px-8 py-4 bg-white dark:bg-gray-800 text-primary dark:text-blue-400 text-lg font-semibold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition shadow-lg border-2 border-primary dark:border-blue-500"
               >
-                Meet Your Instructor
+                {t('hero.meetInstructor')}
               </Link>
             </div>
           </div>
@@ -102,13 +102,13 @@ export default function Home() {
       {/* Student Upcoming Lessons Section */}
       <StudentUpcomingLessons isLoggedIn={isLoggedIn} userEmail={userEmail} />
 
-      {/* Why Drive With Bui? - Redesigned */}
+      {/* Why Drive With Bui? */}
       <section className="bg-white dark:bg-gray-900 py-16" id="why-choose">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12" data-aos="fade-up">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">Why Students Choose Drive With Bui</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">{t('why.title')}</h2>
             <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              More than just driving lessons - a supportive journey to confidence on Sydney roads
+              {t('why.subtitle')}
             </p>
           </div>
 
@@ -118,9 +118,9 @@ export default function Home() {
               <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center mb-4">
                 <span className="text-2xl">🌏</span>
               </div>
-              <h3 className="text-lg font-bold mb-2 text-gray-900 dark:text-white">International Focus</h3>
+              <h3 className="text-lg font-bold mb-2 text-gray-900 dark:text-white">{t('why.internationalFocus')}</h3>
               <p className="text-gray-600 dark:text-gray-400 text-sm">
-                Specialized in helping international students navigate NSW licensing requirements
+                {t('why.internationalFocusDesc')}
               </p>
             </div>
 
@@ -129,9 +129,9 @@ export default function Home() {
               <div className="w-14 h-14 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center mb-4">
                 <span className="text-2xl">😌</span>
               </div>
-              <h3 className="text-lg font-bold mb-2 text-gray-900 dark:text-white">Zero Judgment</h3>
+              <h3 className="text-lg font-bold mb-2 text-gray-900 dark:text-white">{t('why.zeroJudgment')}</h3>
               <p className="text-gray-600 dark:text-gray-400 text-sm">
-                Patient, understanding approach for nervous drivers - everyone starts somewhere
+                {t('why.zeroJudgmentDesc')}
               </p>
             </div>
 
@@ -140,9 +140,9 @@ export default function Home() {
               <div className="w-14 h-14 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center mb-4">
                 <span className="text-2xl">⏱️</span>
               </div>
-              <h3 className="text-lg font-bold mb-2 text-gray-900 dark:text-white">Full 60 Minutes</h3>
+              <h3 className="text-lg font-bold mb-2 text-gray-900 dark:text-white">{t('why.full60Min')}</h3>
               <p className="text-gray-600 dark:text-gray-400 text-sm">
-                No rushing - complete attention for the entire lesson, plus safe ride home if needed
+                {t('why.full60MinDesc')}
               </p>
             </div>
 
@@ -151,9 +151,9 @@ export default function Home() {
               <div className="w-14 h-14 bg-amber-100 dark:bg-amber-900/30 rounded-lg flex items-center justify-center mb-4">
                 <span className="text-2xl">📱</span>
               </div>
-              <h3 className="text-lg font-bold mb-2 text-gray-900 dark:text-white">Easy Booking</h3>
+              <h3 className="text-lg font-bold mb-2 text-gray-900 dark:text-white">{t('why.easyBooking')}</h3>
               <p className="text-gray-600 dark:text-gray-400 text-sm">
-                Simple online scheduling that fits around work, study, or family commitments
+                {t('why.easyBookingDesc')}
               </p>
             </div>
           </div>
@@ -163,22 +163,22 @@ export default function Home() {
             <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg" data-aos="fade-up" data-aos-delay="0">
               <div className="text-green-500 text-xl">✓</div>
               <div>
-                <h4 className="font-semibold text-gray-900 dark:text-white">Dual Control Vehicle</h4>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">Extra safety with instructor controls</p>
+                <h4 className="font-semibold text-gray-900 dark:text-white">{t('why.dualControl')}</h4>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">{t('why.dualControlDesc')}</p>
               </div>
             </div>
             <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg" data-aos="fade-up" data-aos-delay="100">
               <div className="text-green-500 text-xl">✓</div>
               <div>
-                <h4 className="font-semibold text-gray-900 dark:text-white">Mock tests & practice routes</h4>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">Test Preparation</p>
+                <h4 className="font-semibold text-gray-900 dark:text-white">{t('why.mockTests')}</h4>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">{t('why.mockTestsDesc')}</p>
               </div>
             </div>
             <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg" data-aos="fade-up" data-aos-delay="200">
               <div className="text-green-500 text-xl">✓</div>
               <div>
-                <h4 className="font-semibold text-gray-900 dark:text-white">Weekdays & weekends available</h4>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">Flexible Scheduling</p>
+                <h4 className="font-semibold text-gray-900 dark:text-white">{t('why.flexibleSchedule')}</h4>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">{t('why.flexibleScheduleDesc')}</p>
               </div>
             </div>
           </div>
@@ -190,28 +190,28 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center text-white">
             <div className="inline-block px-4 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold mb-4">
-              🎉 LIMITED TIME OFFER
+              🎉 {t('promo.badge')}
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">First 3 Students Get FREE Lessons!</h2>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">{t('promo.title')}</h2>
             <p className="text-xl mb-6 max-w-3xl mx-auto">
-              Be among the first 3 students to sign up and receive complimentary driving lessons.
+              {t('promo.subtitle')}
             </p>
             <div className="max-w-2xl mx-auto bg-white/10 backdrop-blur-sm rounded-xl p-6 mb-8">
               <div className="grid md:grid-cols-3 gap-6 text-center">
                 <div>
                   <div className="text-4xl mb-2">🎯</div>
-                  <h3 className="font-bold text-lg mb-1">Limited Spots</h3>
-                  <p className="text-amber-100 text-sm">Only 3 students eligible</p>
+                  <h3 className="font-bold text-lg mb-1">{t('promo.limitedSpots')}</h3>
+                  <p className="text-amber-100 text-sm">{t('promo.limitedSpotsSub')}</p>
                 </div>
                 <div>
                   <div className="text-4xl mb-2">🎁</div>
-                  <h3 className="font-bold text-lg mb-1">Free Lessons</h3>
-                  <p className="text-amber-100 text-sm">Complimentary driving sessions</p>
+                  <h3 className="font-bold text-lg mb-1">{t('promo.freeLessons')}</h3>
+                  <p className="text-amber-100 text-sm">{t('promo.freeLessonsSub')}</p>
                 </div>
                 <div>
                   <div className="text-4xl mb-2">📝</div>
-                  <h3 className="font-bold text-lg mb-1">Contact to Claim</h3>
-                  <p className="text-amber-100 text-sm">Submit form for promo code</p>
+                  <h3 className="font-bold text-lg mb-1">{t('promo.contactClaim')}</h3>
+                  <p className="text-amber-100 text-sm">{t('promo.contactClaimSub')}</p>
                 </div>
               </div>
             </div>
@@ -220,17 +220,17 @@ export default function Home() {
                 href="/contact"
                 className="px-8 py-4 bg-white text-amber-700 font-bold rounded-xl hover:bg-amber-50 transition shadow-lg"
               >
-                📩 Contact for Promo Code
+                {t('promo.contactBtn')}
               </Link>
               <Link
                 href="/book"
                 className="px-8 py-4 bg-amber-900/30 text-white font-bold rounded-xl hover:bg-amber-900/50 transition border-2 border-white/30"
               >
-                📅 Book Your Lesson
+                {t('promo.bookBtn')}
               </Link>
             </div>
             <p className="text-amber-100 text-sm mt-6">
-              Submit a contact form to reach out to Michael Bui and obtain your promo code for free lessons.
+              {t('promo.footerNote')}
             </p>
           </div>
         </div>
@@ -240,30 +240,30 @@ export default function Home() {
       <section className="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-16" id="pricing">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12" data-aos="fade-up">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">Simple, Transparent Pricing</h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">No hidden fees, no surprises - just quality driving instruction</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900 dark:text-white">{t('pricing.title')}</h2>
+            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">{t('pricing.subtitle')}</p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             {/* Single Lesson */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 hover:shadow-2xl transition-all duration-300" data-aos="fade-up" data-aos-delay="200">
               <div className="text-center">
-                <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">Single Lesson</h3>
-                <div className="text-5xl font-bold text-primary mb-2">$55</div>
-                <p className="text-gray-500 dark:text-gray-400 mb-6">per 60-minute lesson</p>
+                <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">{t('pricing.singleLesson')}</h3>
+                <div className="text-5xl font-bold text-primary mb-2">{t('pricing.singlePrice')}</div>
+                <p className="text-gray-500 dark:text-gray-400 mb-6">{t('pricing.singlePer')}</p>
 
                 <div className="space-y-3 mb-8 text-left">
                   <div className="flex items-start gap-3">
                     <div className="text-green-600 text-xl">✓</div>
-                    <p className="text-gray-700 dark:text-gray-300">Book lessons as you need them</p>
+                    <p className="text-gray-700 dark:text-gray-300">{t('pricing.singleBook')}</p>
                   </div>
                   <div className="flex items-start gap-3">
                     <div className="text-green-600 text-xl">✓</div>
-                    <p className="text-gray-700 dark:text-gray-300">Maximum flexibility</p>
+                    <p className="text-gray-700 dark:text-gray-300">{t('pricing.singleMax')}</p>
                   </div>
                   <div className="flex items-start gap-3">
                     <div className="text-green-600 text-xl">✓</div>
-                    <p className="text-gray-700 dark:text-gray-300">Pay as you go</p>
+                    <p className="text-gray-700 dark:text-gray-300">{t('pricing.singlePay')}</p>
                   </div>
                 </div>
 
@@ -271,7 +271,7 @@ export default function Home() {
                   href="/book"
                   className="block w-full px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-secondary transition text-center"
                 >
-                  Book Now
+                  {t('pricing.bookNow')}
                 </Link>
               </div>
             </div>
@@ -279,26 +279,26 @@ export default function Home() {
             {/* Casual Driving */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl p-8 relative" data-aos="fade-up" data-aos-delay="300">
               <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                <span className="inline-block px-4 py-1 bg-accent text-white text-sm font-semibold rounded-full">Best Value</span>
+                <span className="inline-block px-4 py-1 bg-accent text-white text-sm font-semibold rounded-full">{t('pricing.bestValue')}</span>
               </div>
               
               <div className="text-center">
-                <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">Casual Driving</h3>
-                <div className="text-5xl font-bold text-gray-800 dark:text-white mb-2">$45</div>
-                <p className="text-gray-500 dark:text-gray-400 mb-6">per 60-minute lesson</p>
+                <h3 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">{t('pricing.casualDriving')}</h3>
+                <div className="text-5xl font-bold text-gray-800 dark:text-white mb-2">{t('pricing.casualPrice')}</div>
+                <p className="text-gray-500 dark:text-gray-400 mb-6">{t('pricing.casualPer')}</p>
                 
                 <div className="space-y-3 mb-8 text-left">
                   <div className="flex items-start gap-3">
                     <div className="text-green-600 text-xl">✓</div>
-                    <p className="text-gray-700 dark:text-gray-300">Any Drivers welcome</p>
+                    <p className="text-gray-700 dark:text-gray-300">{t('pricing.casualAny')}</p>
                   </div>
                   <div className="flex items-start gap-3">
                     <div className="text-green-600 text-xl">✓</div>
-                    <p className="text-gray-700 dark:text-gray-300">Maintenance & practice</p>
+                    <p className="text-gray-700 dark:text-gray-300">{t('pricing.casualMaintenance')}</p>
                   </div>
                   <div className="flex items-start gap-3">
                     <div className="text-green-600 text-xl">✓</div>
-                    <p className="text-gray-700 dark:text-gray-300">Stay road-ready</p>
+                    <p className="text-gray-700 dark:text-gray-300">{t('pricing.casualStay')}</p>
                   </div>
                 </div>
                 
@@ -306,7 +306,7 @@ export default function Home() {
                   href="/book"
                   className="block w-full px-6 py-3 bg-accent text-white font-semibold rounded-lg hover:bg-accent/90 transition text-center"
                 >
-                  Book Now
+                  {t('pricing.bookNow')}
                 </Link>
               </div>
             </div>
@@ -315,9 +315,7 @@ export default function Home() {
           {/* Pricing Note */}
           <div className="mt-12 text-center" data-aos="fade-up" data-aos-delay="400">
             <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-              <span className="font-semibold text-gray-900 dark:text-white">Note:</span> All lessons include dual-control vehicle,
-              comprehensive insurance, and pick-up/drop-off within the Lidcombe area.
-              Additional travel fees may apply for locations outside the service area.
+              {t('pricing.pricingNote')}
             </p>
           </div>
         </div>
@@ -328,9 +326,9 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-8">
             <div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-2 text-gray-900 dark:text-white" data-aos="fade-up">Latest from the Blog</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-2 text-gray-900 dark:text-white" data-aos="fade-up">{t('blog.title')}</h2>
               <p className="text-gray-600 dark:text-gray-300" data-aos="fade-up" data-aos-delay="100">
-                Practical driving tips and safety advice from your instructor
+                {t('blog.subtitle')}
               </p>
             </div>
             <Link
@@ -339,7 +337,7 @@ export default function Home() {
               data-aos="fade-up"
               data-aos-delay="200"
             >
-              View All Posts →
+              {t('blog.viewAll')}
             </Link>
           </div>
 
@@ -351,7 +349,7 @@ export default function Home() {
               </div>
               <div className="p-6">
                 <div className="bg-primary/10 dark:bg-blue-900/30 text-primary dark:text-blue-400 text-xs font-semibold px-3 py-1 rounded-full inline-block mb-3">
-                  Safety Tips
+                  {t('blog.safetyTips')}
                 </div>
                 <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition text-gray-900 dark:text-white">
                   The 3-Second Rule: How Much Space Do You Really Need?
@@ -372,7 +370,7 @@ export default function Home() {
               </div>
               <div className="p-6">
                 <div className="bg-primary/10 dark:bg-blue-900/30 text-primary dark:text-blue-400 text-xs font-semibold px-3 py-1 rounded-full inline-block mb-3">
-                  Safety Tips
+                  {t('blog.safetyTips')}
                 </div>
                 <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition text-gray-900 dark:text-white">
                   Scanning for Hazards: Stay One Step Ahead
@@ -393,7 +391,7 @@ export default function Home() {
               </div>
               <div className="p-6">
                 <div className="bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-xs font-semibold px-3 py-1 rounded-full inline-block mb-3">
-                  Night Driving
+                  {t('blog.nightDriving')}
                 </div>
                 <h3 className="text-lg font-bold mb-2 group-hover:text-primary transition text-gray-900 dark:text-white">
                   Night Driving: Essential Tips for Safety
@@ -413,7 +411,7 @@ export default function Home() {
               href="/blog"
               className="inline-flex items-center gap-2 px-6 py-3 bg-white dark:bg-gray-800 text-primary dark:text-blue-400 font-semibold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition shadow-md dark:shadow-gray-900/50"
             >
-              View All Posts →
+              {t('blog.viewAll')}
             </Link>
           </div>
         </div>
@@ -423,7 +421,7 @@ export default function Home() {
       <section className="bg-white dark:bg-gray-900 py-16" id="testimonials">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl md:text-4xl font-bold mb-12 text-center text-gray-900 dark:text-white" data-aos="fade-up">
-            What Students Say
+            {t('testimonials.title')}
           </h2>
           <div className="max-w-3xl mx-auto">
             {/* Testimonial 1 - Jihee */}
@@ -455,9 +453,9 @@ export default function Home() {
       {/* Instagram Section */}
       <section className="bg-gradient-to-br from-pink-50 to-purple-100 py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-6" data-aos="fade-up">Follow on Instagram</h2>
+          <h2 className="text-3xl md:text-4xl font-bold mb-6" data-aos="fade-up">{t('instagram.title')}</h2>
           <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="100">
-            Get driving tips, updates, and behind-the-scenes content on our Instagram page!
+            {t('instagram.subtitle')}
           </p>
           <a
             href="https://instagram.com/drivewithbui"
@@ -470,7 +468,7 @@ export default function Home() {
             <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
             </svg>
-            @drivewithbui
+            {t('instagram.cta')}
           </a>
         </div>
       </section>
@@ -478,22 +476,22 @@ export default function Home() {
       {/* CTA Section */}
       <section className="bg-gradient-to-br from-primary to-secondary py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6" data-aos="fade-up">Ready to Start Your Driving Journey?</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6" data-aos="fade-up">{t('cta.title')}</h2>
           <p className="text-xl text-white/90 mb-8 max-w-2xl mx-auto" data-aos="fade-up" data-aos-delay="100">
-            Book your first lesson online in just 2 minutes. No phone call needed!
+            {t('cta.subtitle')}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center" data-aos="fade-up" data-aos-delay="200">
             <Link
               href="/book"
               className="px-8 py-4 bg-white text-primary text-lg font-semibold rounded-xl hover:bg-gray-100 transition shadow-lg"
             >
-              Book Your First Lesson
+              {t('cta.bookFirst')}
             </Link>
             <Link
               href="/contact"
               className="px-8 py-4 bg-transparent border-2 border-white text-white text-lg font-semibold rounded-xl hover:bg-white/10 transition"
             >
-              Have Questions?
+              {t('cta.haveQuestions')}
             </Link>
           </div>
         </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import LanguageSwitcher from './LanguageSwitcher'
 
 interface NavbarProps {
   showLocation?: boolean
@@ -169,6 +170,7 @@ export default function Navbar({ showLocation = true }: NavbarProps) {
             <Link href="/blog" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">Blog</Link>
             <Link href="/faq" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">FAQ</Link>
             <Link href="/contact" className="text-gray-700 hover:text-primary transition font-medium px-2 py-1">Contact</Link>
+            <LanguageSwitcher />
             <div className="flex items-center gap-2 ml-2">
               {/* Student - show email if logged in */}
               {isLoggedIn ? (
